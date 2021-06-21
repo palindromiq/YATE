@@ -24,6 +24,12 @@ enum class HuntStateStage {
     ShardInserted,
 };
 
+enum class HuntStateChangeType {
+    Watershield,
+    LimbBreak,
+    CapShot
+};
+
 class HuntState {
 
 public:
@@ -51,7 +57,7 @@ class HuntInfoGenerator: public QObject
 public:
     HuntInfoGenerator(QObject *parent = nullptr);
     HuntInfo *huntInfo() const;
-    void resetHuntInfo();
+
 
     ~HuntInfoGenerator();
 
@@ -60,6 +66,10 @@ public:
 
 public slots:
     void onLogEvent(LogEvent &e);
+    void resetHuntInfo();
+
+signals:
+    void onHuntStateChanged(QString);
 
 private:
     HuntInfo* huntInfo_;
@@ -71,6 +81,7 @@ private:
     int currentRunIndex_;
     int currentNightIndex_;
     bool nightEnded_;
+    float shrineDelay_;
 };
 }
 

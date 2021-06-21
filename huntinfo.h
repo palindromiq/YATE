@@ -174,6 +174,10 @@ public:
     void removeNight(int index);
     void clear();
 
+    static QString eidolonName(Eidolon eido, bool abbreviate = false);
+    static QString eidolonName(int eido, bool abbreviate = false);
+    static QString timestampToProgressString(float timestamp);
+
     QVector<AnalysisViewItem *> toAnalysisViewItem() const;
 private:
     QVector<NightInfo> nights_;

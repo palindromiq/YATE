@@ -22,6 +22,9 @@ public:
     void setHunt(HuntInfo *newHunt);
     HuntInfo *createDummyHunt();
 
+private slots:
+    void on_btnClose_clicked();
+
 private:
     Ui::AnalysisWindow *ui;
     AnalysisViewModel *model_;

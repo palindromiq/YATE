@@ -82,4 +82,10 @@ HuntInfo *AnalysisWindow::createDummyHunt()
 
 }
 
+
+void AnalysisWindow::on_btnClose_clicked()
+{
+  this->close();
+}
+
 }

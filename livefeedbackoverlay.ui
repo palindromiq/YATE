@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>177</width>
+    <width>206</width>
     <height>31</height>
    </rect>
   </property>
@@ -21,7 +21,7 @@
     <item>
      <widget class="QLabel" name="lblFeedback">
       <property name="text">
-       <string>[12:00] 5th Limb took 0.123ms</string>
+       <string> [Live Feedback will show here]</string>
       </property>
      </widget>
     </item>

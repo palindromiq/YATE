@@ -58,6 +58,12 @@ private slots:
     void onParserFinished();
     void onParserError(QString);
 
+public slots:
+    void setLogFilePath(QString path);
+
+signals:
+    void exitFeebackOverlay();
+
 private:
     void createTrayIcon();
 

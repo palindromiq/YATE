@@ -20,7 +20,8 @@ enum class LogEventType {
     ShrineDisable,
     EidolonSpawn,
     HostUnload,
-    Invalid
+    Invalid,
+    EidolonDespawn
 };
 
 

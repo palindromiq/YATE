@@ -40,6 +40,48 @@ void HuntInfo::clear()
     nights_.clear();
 }
 
+QString HuntInfo::eidolonName(Eidolon eido, bool abbreviate)
+{
+    if (!abbreviate) {
+        if (eido == Eidolon::Terralyst) {
+            return ANALYSIS_STAT_TERRALYST;
+        } else if (eido == Eidolon::Gantulyst) {
+            return ANALYSIS_STAT_GANTULYST;
+        } else if (eido == Eidolon::Hydrolyst) {
+           return ANALYSIS_STAT_HYDROLYST;
+        }
+    } else {
+        if (eido == Eidolon::Terralyst) {
+            return ANALYSIS_STAT_TERRY;
+        } else if (eido == Eidolon::Gantulyst) {
+            return ANALYSIS_STAT_GARRY;
+        } else if (eido == Eidolon::Hydrolyst) {
+           return ANALYSIS_STAT_HARRY;
+        }
+    }
+    return "N/A";
+}
+
+QString HuntInfo::eidolonName(int eido, bool abbreviate)
+{
+    if (eido == 0) {
+        return HuntInfo::eidolonName(Eidolon::Terralyst, abbreviate);
+    } else if (eido == 1) {
+        return HuntInfo::eidolonName(Eidolon::Gantulyst, abbreviate);
+    } else if (eido == 2) {
+        return HuntInfo::eidolonName(Eidolon::Hydrolyst, abbreviate);
+    }
+    return "N/A";
+}
+
+QString HuntInfo::timestampToProgressString(float timestamp)
+{
+    int tsMins = int(timestamp / 60.0);
+    return QString::number(tsMins) + ":" + FORMAT_NUMBER(timestamp - (tsMins * 60));
+
+}
+
+
 QVector<AnalysisViewItem *> HuntInfo::toAnalysisViewItem() const
 {
     //TODO: GC
@@ -412,6 +454,7 @@ AnalysisViewItem *CapInfo::toAnalysisViewItem() const
     if(result() !=  CapState::InComplete) {
         QString ws = FORMAT_NUMBER(waterShield());
         if (shrineTime() > 0) {
+            capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_SHRINE_ACTIVASION, FORMAT_NUMBER(shrineActivationTime())}));
             capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_SHRINE_TIME, FORMAT_NUMBER(shrineTime())}));
 
             auto shardTimes = timeBetweenShards();
@@ -447,12 +490,8 @@ AnalysisViewItem *CapInfo::toAnalysisViewItem() const
             }
             limbsAvg = limbsAvg / limbBreaks().size();
             capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_LIMBS_AVERAGE, FORMAT_NUMBER(limbsAvg)}));
-            int lastLimbTimeMins = int(lastLimbProgressTime() / 60.0);
-            int capshotTimeStampMin = int(capshotProgressTimestamp() / 60.0);
-            QString lastLimbStr = QString::number(lastLimbTimeMins) + ":" + FORMAT_NUMBER(lastLimbProgressTime() - (lastLimbTimeMins * 60));
-            QString capLimbStr = QString::number(capshotTimeStampMin) + ":" + FORMAT_NUMBER(capshotProgressTimestamp() - (capshotTimeStampMin * 60));
-            capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_LAST_LIMB, lastLimbStr}));
-            capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_CAPSHOT_TIME, capLimbStr}));
+            capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_LAST_LIMB, HuntInfo::timestampToProgressString(lastLimbProgressTime())}));
+            capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_CAPSHOT_TIME, HuntInfo::timestampToProgressString(capshotProgressTimestamp())}));
         }
     }
 

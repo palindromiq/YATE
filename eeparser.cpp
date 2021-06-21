@@ -4,10 +4,14 @@
 #include <QDebug>
 #include <QRegularExpression>
 #include <QDateTime>
+#include <QFileSystemWatcher>
+#include <QFileInfo>
+#include <QDir>
 
 namespace Yate {
 
-EEParser::EEParser(QString logFilename, bool isLive, QObject *parent):QObject(parent), filename_(logFilename), liveParsing_(isLive), currentPosition_(0), evtId_(0)
+EEParser::EEParser(QString logFilename, bool isLive, QObject *parent):
+    QObject(parent), filename_(logFilename), liveParsing_(isLive), currentPosition_(0), evtId_(0), lineParseRegex_("(\\d+\\.\\d+)\\s+(\\w+)\\s+\\[(\\w+)\\]\\s*\\:\\s*(.*)"), logDoesNotExist_(true)
 {
 
 }
@@ -48,55 +52,88 @@ void EEParser::reset()
     evtId_ = 0;
 }
 
-void EEParser::start()
+void Yate::EEParser::parseLine(QString &line)
+{
+    line = line.trimmed();
+    if (!line.length()) {
+        return;
+    }
+    auto it = lineParseRegex_.globalMatch(line);
+    bool matched = false;
+    float timestamp;
+    QString msgText;
+    if (it.hasNext()) {
+        matched = true;
+        auto match = it.next();
+        timestamp = match.captured(1).toFloat();
+        msgText = match.captured(4).trimmed();
+    }
+
+    if(matched) {
+        int val;
+        auto evtType = EEParser::msgToEventType(msgText, val);
+        if (evtType != LogEventType::Invalid) {
+            LogEvent evt(evtId_++, evtType, timestamp, val);
+            emit logEvent(evt);
+        }
+    }
+}
+
+void EEParser::stopParsing()
+{
+    if(watcher_) {
+        watcher_->removePath(filename());
+    }
+    emit parsingFinished();
+}
+
+void EEParser::startOffline()
 {
     emit parsingStarted();
     QFile logFile(filename());
-    QString line;
-    QRegularExpression rx("(\\d+\\.\\d+)\\s+(\\w+)\\s+\\[(\\w+)\\]\\s*\\:\\s*(.*)");
-
-
+    QString fileContent;
 
     if(logFile.open(QIODevice::ReadOnly)) {
-        QTextStream stream(&logFile);
-        while(!stream.atEnd()) {
-             stream.readLineInto(&line);
-             setCurrentPosition(currentPosition() + line.size());
-             line = line.trimmed();
-
-
-             auto it = rx.globalMatch(line);
-             bool matched = false;
-             float timestamp;
-             QString msgText;
-             if (it.hasNext()) {
-                 matched = true;
-                 auto match = it.next();
-                 timestamp = match.captured(1).toFloat();
-                 msgText = match.captured(4).trimmed();
-             }
-//             auto parts = line.split(":");
-//             auto precolon = parts[0];
-//             parts.removeFirst();
-//             auto msgText = parts.join(":").trimmed();
-//             float timestamp = (precolon.split(" "))[0].trimmed().toFloat();
-//             bool matched = true;
-             if(matched) {
-                 int val;
-                 auto evtType = EEParser::msgToEventType(msgText, val);
-                 if (evtType != LogEventType::Invalid) {
-                     LogEvent evt(evtId_++, evtType, timestamp, val);
-                     emit logEvent(evt);
-                 }
-             }
-
+        fileContent =  QString(logFile.readAll());
+        auto lines = fileContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
+        for(auto &line: lines) {
+             parseLine(line);
         }
     } else {
-        qCritical() << logFile.errorString();
+        emit parsingError(logFile.errorString());
     }
 
-    if (!liveParsing()) {
-        emit parsingFinished();
+    emit parsingFinished();
+
+}
+
+void EEParser::startLive()
+{
+    emit parsingStarted();
+
+    QFile logFile(filename());
+    watcher_ = new QFileSystemWatcher(this);
+    parentWatcher_ = new QFileSystemWatcher(this);
+    watcher_->addPath(filename());
+    QString fileContent;
+    QString parentPath = QFileInfo(logFile).dir().path();
+    parentWatcher_->addPath(parentPath);
+    connect(parentWatcher_, &QFileSystemWatcher::directoryChanged,  this, &EEParser::onDirectoryChanged);
+    if(!logFile.exists()) {
+        logDoesNotExist_ = true;
+
+        connect(watcher_, &QFileSystemWatcher::fileChanged, this, &EEParser::onFileChanged);
+    } else if(logFile.open(QIODevice::ReadOnly)) {
+        logDoesNotExist_ = false;
+        fileContent =  QString(logFile.readAll());
+        auto lines = fileContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
+        for(auto &line: lines) {
+             parseLine(line);
+        }
+        setCurrentPosition(fileContent.length());
+        connect(watcher_, &QFileSystemWatcher::fileChanged, this, &EEParser::onFileChanged);
+    } else {
+        emit parsingError(logFile.errorString());
     }
 
 }
@@ -114,7 +151,8 @@ LogEventType EEParser::msgToEventType(QString msg, int &val)
 //        {"TeralystEncounter.lua: Shrine disabled", LogEventType::ShrineDisable},
         {"EidolonMP.lua: EIDOLONMP: Finalize Eidolon transition", LogEventType::TerralystSpawn},
         {"TeralystEncounter.lua:      Eidolon spawning SUCCESS", LogEventType::EidolonSpawn},
-        {"EidolonMP.lua: EIDOLONMP: Level fully destroyed", LogEventType::HostUnload}
+        {"EidolonMP.lua: EIDOLONMP: Level fully destroyed", LogEventType::HostUnload},
+        {"TeralystEncounter.lua: Teralyst Escape complete. All Teralysts should be gone now", LogEventType::EidolonDespawn}
     };
     val = -1;
 
@@ -127,14 +165,61 @@ LogEventType EEParser::msgToEventType(QString msg, int &val)
         val = parts[0].toInt();
         return LogEventType::ShardInsert;
     } else if (msg.startsWith("TeralystEncounter.lua: A shard has been removed from the Eidolon Shrine.")) {
-        const QRegularExpression rx("[^0-9]+");
-        const auto&& parts = msg.split(rx, Qt::SkipEmptyParts);
-        val = parts[0].toInt();
-        return LogEventType::ShardRemove;
+//        const QRegularExpression rx("[^0-9]+");
+//        const auto&& parts = msg.split(rx, Qt::SkipEmptyParts);
+//        val = parts[0].toInt();
+//        return LogEventType::ShardRemove;
+        return LogEventType::Invalid;
     } else {
         return LogEventType::Invalid;
     }
 
+}
+
+void EEParser::onFileChanged(QString path)
+{
+    if(!watcher_->files().contains(path)) {
+        if (QFile(path).exists()) {
+            watcher_->addPath(path);
+        } else {
+            emit parsingError(tr("Log file not found!"));
+        }
+    }
+    QFile logFile(path);
+    QString fileContent;
+
+    if(logFile.open(QIODevice::ReadOnly)) {
+        logFile.seek(currentPosition());
+        fileContent =  QString(logFile.readAll());
+        setCurrentPosition(currentPosition() + fileContent.length());
+        auto lines = fileContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
+        for(auto &line: lines) {
+             parseLine(line);
+        }
+    } else {
+        emit parsingError(logFile.errorString());
+    }
+
+
+}
+
+void EEParser::onDirectoryChanged(QString)
+{
+    QFile logFile(filename());
+    if (logFile.exists()) {
+        if (logDoesNotExist_) {
+            setCurrentPosition(0);
+        }
+        if (!watcher_->files().contains(filename())) {
+            watcher_->addPath(filename());
+        }
+        onFileChanged(filename());
+        logDoesNotExist_ = false;
+    } else {
+        setCurrentPosition(0);
+        logDoesNotExist_ = true;
+        emit parsingReset();
+    }
 }
 
 }

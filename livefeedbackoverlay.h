@@ -22,6 +22,13 @@ private slots:
     void mousePressEvent(QMouseEvent *evt);
     void mouseMoveEvent(QMouseEvent *evt);
     void mouseReleaseEvent(QMouseEvent *evt);
+    void mouseDoubleClickEvent(QMouseEvent *event);
+public slots:
+    void onUpdateMessage(QString msg);
+
+signals:
+    void onDoubleClicked();
+
 
 private:
     Ui::LiveFeedbackOverlay *ui;

@@ -2,7 +2,10 @@
 #define EEPARSER_H
 #include <QObject>
 #include <QTextStream>
+#include <QRegularExpression>
 #include "logevent.h"
+
+class QFileSystemWatcher;
 
 namespace Yate {
 class EEParser: public QObject
@@ -20,13 +23,22 @@ public:
 
 
     static LogEventType msgToEventType(QString msg, int &val);
+
+private slots:
+    void onFileChanged(QString path);
+    void onDirectoryChanged(QString path);
+
 public slots:
-    void start();
+    void startOffline();
+    void startLive();
     void reset();
+    void parseLine(QString &line);
+    void stopParsing();
 
 signals:
     void parsingStarted();
     void parsingFinished();
+    void parsingReset();
     void parsingError(QString);
     void logEvent(LogEvent &e);
 private:
@@ -34,6 +46,10 @@ private:
     bool liveParsing_;
     int currentPosition_;
     int evtId_;
+    QRegularExpression lineParseRegex_;
+    QFileSystemWatcher *watcher_;
+    QFileSystemWatcher *parentWatcher_;
+    bool logDoesNotExist_;
 };
 }
 

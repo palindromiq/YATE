@@ -35,6 +35,8 @@ private slots:
 
     void on_btnResetFeedback_clicked();
 
+    void on_btnDefaultPath_clicked();
+
 private:
     Ui::SettingsDialog *ui;
     QSettings *settings_;

@@ -10,6 +10,7 @@
 #include <QAction>
 #include <QMenu>
 #include <QThread>
+#include <QStatusBar>
 
 #include "globals.h"
 #include "settingsdialog.h"
@@ -49,14 +50,19 @@ YATEWindow::YATEWindow(QWidget *parent)
         eeLogFileManuallySet_ = true;
     }
     QString eePath(QFileInfo(eeLogFile_).filePath());
+
     ui->lblLogFilePath->setText(eePath);
     settingsDialog_->setEEFilePath(eePath);
     settings.setValue(SETTINGS_KEY_EE_LOG, eePath);
 
     if (!eeLogFile_.exists()) {
-        qWarning() << "No log file..";
+        statusBar()->showMessage(tr("Log file not found!"), 3000);
     }
+
+
     createTrayIcon();
+    connect(this, &YATEWindow::exitFeebackOverlay, this, &YATEWindow::stopFeedback);
+
     setAcceptDrops(true);
 
 }
@@ -115,7 +121,8 @@ void YATEWindow::on_btnShrineWater_clicked()
     connect(parser_, &EEParser::parsingError, this, &YATEWindow::onParserError);
     connect(parser_, &EEParser::logEvent, huntInfoGenerator_, &HuntInfoGenerator::onLogEvent);
 
-    connect( parserThread, &QThread::started, parser_, &EEParser::start);
+
+    connect( parserThread, &QThread::started, parser_, &EEParser::startOffline);
     connect( parser_, &EEParser::parsingFinished, parserThread, &QThread::quit);
     connect( parser_, &EEParser::parsingFinished, parser_, &EEParser::deleteLater);
     connect( parser_, &EEParser::parsingFinished, huntInfoGenerator_, &HuntInfoGenerator::deleteLater);
@@ -143,6 +150,30 @@ void YATEWindow::on_btnShrineWater_clicked()
 
 void YATEWindow::on_btnLiveFeedback_clicked()
 {
+    trayStopFeedback_->setVisible(true);
+    parser_ = new EEParser(eeLogFile_.fileName(), false);
+    huntInfoGenerator_ = new HuntInfoGenerator;
+    QThread *parserThread = new QThread;
+    parser_->moveToThread(parserThread);
+
+    connect(parser_, &EEParser::parsingStarted, this, &YATEWindow::onParserStarted);
+    connect(parser_, &EEParser::parsingError, this, &YATEWindow::onParserError);
+    connect(parser_, &EEParser::parsingError, feedbackOverlay_, &LiveFeedbackOverlay::onUpdateMessage);
+    connect(parser_, &EEParser::logEvent, huntInfoGenerator_, &HuntInfoGenerator::onLogEvent);
+    connect(parser_, &EEParser::parsingReset, huntInfoGenerator_, &HuntInfoGenerator::resetHuntInfo);
+
+    connect(parserThread, &QThread::started, parser_, &EEParser::startLive);
+    connect(parser_, &EEParser::parsingFinished, parserThread, &QThread::quit);
+    connect(parser_, &EEParser::parsingFinished, parser_, &EEParser::deleteLater);
+    connect(parser_, &EEParser::parsingFinished, huntInfoGenerator_, &HuntInfoGenerator::deleteLater);
+    connect(huntInfoGenerator_, &HuntInfoGenerator::onHuntStateChanged, feedbackOverlay_, &LiveFeedbackOverlay::onUpdateMessage);
+    connect(parserThread, &QThread::finished, parserThread, &QThread::deleteLater);
+    connect(this, &YATEWindow::exitFeebackOverlay, parser_, &EEParser::stopParsing);
+    connect(feedbackOverlay_, &LiveFeedbackOverlay::onDoubleClicked, parser_, &EEParser::stopParsing);
+    connect(feedbackOverlay_, &LiveFeedbackOverlay::onDoubleClicked, this, &YATEWindow::stopFeedback);
+
+    parserThread->start();
+
     feedbackOverlay_->show();
     trayIcon_->show();
     hide();
@@ -155,21 +186,20 @@ void YATEWindow::showWindow()
 
 void YATEWindow::stopFeedback()
 {
+    trayStopFeedback_->setVisible(false);
     feedbackOverlay_->hide();
+    trayIcon_->hide();
+    show();
 }
 
 void YATEWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
 {
     switch (reason) {
-//    case QSystemTrayIcon::Trigger:
-//        qDebug() << "Trigger";
-//        break;
     case QSystemTrayIcon::DoubleClick:
         show();
+        emit exitFeebackOverlay();
         break;
-//    case QSystemTrayIcon::MiddleClick:
-//        qDebug() << "MiddleClick";
-//        break;
+
     default:
         ;
     }
@@ -216,20 +246,25 @@ void YATEWindow::onParserError(QString err)
     enableUI();
 }
 
+void YATEWindow::setLogFilePath(QString path)
+{
+    ui->lblLogFilePath->setText(path);
+    eeLogFile_.setFileName(path);
+}
+
 void YATEWindow::createTrayIcon()
 {
     trayIcon_ = new QSystemTrayIcon(QIcon(":/yate.ico"), this);
-    trayShowYate_ = new QAction(tr("&Open"),this);
+
     trayStopFeedback_ = new QAction(tr("&Stop Feedback"), this);
     trayQuit_ = new QAction(tr("&Exit"),this);
-    connect(trayShowYate_, &QAction::triggered, this, &YATEWindow::showWindow);
     connect(trayStopFeedback_, &QAction::triggered, this, &YATEWindow::stopFeedback);
-    connect(trayQuit_, &QAction::triggered, this, &YATEWindow::exitApp);
+    connect(trayQuit_, &QAction::triggered, QCoreApplication::instance(), &QCoreApplication::quit);
     QMenu *menu = new QMenu(this);
-    menu->addAction(trayShowYate_);
     menu->addAction(trayStopFeedback_);
     menu->addSeparator();
     menu->addAction(trayQuit_);
+    trayStopFeedback_->setVisible(false);
 
     trayIcon_->setContextMenu(menu);
 

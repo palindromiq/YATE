@@ -3,6 +3,7 @@
 
 #include <QMouseEvent>
 #include <QSettings>
+#include <QDateTime>
 
 #include "globals.h"
 
@@ -30,10 +31,21 @@ void LiveFeedbackOverlay::mousePressEvent(QMouseEvent *evt)
     isMoving_ = true;
 }
 
+void LiveFeedbackOverlay::mouseDoubleClickEvent(QMouseEvent *evt) {
+    emit onDoubleClicked();
+    QMainWindow::mouseDoubleClickEvent(evt);
+}
+
 void LiveFeedbackOverlay::mouseReleaseEvent(QMouseEvent *evt)
 {
     oldPos_ = evt->globalPosition();
     isMoving_ = false;
+}
+
+void LiveFeedbackOverlay::onUpdateMessage(QString msg)
+{
+//    ui->lblFeedback->setText(QString("[") + QDateTime::currentDateTime().toString("HH:mm:ss") + "] " + msg);
+    ui->lblFeedback->setText(" " + msg);
 }
 
 void LiveFeedbackOverlay::mouseMoveEvent(QMouseEvent *evt)

@@ -5,8 +5,10 @@
 #include <QDropEvent>
 #include <QDragEnterEvent>
 #include <QMimeData>
+#include <QStandardPaths>
 
 #include "globals.h"
+#include "yatewindow.h"
 
 namespace Yate {
 SettingsDialog::SettingsDialog(QWidget *parent) :
@@ -59,6 +61,8 @@ void SettingsDialog::on_btnSave_clicked()
   this->accept();
   if(!ui->lblLogFilePath->text().isEmpty()) {
       settings_->setValue(SETTINGS_KEY_EE_LOG, ui->lblLogFilePath->text().trimmed());
+      YATEWindow *parentW = dynamic_cast<YATEWindow*>(parentWidget());
+      parentW->setLogFilePath(ui->lblLogFilePath->text().trimmed());
   }
 }
 
@@ -82,6 +86,22 @@ void SettingsDialog::on_btnResetFeedback_clicked()
 {
   settings_->remove(SETTINGS_KEY_FEEDBACK_POS_X);
   settings_->remove(SETTINGS_KEY_FEEDBACK_POS_Y);
+}
+
+
+void SettingsDialog::on_btnDefaultPath_clicked()
+{
+    QString appDataPath;
+    QStringList appDataLocations = QStandardPaths::standardLocations(QStandardPaths::AppLocalDataLocation);
+    if (!appDataLocations.length()) {
+        appDataPath = QDir::homePath() + QDir::separator() + "AppData" + QDir::separator() + "Local";
+    } else {
+        appDataPath = appDataLocations.first();
+        appDataPath = QFileInfo(appDataPath).dir().absolutePath(); // Up one directory
+        appDataPath = QFileInfo(appDataPath).dir().absolutePath(); // Up one directory
+    }
+    QString path = QDir(appDataPath).filePath(PATH_EE_LOG_RELATIVE);
+    setEEFilePath(path);
 }
 
 }
