@@ -166,6 +166,7 @@ QString NightInfo::getNightResult() const
     if(x1s) {
         results.append(QString::number(x1s) + "x1");
     }
+
     return results.join("+");
 }
 

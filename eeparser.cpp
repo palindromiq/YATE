@@ -110,7 +110,6 @@ void EEParser::startOffline()
 void EEParser::startLive()
 {
     emit parsingStarted();
-
     QFile logFile(filename());
     watcher_ = new QFileSystemWatcher(this);
     parentWatcher_ = new QFileSystemWatcher(this);
@@ -181,6 +180,7 @@ void EEParser::onFileChanged(QString path)
     if(!watcher_->files().contains(path)) {
         if (QFile(path).exists()) {
             watcher_->addPath(path);
+            setCurrentPosition(0);
         } else {
             emit parsingError(tr("Log file not found!"));
         }
@@ -207,9 +207,8 @@ void EEParser::onDirectoryChanged(QString)
 {
     QFile logFile(filename());
     if (logFile.exists()) {
-        if (logDoesNotExist_) {
-            setCurrentPosition(0);
-        }
+        setCurrentPosition(0);
+        emit parsingReset();
         if (!watcher_->files().contains(filename())) {
             watcher_->addPath(filename());
         }

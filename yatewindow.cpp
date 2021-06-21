@@ -19,6 +19,7 @@
 #include "eeparser.h"
 #include "huntinfogenerator.h"
 
+
 namespace Yate {
 YATEWindow::YATEWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -80,6 +81,7 @@ void YATEWindow::dropEvent(QDropEvent *e)
     foreach (const QUrl &url, e->mimeData()->urls()) {
         QString fileName = url.toLocalFile();
         ui->lblLogFilePath->setText(fileName);
+        eeLogFile_.setFileName(fileName);
         break;
     }
 }
@@ -120,7 +122,6 @@ void YATEWindow::on_btnShrineWater_clicked()
     connect(parser_, &EEParser::parsingFinished, this, &YATEWindow::onParserFinished);
     connect(parser_, &EEParser::parsingError, this, &YATEWindow::onParserError);
     connect(parser_, &EEParser::logEvent, huntInfoGenerator_, &HuntInfoGenerator::onLogEvent);
-
 
     connect( parserThread, &QThread::started, parser_, &EEParser::startOffline);
     connect( parser_, &EEParser::parsingFinished, parserThread, &QThread::quit);

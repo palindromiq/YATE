@@ -4,7 +4,10 @@
 #include <QFile>
 #include <QTextStream>
 
+
 #include "globals.h"
+
+
 
 int main(int argc, char *argv[])
 {

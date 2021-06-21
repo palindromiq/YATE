@@ -29,6 +29,8 @@ void HuntInfoGenerator::resetHuntInfo()
     currentRunIndex_ = -1;
     currentNightIndex_ = -1;
     nightEnded_ = false;
+    emit onHuntStateChanged(" [Live Feedback will show here]");
+
 
 }
 
@@ -107,9 +109,13 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
         if (currentNightIndex_ != -1 && (timestamp -  huntInfo()->night(currentNightIndex_).startTimestamp()) > MAX_NIGHT_DURATION) {
             nightEnded_ = true;
         }
-        emit onHuntStateChanged("Pending");
+        state_.setStage(HuntStateStage::Initial);
+        state_.setEidolonNumber(0);
+        emit onHuntStateChanged(" [Live Feedback will show here]");
     } else if (typ == LogEventType::EidolonDespawn) {
         emit onHuntStateChanged(HuntInfo::eidolonName(state_.eidolonNumber()) + tr(" despawned"));
+        state_.setStage(HuntStateStage::Initial);
+        state_.setEidolonNumber(0);
     } else {
         switch (state_.stage()) {
             case HuntStateStage::Initial: {
