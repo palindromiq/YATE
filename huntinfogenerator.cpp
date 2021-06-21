@@ -100,7 +100,7 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
             huntInfo()->night(currentNightIndex_).run(currentRunIndex_).setStartTimestamp(timestamp);
         }
         state_.setStage(HuntStateStage::Spawned);
-        emit onHuntStateChanged(HuntInfo::eidolonName(state_.eidolonNumber()) + tr(" spawned"));
+        emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + HuntInfo::eidolonName(state_.eidolonNumber()) + tr(" spawned"));
 
     } else if (typ == LogEventType::DayBegin) {
          nightEnded_ = true;
@@ -113,9 +113,19 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
         state_.setEidolonNumber(0);
         emit onHuntStateChanged(" [Live Feedback will show here]");
     } else if (typ == LogEventType::EidolonDespawn) {
-        emit onHuntStateChanged(HuntInfo::eidolonName(state_.eidolonNumber()) + tr(" despawned"));
-        state_.setStage(HuntStateStage::Initial);
-        state_.setEidolonNumber(0);
+        auto capState = huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).result();
+         state_.setStage(HuntStateStage::Initial);
+        if (capState == CapState::Spawned) {
+            emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + HuntInfo::eidolonName(state_.eidolonNumber()) + tr(" despawned"));
+            state_.setEidolonNumber(0);
+        } else if (capState == CapState::Capture) {
+            state_.setStage(HuntStateStage::Capped);
+        } else if (capState == CapState::Kill) {
+            state_.setStage(HuntStateStage::Killed);
+        }
+
+
+
     } else {
         switch (state_.stage()) {
             case HuntStateStage::Initial: {
@@ -162,7 +172,7 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                         statStr = statStr + FORMAT_NUMBER(spDelay + ws);
                         statStr = statStr + ")";
                     }
-                    emit onHuntStateChanged(statStr);
+                    emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + statStr);
                 } else {
                     invalid = true;
                 }
@@ -174,11 +184,11 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                     float limbtime = timestamp - lastEventTime_ - LIMB_BREAK_ANIMATION_TIME;
                     huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).addlimbBreak(limbtime);
                     state_.setLimbNumber(state_.limbNumber() + 1);
-                    emit onHuntStateChanged(HuntInfo::eidolonName(state_.eidolonNumber(), true) + tr(" Limb ") + QString::number(state_.limbNumber() + 1) + ": " + FORMAT_NUMBER(limbtime));
+                    emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + HuntInfo::eidolonName(state_.eidolonNumber(), true) + tr(" Limb ") + QString::number(state_.limbNumber() + 1) + ": " + FORMAT_NUMBER(limbtime));
                     if (state_.limbNumber() == maxLimbs - 1) {
                         state_.setStage(HuntStateStage::Healing);
                         huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setLastLimbProgressTime(timestamp - huntInfo()->night(currentNightIndex_).run(currentRunIndex_).startTimestamp());
-                        emit onHuntStateChanged(HuntInfo::eidolonName(state_.eidolonNumber(), true) + tr(" Limb: ")
+                        emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + HuntInfo::eidolonName(state_.eidolonNumber(), true) + tr(" Limb ")
                                                 + QString::number(state_.limbNumber() + 1) + ": " + FORMAT_NUMBER(limbtime)
                                                 + " [" + HuntInfo::timestampToProgressString(huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).lastLimbProgressTime())
                                                 + "]");
@@ -195,7 +205,7 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                     huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setResult(CapState::Capture);
                     huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setCapshotProgressTime(timestamp - huntInfo()->night(currentNightIndex_).run(currentRunIndex_).startTimestamp());
                     state_.setStage(HuntStateStage::Capped);
-                    emit onHuntStateChanged(HuntInfo::eidolonName(state_.eidolonNumber(), true) + tr(" Capshot") + ": " + FORMAT_NUMBER(capshot) + " ["
+                    emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + HuntInfo::eidolonName(state_.eidolonNumber(), true) + tr(" Capshot") + ": " + FORMAT_NUMBER(capshot) + " ["
                                              + HuntInfo::timestampToProgressString(huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).capshotProgressTimestamp())
                                              + "]");
 
@@ -206,7 +216,7 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                     huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setResult(CapState::Kill);
                     huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setCapshotProgressTime(timestamp - huntInfo()->night(currentNightIndex_).run(currentRunIndex_).startTimestamp());
                     state_.setStage(HuntStateStage::Killed);
-                    emit onHuntStateChanged(HuntInfo::eidolonName(state_.eidolonNumber(), true) + tr(" Killshot") + ": " + FORMAT_NUMBER(capshot) + " ["
+                    emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + HuntInfo::eidolonName(state_.eidolonNumber(), true) + tr(" Killshot") + ": " + FORMAT_NUMBER(capshot) + " ["
                                              + HuntInfo::timestampToProgressString(huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).capshotProgressTimestamp())
                                              + "]");
 
@@ -238,7 +248,7 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                     shrineDelay_ = timestamp - lastEventTime_;
 
                     state_.setStage(HuntStateStage::ShrineEnabled);
-                    emit onHuntStateChanged("Shrine Delay: " + FORMAT_NUMBER(shrineDelay_));
+                    emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + "Shrine Delay: " + FORMAT_NUMBER(shrineDelay_));
                 }  else {
                     invalid = true;
                 }
@@ -275,7 +285,7 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
 
                     state_.setStage(HuntStateStage::Spawned);
                     state_.setEidolonNumber(state_.eidolonNumber() + 1);
-                    emit onHuntStateChanged(HuntInfo::eidolonName(state_.eidolonNumber()) + tr(" spawned"));
+                    emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + HuntInfo::eidolonName(state_.eidolonNumber()) + tr(" spawned"));
 
                 } else {
                     invalid = true;

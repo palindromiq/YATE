@@ -81,7 +81,7 @@
       <item>
        <widget class="QLabel" name="lblAboutContact">
         <property name="text">
-         <string>For bug reporting and suggestions, reach me on discord @ palindromiq#5731</string>
+         <string>For bug reporting and feedback, reach me on Discord @ palindromiq#5731</string>
         </property>
        </widget>
       </item>
