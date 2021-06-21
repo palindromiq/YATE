@@ -12,8 +12,11 @@ SOURCES += \
     analysisviewitem.cpp \
     analysisviewmodel.cpp \
     analysiswindow.cpp \
+    eeparser.cpp \
     huntinfo.cpp \
+    huntinfogenerator.cpp \
     livefeedbackoverlay.cpp \
+    logevent.cpp \
     main.cpp \
     settingsdialog.cpp \
     yatewindow.cpp
@@ -22,9 +25,12 @@ HEADERS += \
     analysisviewitem.h \
     analysisviewmodel.h \
     analysiswindow.h \
+    eeparser.h \
     globals.h \
     huntinfo.h \
+    huntinfogenerator.h \
     livefeedbackoverlay.h \
+    logevent.h \
     settingsdialog.h \
     yatewindow.h
 

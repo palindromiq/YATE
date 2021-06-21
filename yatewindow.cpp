@@ -9,11 +9,14 @@
 #include <QMimeData>
 #include <QAction>
 #include <QMenu>
+#include <QThread>
 
 #include "globals.h"
 #include "settingsdialog.h"
 #include "analysiswindow.h"
 #include "livefeedbackoverlay.h"
+#include "eeparser.h"
+#include "huntinfogenerator.h"
 
 namespace Yate {
 YATEWindow::YATEWindow(QWidget *parent)
@@ -22,7 +25,9 @@ YATEWindow::YATEWindow(QWidget *parent)
       eeLogFileManuallySet_(false),
       settingsDialog_(new SettingsDialog(this)),
       feedbackOverlay_(new LiveFeedbackOverlay(this)),
-      analysisWindow_(new AnalysisWindow(this))
+      analysisWindow_(new AnalysisWindow(this)),
+      parser_(nullptr),
+      huntInfoGenerator_(nullptr)
 
 {
     ui->setupUi(this);
@@ -79,7 +84,7 @@ YATEWindow::~YATEWindow()
 }
 
 
-void YATEWindow::on_pushButton_clicked()
+void YATEWindow::on_btnSettings_clicked()
 {
     settingsDialog_->reloadSettings();
     settingsDialog_->exec();
@@ -98,7 +103,41 @@ void YATEWindow::on_btnEditLogPath_clicked()
 
 void YATEWindow::on_btnShrineWater_clicked()
 {
-    analysisWindow_->show();
+    disableUI();
+#ifdef THREADED_PARSING
+    parser_ = new EEParser(eeLogFile_.fileName(), false);
+    huntInfoGenerator_ = new HuntInfoGenerator;
+    QThread *parserThread = new QThread;
+    parser_->moveToThread(parserThread);
+
+    connect(parser_, &EEParser::parsingStarted, this, &YATEWindow::onParserStarted);
+    connect(parser_, &EEParser::parsingFinished, this, &YATEWindow::onParserFinished);
+    connect(parser_, &EEParser::parsingError, this, &YATEWindow::onParserError);
+    connect(parser_, &EEParser::logEvent, huntInfoGenerator_, &HuntInfoGenerator::onLogEvent);
+
+    connect( parserThread, &QThread::started, parser_, &EEParser::start);
+    connect( parser_, &EEParser::parsingFinished, parserThread, &QThread::quit);
+    connect( parser_, &EEParser::parsingFinished, parser_, &EEParser::deleteLater);
+    connect( parser_, &EEParser::parsingFinished, huntInfoGenerator_, &HuntInfoGenerator::deleteLater);
+    connect( parserThread, &QThread::finished, parserThread, &QThread::deleteLater);
+
+    parserThread->start();
+#else
+    if (parser_ == nullptr) {
+        parser_ = new EEParser(eeLogFile_.fileName(), false, this);
+        huntInfoGenerator_ = new HuntInfoGenerator(this);
+    } else {
+        parser_->setFilename(eeLogFile_.fileName());
+        parser_->reset();
+        huntInfoGenerator_->resetHuntInfo();
+        disconnect(parser_, &EEParser::logEvent, huntInfoGenerator_, &HuntInfoGenerator::onLogEvent);
+    }
+    connect(parser_, &EEParser::parsingStarted, this, &YATEWindow::onParserStarted);
+    connect(parser_, &EEParser::parsingFinished, this, &YATEWindow::onParserFinished);
+    connect(parser_, &EEParser::parsingError, this, &YATEWindow::onParserError);
+    connect(parser_, &EEParser::logEvent, huntInfoGenerator_, &HuntInfoGenerator::onLogEvent);
+    parser_->start();
+#endif
 }
 
 
@@ -140,6 +179,41 @@ void YATEWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
 void YATEWindow::exitApp()
 {
 
+}
+
+void YATEWindow::disableUI()
+{
+    ui->btnEditLogPath->setEnabled(false);
+    ui->btnLiveFeedback->setEnabled(false);
+    ui->btnShrineWater->setEnabled(false);
+    ui->btnSettings->setEnabled(false);
+}
+
+void YATEWindow::enableUI()
+{
+    ui->btnEditLogPath->setEnabled(true);
+    ui->btnLiveFeedback->setEnabled(true);
+    ui->btnShrineWater->setEnabled(true);
+    ui->btnSettings->setEnabled(true);
+}
+
+void YATEWindow::onParserStarted()
+{
+
+}
+
+void YATEWindow::onParserFinished()
+{
+    enableUI();
+    // Set analysisWindow_ model
+    analysisWindow_->setHunt(huntInfoGenerator_->huntInfo());
+    analysisWindow_->show();
+}
+
+void YATEWindow::onParserError(QString err)
+{
+    qCritical() << err;
+    enableUI();
 }
 
 void YATEWindow::createTrayIcon()

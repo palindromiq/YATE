@@ -22,7 +22,8 @@ namespace Yate {
 class SettingsDialog;
 class LiveFeedbackOverlay;
 class AnalysisWindow;
-
+class EEParser;
+class HuntInfoGenerator;
 
 class YATEWindow : public QMainWindow
 {
@@ -33,7 +34,7 @@ public:
     ~YATEWindow();
 
 private slots:
-    void on_pushButton_clicked();
+    void on_btnSettings_clicked();
 
     void on_btnEditLogPath_clicked();
     void dragEnterEvent(QDragEnterEvent *e);
@@ -50,6 +51,13 @@ private slots:
 
     void exitApp();
 
+    void disableUI();
+    void enableUI();
+
+    void onParserStarted();
+    void onParserFinished();
+    void onParserError(QString);
+
 private:
     void createTrayIcon();
 
@@ -63,6 +71,8 @@ private:
     QAction *trayShowYate_;
     QAction *trayStopFeedback_;
     QAction *trayQuit_;
+    EEParser *parser_;
+    HuntInfoGenerator *huntInfoGenerator_;
 
 
 };

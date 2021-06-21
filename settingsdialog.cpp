@@ -26,14 +26,6 @@ void SettingsDialog::setEEFilePath(QString &path)
 
 void SettingsDialog::reloadSettings()
 {
-    QVariant watershieldSetting = settings_->value(SETTINGS_KEY_WATERSHIELD);
-    if(!watershieldSetting.isNull() && watershieldSetting.toString() == SETTINGS_OPT_SHARD) {
-        ui->radWaterShieldShardIn->setChecked(true);
-        ui->radWatershieldExact->setChecked(false);
-    } else {
-        ui->radWaterShieldShardIn->setChecked(false);
-        ui->radWatershieldExact->setChecked(true);
-    }
     if (!settings_->value(SETTINGS_KEY_EE_LOG).isNull()) {
         QString pth = settings_->value(SETTINGS_KEY_EE_LOG).toString();
         setEEFilePath(pth);
@@ -67,11 +59,6 @@ void SettingsDialog::on_btnSave_clicked()
   this->accept();
   if(!ui->lblLogFilePath->text().isEmpty()) {
       settings_->setValue(SETTINGS_KEY_EE_LOG, ui->lblLogFilePath->text().trimmed());
-  }
-  if (ui->radWaterShieldShardIn->isChecked()) {
-      settings_->setValue(SETTINGS_KEY_WATERSHIELD, SETTINGS_OPT_SHARD);
-  } else {
-      settings_->setValue(SETTINGS_KEY_WATERSHIELD, SETTINGS_OPT_EXACT);
   }
 }
 

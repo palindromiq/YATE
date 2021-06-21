@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>480</width>
-    <height>261</height>
+    <height>174</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -50,35 +50,6 @@
       </widget>
      </item>
     </layout>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="grpWatershieldCalc">
-     <property name="title">
-      <string>Watershield Calculation (for live analysis)</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <widget class="QRadioButton" name="radWatershieldExact">
-        <property name="text">
-         <string>Exact Watershield timing</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QRadioButton" name="radWaterShieldShardIn">
-        <property name="text">
-         <string>From last shard in to limb break (matches idalon.com)</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_3"/>
    </item>
    <item>
     <widget class="QPushButton" name="btnResetFeedback">

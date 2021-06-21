@@ -59,7 +59,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton">
+         <widget class="QPushButton" name="btnSettings">
           <property name="text">
            <string>Settings</string>
           </property>
@@ -70,14 +70,14 @@
       <item>
        <widget class="QPushButton" name="btnShrineWater">
         <property name="text">
-         <string>Shrines and Wateshields</string>
+         <string>Stats Analysis</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="btnLiveFeedback">
         <property name="text">
-         <string>Live Analysis</string>
+         <string>Live Feedback</string>
         </property>
        </widget>
       </item>

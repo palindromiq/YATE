@@ -4,7 +4,8 @@ namespace Yate {
 
 AnalysisViewItem::AnalysisViewItem(const QVector<QVariant> &data, AnalysisViewItem *parent)
     : itemData_(data), parentItem_(parent)
-{}
+{
+}
 
 
 AnalysisViewItem::~AnalysisViewItem()
@@ -15,6 +16,7 @@ AnalysisViewItem::~AnalysisViewItem()
 
 void AnalysisViewItem::appendChild(AnalysisViewItem *item)
 {
+    item->setParentItem(this);
     childItems_.append(item);
 }
 
@@ -50,6 +52,11 @@ QVariant AnalysisViewItem::data(int column) const
 AnalysisViewItem *AnalysisViewItem::parentItem()
 {
     return parentItem_;
+}
+
+void AnalysisViewItem::setParentItem(AnalysisViewItem *parent)
+{
+    parentItem_ = parent;
 }
 
 

@@ -2,13 +2,18 @@
 #define HUNTINFO_H
 
 #include <QVector>
+#include "globals.h"
 
 namespace Yate {
+class AnalysisViewItem;
+
+
 
 enum class CapState {
     Capture,
     Kill,
-    Incomplete
+    Spawned,
+    InComplete
 };
 
 enum class Eidolon {
@@ -17,6 +22,9 @@ enum class Eidolon {
     Hydrolyst
 };
 
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuninitialized"
 class CapInfo {
 public:
     CapInfo();
@@ -31,6 +39,12 @@ public:
     void addTimeBetweenShards(float &newTimeBetweenShards);
     float timeBetweenShards(int index) const;
     void clearTimeBetweenShards();
+
+    const QVector<float> &limbBreaks() const;
+    void setlimbBreaks(const QVector<float> &newLimbBreaks);
+    void addlimbBreak(float &newLimbBreak);
+    float limbBreak(int index) const;
+    void clearLimbBreaks();
 
     float spawnDelay() const;
     void setSpawnDelay(float newSpawnDelay);
@@ -47,29 +61,48 @@ public:
     int numberOfLimbs() const;
     void setNumberOfLimbs(int newNumberOfLimbs);
 
-    float healingPhaseTime() const;
-    void setHealingPhaseTime(float newHealingPhaseTime);
-
-    bool spawned() const;
-    void setSpawned(bool newSpawned);
-
     CapState result() const;
     void setResult(CapState newResult);
 
     Eidolon eidolon() const;
     void setEidolon(Eidolon newEidolon);
 
+    AnalysisViewItem *toAnalysisViewItem() const;
+
+    float lastLimbProgressTime() const;
+    void setLastLimbProgressTime(float newLastLimbTime);
+
+    float loadTime() const;
+    void setLoadTime(float newLoadTime);
+
+    float lootDropTime() const;
+    void setLootDropTime(float newLootDropTime);
+
+    float lootDropTimestamp() const;
+    void setLootDropTimestamp(float newLootDropTimestamp);
+
+    float spawnTimestamp() const;
+    void setSpawnTimestamp(float newSpawnTimestamp);
+
+    float capshotProgressTimestamp() const;
+    void setCapshotProgressTime(float newCapshotTimestamp);
+
 private:
     bool valid_;
     float shrineTime_;
     QVector<float> timeBetweenShards_;
+    QVector<float> limbBreaks_;
     float spawnDelay_;
     float waterShield_;
     float shrineActivationTime_;
     float capshotTime_;
-    float healingPhaseTime_;
+    float lastLimbProgessTime_;
+    float loadTime_;
+    float lootDropTime_;
+    float lootDropTimestamp_;
+    float spawnTimestamp_;
+    float capshotProgressTimestamp_;
     int numberOfLimbs_;
-    bool spawned_;
     CapState result_;
     Eidolon eidolon_;
 };
@@ -77,21 +110,35 @@ private:
 class RunInfo {
 public:
     RunInfo();
-    const CapInfo &terralystCapInfo() const;
+    CapInfo &terralystCapInfo();
     void setTerralystCapInfo(const CapInfo &newTerralystCapInfo);
 
-    const CapInfo &gantulystCapInfo() const;
+    CapInfo &gantulystCapInfo();
     void setGantulystCapInfo(const CapInfo &newGantulystCapInfo);
 
-    const CapInfo &hydrolystCapInfo() const;
+    CapInfo &hydrolystCapInfo();
     void setHydrolystCapInfo(const CapInfo &newHydrolystCapInfo);
 
+    CapInfo &capInfoByIndex(int index);
+
+
+
     void clear();
+
+    AnalysisViewItem *toAnalysisViewItem(int runNo);
+    QString getRunResult();
+
+    int getNumberOfCaps();
+
+
+    float startTimestamp() const;
+    void setStartTimestamp(float newStartTime);
 
 private:
     CapInfo terralystCapInfo_;
     CapInfo gantulystCapInfo_;
     CapInfo hydrolystCapInfo_;
+    float startTimestamp_;
 };
 
 class NightInfo {
@@ -100,12 +147,20 @@ public:
     const QVector<RunInfo> &runs() const;
     void setRuns(const QVector<RunInfo> &newRuns);
     void addRun(RunInfo runInfo);
-    RunInfo run(int index);
+    RunInfo &run(int index);
     void removeRun(int index);
     void clear();
 
+    AnalysisViewItem *toAnalysisViewItem(int nightNo) const;
+    QString getNightResult() const;
+
+
+    float startTimestamp() const;
+    void setStartTimestamp(float newStartTime);
+
 private:
     QVector<RunInfo> runs_;
+    float startTimestamp_;
 };
 
 class HuntInfo
@@ -115,12 +170,16 @@ public:
     const QVector<NightInfo> &nights() const;
     void setNights(const QVector<NightInfo> &newNights);
     void addNight(NightInfo nightInfo);
-    NightInfo night(int index);
+    NightInfo &night(int index);
     void removeNight(int index);
     void clear();
+
+    QVector<AnalysisViewItem *> toAnalysisViewItem() const;
 private:
     QVector<NightInfo> nights_;
 };
+
+#pragma GCC diagnostic pop
 }
 
 #endif // HUNTINFO_H

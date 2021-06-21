@@ -9,8 +9,14 @@ namespace Yate {
 AnalysisViewModel::AnalysisViewModel(HuntInfo *hunt, QObject *parent)
     : QAbstractItemModel(parent), hunt_(hunt)
 {
-    rootItem_ = new AnalysisViewItem({tr("Title"), tr("Summary")});
-    //setupModelData(data.split('\n'), rootItem_);
+    rootItem_ = new AnalysisViewItem({ANALYSIS_STAT_HEADER1, ANALYSIS_STAT_HEADER2});
+    if (hunt) {
+        auto huntNights = hunt->toAnalysisViewItem();
+        for (auto &night : huntNights) {
+            rootItem_->appendChild(night);
+        }
+    }
+
 }
 
 
@@ -68,6 +74,7 @@ QModelIndex AnalysisViewModel::index(int row, int column, const QModelIndex &par
     if (!hasIndex(row, column, parent))
         return QModelIndex();
 
+
     AnalysisViewItem *parentItem;
 
     if (!parent.isValid())
@@ -109,57 +116,6 @@ int AnalysisViewModel::rowCount(const QModelIndex &parent) const
         parentItem = static_cast<AnalysisViewItem*>(parent.internalPointer());
 
     return parentItem->childCount();
-}
-
-
-void AnalysisViewModel::setupModelData(const QStringList &lines, AnalysisViewItem *parent)
-{
-    QVector<AnalysisViewItem*> parents;
-    QVector<int> indentations;
-    parents << parent;
-    indentations << 0;
-
-    int number = 0;
-
-    while (number < lines.count()) {
-        int position = 0;
-        while (position < lines[number].length()) {
-            if (lines[number].at(position) != ' ')
-                break;
-            position++;
-        }
-
-        const QString lineData = lines[number].mid(position).trimmed();
-
-        if (!lineData.isEmpty()) {
-            // Read the column data from the rest of the line.
-            const QStringList columnStrings =
-                lineData.split(QLatin1Char('\t'), Qt::SkipEmptyParts);
-            QVector<QVariant> columnData;
-            columnData.reserve(columnStrings.count());
-            for (const QString &columnString : columnStrings)
-                columnData << columnString;
-
-            if (position > indentations.last()) {
-                // The last child of the current parent is now the new parent
-                // unless the current parent has no children.
-
-                if (parents.last()->childCount() > 0) {
-                    parents << parents.last()->child(parents.last()->childCount()-1);
-                    indentations << position;
-                }
-            } else {
-                while (position < indentations.last() && parents.count() > 0) {
-                    parents.pop_back();
-                    indentations.pop_back();
-                }
-            }
-
-            // Append a new item to the current parent's list of children.
-            parents.last()->appendChild(new AnalysisViewItem(columnData, parents.last()));
-        }
-        ++number;
-    }
 }
 
 }

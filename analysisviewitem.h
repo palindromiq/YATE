@@ -19,6 +19,7 @@ public:
     QVariant data(int column) const;
     int row() const;
     AnalysisViewItem *parentItem();
+    void setParentItem(AnalysisViewItem *parent);
 
 private:
     QVector<AnalysisViewItem*> childItems_;
