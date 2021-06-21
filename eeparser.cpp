@@ -7,6 +7,7 @@
 #include <QFileSystemWatcher>
 #include <QFileInfo>
 #include <QDir>
+#include <QTimer>
 
 namespace Yate {
 
@@ -99,6 +100,7 @@ void EEParser::startOffline()
         for(auto &line: lines) {
              parseLine(line);
         }
+        logFile.close();
     } else {
         emit parsingError(logFile.errorString());
     }
@@ -118,10 +120,13 @@ void EEParser::startLive()
     QString parentPath = QFileInfo(logFile).dir().path();
     parentWatcher_->addPath(parentPath);
     connect(parentWatcher_, &QFileSystemWatcher::directoryChanged,  this, &EEParser::onDirectoryChanged);
+    connect(watcher_, &QFileSystemWatcher::fileChanged, this, &EEParser::onFileChanged);
+    QTimer *tmr = new QTimer(this);
+    tmr->setInterval(1500);
+    connect(tmr, &QTimer::timeout, [&]() {if(QFileInfo::exists(filename())) { QFileInfo(filename()).lastModified();}});
+    tmr->start();
     if(!logFile.exists()) {
         logDoesNotExist_ = true;
-
-        connect(watcher_, &QFileSystemWatcher::fileChanged, this, &EEParser::onFileChanged);
     } else if(logFile.open(QIODevice::ReadOnly)) {
         logDoesNotExist_ = false;
         fileContent =  QString(logFile.readAll());
@@ -130,7 +135,7 @@ void EEParser::startLive()
              parseLine(line);
         }
         setCurrentPosition(fileContent.length());
-        connect(watcher_, &QFileSystemWatcher::fileChanged, this, &EEParser::onFileChanged);
+        logFile.close();
     } else {
         emit parsingError(logFile.errorString());
     }
@@ -196,6 +201,7 @@ void EEParser::onFileChanged(QString path)
         for(auto &line: lines) {
              parseLine(line);
         }
+        logFile.close();
     } else {
         emit parsingError(logFile.errorString());
     }

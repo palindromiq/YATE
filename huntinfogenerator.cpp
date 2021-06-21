@@ -230,8 +230,7 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                 if (typ == LogEventType::LootDrop) {
                     huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setLootDropTimestamp(timestamp);
                     huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setLootDropTime(timestamp - lastEventTime_);
-                    if (huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).eidolon() == Eidolon::Hydrolyst
-                            || state_.stage() == HuntStateStage::Killed) {
+                    if (huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).eidolon() == Eidolon::Hydrolyst) {
                         state_.setStage(HuntStateStage::Initial);
                     } else {
                         state_.setStage(HuntStateStage::LootDropped);
@@ -246,8 +245,12 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
 
                 if (typ == LogEventType::ShrineEnable) {
                     shrineDelay_ = timestamp - lastEventTime_;
+                    if (huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).result() == CapState::Kill) {
+                        state_.setStage(HuntStateStage::Initial);
+                    } else {
+                        state_.setStage(HuntStateStage::ShrineEnabled);
+                    }
 
-                    state_.setStage(HuntStateStage::ShrineEnabled);
                     emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + "Shrine Delay: " + FORMAT_NUMBER(shrineDelay_));
                 }  else {
                     invalid = true;
