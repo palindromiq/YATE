@@ -134,7 +134,9 @@ AnalysisViewItem *NightInfo::toAnalysisViewItem(int nightNo) const
     AnalysisViewItem *nightItem = new AnalysisViewItem({ANALYSIS_STAT_NIGHT_NO + QString::number(nightNo), getNightResult()});
     auto nightRuns = runs();
     for (int i = 0; i < nightRuns.size(); i++) {
-        nightItem->appendChild(nightRuns[i].toAnalysisViewItem(i + 1));
+        if (nightRuns[i].getNumberOfCaps() || nightRuns[i].getNumberOfKills()) {
+            nightItem->appendChild(nightRuns[i].toAnalysisViewItem(i + 1));
+        }
     }
     return nightItem;
 
@@ -251,7 +253,13 @@ AnalysisViewItem *RunInfo::toAnalysisViewItem(int runNo)
 
 QString RunInfo::getRunResult()
 {
-    return "1x" + QString::number(getNumberOfCaps());
+    int caps = getNumberOfCaps();
+    if (caps) {
+        return "1x" + QString::number(getNumberOfCaps());
+    } else {
+        return "0x0";
+    }
+
 }
 
 int RunInfo::getNumberOfCaps()
@@ -264,6 +272,21 @@ int RunInfo::getNumberOfCaps()
         caps++;
     }
     if(hydrolystCapInfo().valid() && hydrolystCapInfo().result() == CapState::Capture) {
+        caps++;
+    }
+    return caps;
+}
+
+int RunInfo::getNumberOfKills()
+{
+    int caps = 0;
+    if(terralystCapInfo().valid() && terralystCapInfo().result() == CapState::Kill) {
+        caps++;
+    }
+    if(gantulystCapInfo().valid() && gantulystCapInfo().result() == CapState::Kill) {
+        caps++;
+    }
+    if(hydrolystCapInfo().valid() && hydrolystCapInfo().result() == CapState::Kill) {
         caps++;
     }
     return caps;

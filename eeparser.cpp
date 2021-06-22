@@ -122,7 +122,7 @@ void EEParser::startLive()
     connect(parentWatcher_, &QFileSystemWatcher::directoryChanged,  this, &EEParser::onDirectoryChanged);
     connect(watcher_, &QFileSystemWatcher::fileChanged, this, &EEParser::onFileChanged);
     QTimer *tmr = new QTimer(this);
-    tmr->setInterval(1500);
+    tmr->setInterval(1000);
     connect(tmr, &QTimer::timeout, [&]() {if(QFileInfo::exists(filename())) { QFileInfo(filename()).lastModified();}});
     tmr->start();
     if(!logFile.exists()) {

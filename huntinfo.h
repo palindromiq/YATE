@@ -129,6 +129,7 @@ public:
     QString getRunResult();
 
     int getNumberOfCaps();
+    int getNumberOfKills();
 
 
     float startTimestamp() const;
