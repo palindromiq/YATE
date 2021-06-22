@@ -74,7 +74,7 @@
       <item>
        <widget class="QLabel" name="lblVersion">
         <property name="text">
-         <string>YATE 0.1-beta</string>
+         <string>YATE 0.2-beta</string>
         </property>
        </widget>
       </item>

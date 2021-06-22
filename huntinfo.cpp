@@ -484,6 +484,8 @@ AnalysisViewItem *CapInfo::toAnalysisViewItem() const
         }
         if (result() != CapState::Spawned) {
             capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_CAPSHOT, FORMAT_NUMBER(capshotTime())}));
+            capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_CAPSHOT_TIME, HuntInfo::timestampToProgressString(capshotProgressTimestamp())}));
+
             capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_LOOT_DROP, FORMAT_NUMBER(lootDropTime())}));
             float limbsAvg = 0;
             for (auto &l: limbBreaks()) {
@@ -492,7 +494,6 @@ AnalysisViewItem *CapInfo::toAnalysisViewItem() const
             limbsAvg = limbsAvg / limbBreaks().size();
             capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_LIMBS_AVERAGE, FORMAT_NUMBER(limbsAvg)}));
             capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_LAST_LIMB, HuntInfo::timestampToProgressString(lastLimbProgressTime())}));
-            capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_CAPSHOT_TIME, HuntInfo::timestampToProgressString(capshotProgressTimestamp())}));
         }
     }
 

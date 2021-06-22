@@ -184,14 +184,14 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                     float limbtime = timestamp - lastEventTime_ - LIMB_BREAK_ANIMATION_TIME;
                     huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).addlimbBreak(limbtime);
                     state_.setLimbNumber(state_.limbNumber() + 1);
-                    emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + HuntInfo::eidolonName(state_.eidolonNumber(), true) + tr(" Limb ") + QString::number(state_.limbNumber() + 1) + ": " + FORMAT_NUMBER(limbtime));
+                    float limbProgressTime = timestamp - huntInfo()->night(currentNightIndex_).run(currentRunIndex_).startTimestamp();
+
+                    emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + HuntInfo::eidolonName(state_.eidolonNumber(), true) + tr(" Limb ")
+                                            + QString::number(state_.limbNumber() + 1) + ": " + FORMAT_NUMBER(limbtime)
+                                            + " [" + HuntInfo::timestampToProgressString(limbProgressTime) + "]");
                     if (state_.limbNumber() == maxLimbs - 1) {
+                        huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setLastLimbProgressTime(limbProgressTime);
                         state_.setStage(HuntStateStage::Healing);
-                        huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setLastLimbProgressTime(timestamp - huntInfo()->night(currentNightIndex_).run(currentRunIndex_).startTimestamp());
-                        emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + HuntInfo::eidolonName(state_.eidolonNumber(), true) + tr(" Limb ")
-                                                + QString::number(state_.limbNumber() + 1) + ": " + FORMAT_NUMBER(limbtime)
-                                                + " [" + HuntInfo::timestampToProgressString(huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).lastLimbProgressTime())
-                                                + "]");
                     }
                 } else {
                     invalid = true;
