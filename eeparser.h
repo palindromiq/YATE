@@ -8,6 +8,7 @@
 class QFileSystemWatcher;
 
 namespace Yate {
+class FileWatcher;
 class EEParser: public QObject
 {
     Q_OBJECT
@@ -25,8 +26,7 @@ public:
     static LogEventType msgToEventType(QString msg, int &val);
 
 private slots:
-    void onFileChanged(QString path);
-    void onDirectoryChanged(QString path);
+    void onFileChanged(bool exist);
 
 public slots:
     void startOffline();
@@ -41,14 +41,16 @@ signals:
     void parsingReset();
     void parsingError(QString);
     void logEvent(LogEvent &e);
+
+    void startWatcher();
+    void stopWatcher();
 private:
     QString filename_;
     bool liveParsing_;
     int currentPosition_;
     int evtId_;
     QRegularExpression lineParseRegex_;
-    QFileSystemWatcher *watcher_;
-    QFileSystemWatcher *parentWatcher_;
+    FileWatcher *watcher_;
     bool logDoesNotExist_;
 };
 }

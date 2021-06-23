@@ -8,6 +8,10 @@
 #include <QFileInfo>
 #include <QDir>
 #include <QTimer>
+#include <QThread>
+
+
+#include "filewatcher.h"
 
 namespace Yate {
 
@@ -82,9 +86,7 @@ void Yate::EEParser::parseLine(QString &line)
 
 void EEParser::stopParsing()
 {
-    if(watcher_) {
-        watcher_->removePath(filename());
-    }
+    emit stopWatcher();
     emit parsingFinished();
 }
 
@@ -109,26 +111,33 @@ void EEParser::startOffline()
 
 }
 
+
 void EEParser::startLive()
 {
     emit parsingStarted();
     QFile logFile(filename());
-    watcher_ = new QFileSystemWatcher(this);
-    parentWatcher_ = new QFileSystemWatcher(this);
-    watcher_->addPath(filename());
-    QString fileContent;
-    QString parentPath = QFileInfo(logFile).dir().path();
-    parentWatcher_->addPath(parentPath);
-    connect(parentWatcher_, &QFileSystemWatcher::directoryChanged,  this, &EEParser::onDirectoryChanged);
-    connect(watcher_, &QFileSystemWatcher::fileChanged, this, &EEParser::onFileChanged);
+    watcher_ = new FileWatcher(nullptr, filename());
+    QThread *watcherThread = new QThread;
+
+    watcher_->moveToThread(watcherThread);
+
+    connect( watcherThread, &QThread::started, watcher_, &FileWatcher::start);
+    connect( this, &EEParser::parsingFinished, watcher_, &FileWatcher::stop, Qt::DirectConnection);
+    connect( watcherThread, &QThread::finished, watcher_, &QThread::deleteLater);
+    connect( watcherThread, &QThread::finished, watcherThread, &QThread::deleteLater);
+
+
+    connect(watcher_, &FileWatcher::fileChanged, this, &EEParser::onFileChanged);
+
     QTimer *tmr = new QTimer(this);
     tmr->setInterval(1000);
     connect(tmr, &QTimer::timeout, [&]() {if(QFileInfo::exists(filename())) { QFileInfo(filename()).lastModified();}});
     tmr->start();
-    if(!logFile.exists()) {
-        logDoesNotExist_ = true;
-    } else if(logFile.open(QIODevice::ReadOnly)) {
-        logDoesNotExist_ = false;
+
+    QString fileContent;
+
+
+    if(logFile.open(QIODevice::ReadOnly)) {
         fileContent =  QString(logFile.readAll());
         auto lines = fileContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
         for(auto &line: lines) {
@@ -139,6 +148,7 @@ void EEParser::startLive()
     } else {
         emit parsingError(logFile.errorString());
     }
+    watcherThread->start();
 
 }
 
@@ -180,51 +190,28 @@ LogEventType EEParser::msgToEventType(QString msg, int &val)
 
 }
 
-void EEParser::onFileChanged(QString path)
+void EEParser::onFileChanged(bool exists)
 {
-    if(!watcher_->files().contains(path)) {
-        if (QFile(path).exists()) {
-            watcher_->addPath(path);
-            setCurrentPosition(0);
+    if (!exists) {
+        setCurrentPosition(0);
+        emit parsingReset();
+    } else {
+        QFile logFile(filename());
+        QString fileContent;
+        if(logFile.open(QIODevice::ReadOnly)) {
+            logFile.seek(currentPosition());
+            fileContent =  QString(logFile.readAll());
+            setCurrentPosition(currentPosition() + fileContent.length());
+            auto lines = fileContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
+            for(auto &line: lines) {
+                parseLine(line);
+            }
+            logFile.close();
         } else {
-            emit parsingError(tr("Log file not found!"));
+            emit parsingError(logFile.errorString());
         }
     }
-    QFile logFile(path);
-    QString fileContent;
 
-    if(logFile.open(QIODevice::ReadOnly)) {
-        logFile.seek(currentPosition());
-        fileContent =  QString(logFile.readAll());
-        setCurrentPosition(currentPosition() + fileContent.length());
-        auto lines = fileContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
-        for(auto &line: lines) {
-             parseLine(line);
-        }
-        logFile.close();
-    } else {
-        emit parsingError(logFile.errorString());
-    }
-
-
-}
-
-void EEParser::onDirectoryChanged(QString)
-{
-    QFile logFile(filename());
-    if (logFile.exists()) {
-        setCurrentPosition(0);
-        emit parsingReset();
-        if (!watcher_->files().contains(filename())) {
-            watcher_->addPath(filename());
-        }
-        onFileChanged(filename());
-        logDoesNotExist_ = false;
-    } else {
-        setCurrentPosition(0);
-        logDoesNotExist_ = true;
-        emit parsingReset();
-    }
 }
 
 }

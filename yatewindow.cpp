@@ -65,7 +65,6 @@ YATEWindow::YATEWindow(QWidget *parent)
     connect(this, &YATEWindow::exitFeebackOverlay, this, &YATEWindow::stopFeedback);
 
     setAcceptDrops(true);
-
 }
 
 

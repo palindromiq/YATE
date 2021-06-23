@@ -13,6 +13,7 @@ SOURCES += \
     analysisviewmodel.cpp \
     analysiswindow.cpp \
     eeparser.cpp \
+    filewatcher.cpp \
     huntinfo.cpp \
     huntinfogenerator.cpp \
     livefeedbackoverlay.cpp \
@@ -26,6 +27,7 @@ HEADERS += \
     analysisviewmodel.h \
     analysiswindow.h \
     eeparser.h \
+    filewatcher.h \
     globals.h \
     huntinfo.h \
     huntinfogenerator.h \
