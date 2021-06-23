@@ -99,8 +99,8 @@ void EEParser::startOffline()
     if(logFile.open(QIODevice::ReadOnly)) {
         fileContent =  QString(logFile.readAll());
         auto lines = fileContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
-        for(auto &line: lines) {
-             parseLine(line);
+        for(int i = 0; i < lines.size(); i++) {
+            parseLine(lines[i]);
         }
         logFile.close();
     } else {
@@ -140,8 +140,8 @@ void EEParser::startLive()
     if(logFile.open(QIODevice::ReadOnly)) {
         fileContent =  QString(logFile.readAll());
         auto lines = fileContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
-        for(auto &line: lines) {
-             parseLine(line);
+        for(int i = 0; i < lines.size(); i++) {
+            parseLine(lines[i]);
         }
         setCurrentPosition(fileContent.length());
         logFile.close();
@@ -201,10 +201,12 @@ void EEParser::onFileChanged(bool exists)
         if(logFile.open(QIODevice::ReadOnly)) {
             logFile.seek(currentPosition());
             fileContent =  QString(logFile.readAll());
-            setCurrentPosition(currentPosition() + fileContent.length());
             auto lines = fileContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
-            for(auto &line: lines) {
-                parseLine(line);
+            for(int i = 0; i < lines.size() - 1; i++) {
+                parseLine(lines[i]);
+            }
+            if (lines.size()) {
+                setCurrentPosition(currentPosition() + fileContent.length() - lines[lines.size() - 1].size());
             }
             logFile.close();
         } else {

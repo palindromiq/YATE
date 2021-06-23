@@ -29,6 +29,8 @@ public slots:
 signals:
     void onDoubleClicked();
 
+protected:
+    void showEvent(QShowEvent *evt);
 
 private:
     Ui::LiveFeedbackOverlay *ui;

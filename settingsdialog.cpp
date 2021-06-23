@@ -32,6 +32,10 @@ void SettingsDialog::reloadSettings()
         QString pth = settings_->value(SETTINGS_KEY_EE_LOG).toString();
         setEEFilePath(pth);
     }
+    if (!settings_->value(SETTINGS_KEY_FEEDBACK_FONT).isNull()) {
+        int font = settings_->value(SETTINGS_KEY_FEEDBACK_FONT).toInt();
+        ui->spnFeedbackFont->setValue(font);
+    }
 }
 
 void SettingsDialog::dragEnterEvent(QDragEnterEvent *e)
@@ -62,8 +66,11 @@ void SettingsDialog::on_btnSave_clicked()
   if(!ui->lblLogFilePath->text().isEmpty()) {
       settings_->setValue(SETTINGS_KEY_EE_LOG, ui->lblLogFilePath->text().trimmed());
       YATEWindow *parentW = dynamic_cast<YATEWindow*>(parentWidget());
-      parentW->setLogFilePath(ui->lblLogFilePath->text().trimmed());
+      if (parentW) {
+        parentW->setLogFilePath(ui->lblLogFilePath->text().trimmed());
+      }
   }
+  settings_->setValue(SETTINGS_KEY_FEEDBACK_FONT, ui->spnFeedbackFont->value());
 }
 
 

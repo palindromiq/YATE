@@ -25,6 +25,18 @@ LiveFeedbackOverlay::LiveFeedbackOverlay(QWidget *parent) :
 
 }
 
+void LiveFeedbackOverlay::showEvent(QShowEvent *evt) {
+    int fontSz = settings_->value(SETTINGS_KEY_FEEDBACK_FONT, SETTINGS_FEEDBACK_FONT_DEFAULT).toInt();
+    int winWidth = 23 * fontSz;
+    int winHeight = 3.5 * fontSz;
+    QFont lblFont = ui->lblFeedback->font();
+    lblFont.setPointSize(fontSz);
+    ui->lblFeedback->setFont(lblFont);
+    resize(winWidth, winHeight);
+    ui->lblFeedback->resize(winWidth, winHeight);
+    QMainWindow::showEvent(evt);
+}
+
 void LiveFeedbackOverlay::mousePressEvent(QMouseEvent *evt)
 {
     oldPos_ = evt->globalPosition();

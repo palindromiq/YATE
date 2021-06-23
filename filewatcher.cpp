@@ -66,7 +66,7 @@ void FileWatcher::start()
         filename[fileBuffer->FileNameLength / 2] = NULL;
 
         bool filter = QString::fromWCharArray(filename) == fileBaseName;
-        qDebug() << QString::fromWCharArray(filename) << filter;
+
         if (filter) {
             if (dirBuffer[0].Action == FILE_ACTION_MODIFIED) {
                 emit fileChanged(true);

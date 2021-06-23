@@ -304,6 +304,9 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
     if (invalid) {
         //qDebug() << "Failed!" << int(typ) << state_.eidolonNumber() << int(state_.stage());
         qDebug () << stateStageName[state_.stage()] << "" << int(typ) << logEvtTypName[typ] << "  " << timestamp;
+        emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] Error: at phase " +
+                                stateStageName[state_.stage()] + " received " + logEvtTypName[typ]);
+
     }
     lastEventTime_ = timestamp;
     lastEvent_ = e;
