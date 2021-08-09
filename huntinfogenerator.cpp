@@ -345,7 +345,11 @@ void HuntInfoGenerator::emitLimbsUpdate()
     int maxLimbs = currentCap.numberOfLimbs();
 
     if(currentCap.waterShield()) {
-         limbBreaks.push_back(FORMAT_NUMBER_PREC(currentCap.waterShield(), limbsSummaryPrec_));
+        float ws = currentCap.waterShield();
+        if (state_.eidolonNumber() != 0) {
+            ws +=   currentCap.spawnDelay();
+        }
+        limbBreaks.push_back(FORMAT_NUMBER_PREC(ws, limbsSummaryPrec_));
     }
     for(auto &brk: currentCap.limbBreaks()) {
         limbBreaks.push_back(FORMAT_NUMBER_PREC(brk, limbsSummaryPrec_));
