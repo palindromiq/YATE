@@ -43,15 +43,15 @@ void HuntInfo::clear()
 QString HuntInfo::eidolonName(Eidolon eido, bool abbreviate)
 {
     if (!abbreviate) {
-        if (eido == Eidolon::Terralyst) {
-            return ANALYSIS_STAT_TERRALYST;
+        if (eido == Eidolon::Teralyst) {
+            return ANALYSIS_STAT_TERALYST;
         } else if (eido == Eidolon::Gantulyst) {
             return ANALYSIS_STAT_GANTULYST;
         } else if (eido == Eidolon::Hydrolyst) {
            return ANALYSIS_STAT_HYDROLYST;
         }
     } else {
-        if (eido == Eidolon::Terralyst) {
+        if (eido == Eidolon::Teralyst) {
             return ANALYSIS_STAT_TERRY;
         } else if (eido == Eidolon::Gantulyst) {
             return ANALYSIS_STAT_GARRY;
@@ -65,7 +65,7 @@ QString HuntInfo::eidolonName(Eidolon eido, bool abbreviate)
 QString HuntInfo::eidolonName(int eido, bool abbreviate)
 {
     if (eido == 0) {
-        return HuntInfo::eidolonName(Eidolon::Terralyst, abbreviate);
+        return HuntInfo::eidolonName(Eidolon::Teralyst, abbreviate);
     } else if (eido == 1) {
         return HuntInfo::eidolonName(Eidolon::Gantulyst, abbreviate);
     } else if (eido == 2) {
@@ -220,14 +220,14 @@ RunInfo::RunInfo()
 
 }
 
-CapInfo &RunInfo::terralystCapInfo()
+CapInfo &RunInfo::teralystCapInfo()
 {
-    return terralystCapInfo_;
+    return teralystCapInfo_;
 }
 
-void RunInfo::setTerralystCapInfo(const CapInfo &newTerralystCapInfo)
+void RunInfo::setTeralystCapInfo(const CapInfo &newTeralystCapInfo)
 {
-    terralystCapInfo_ = newTerralystCapInfo;
+    teralystCapInfo_ = newTeralystCapInfo;
 }
 
 CapInfo &RunInfo::gantulystCapInfo()
@@ -257,14 +257,14 @@ CapInfo &RunInfo::capInfoByIndex(int index)
     } else if (index == 2) {
         return hydrolystCapInfo();
     } else {
-        return terralystCapInfo();
+        return teralystCapInfo();
     }
 }
 
 void RunInfo::clear()
 {
     CapInfo emptyCap;
-    setTerralystCapInfo(emptyCap);
+    setTeralystCapInfo(emptyCap);
     setGantulystCapInfo(emptyCap);
     setHydrolystCapInfo(emptyCap);
 }
@@ -276,8 +276,8 @@ AnalysisViewItem *RunInfo::toAnalysisViewItem(int runNo)
         runRes = runRes + " (" + HuntInfo::timestampToProgressString(hydrolystCapInfo().lastLimbProgressTime()) + ")";
     }
     AnalysisViewItem *runItem = new AnalysisViewItem({ANALYSIS_STAT_RUN_NO + QString::number(runNo), runRes});
-    if(terralystCapInfo().valid()) {
-        runItem->appendChild(terralystCapInfo().toAnalysisViewItem());
+    if(teralystCapInfo().valid()) {
+        runItem->appendChild(teralystCapInfo().toAnalysisViewItem());
     }
     if(gantulystCapInfo().valid()) {
         runItem->appendChild(gantulystCapInfo().toAnalysisViewItem());
@@ -302,7 +302,7 @@ QString RunInfo::getRunResult()
 int RunInfo::getNumberOfCaps()
 {
     int caps = 0;
-    if(terralystCapInfo().valid() && terralystCapInfo().result() == CapState::Capture) {
+    if(teralystCapInfo().valid() && teralystCapInfo().result() == CapState::Capture) {
         caps++;
     }
     if(gantulystCapInfo().valid() && gantulystCapInfo().result() == CapState::Capture) {
@@ -317,7 +317,7 @@ int RunInfo::getNumberOfCaps()
 int RunInfo::getNumberOfKills()
 {
     int caps = 0;
-    if(terralystCapInfo().valid() && terralystCapInfo().result() == CapState::Kill) {
+    if(teralystCapInfo().valid() && teralystCapInfo().result() == CapState::Kill) {
         caps++;
     }
     if(gantulystCapInfo().valid() && gantulystCapInfo().result() == CapState::Kill) {
@@ -483,7 +483,7 @@ Eidolon CapInfo::eidolon() const
 void CapInfo::setEidolon(Eidolon newEidolon)
 {
     eidolon_ = newEidolon;
-    if (eidolon_ == Eidolon::Terralyst) {
+    if (eidolon_ == Eidolon::Teralyst) {
         setNumberOfLimbs(4);
     } else {
         setNumberOfLimbs(6);
@@ -493,8 +493,8 @@ void CapInfo::setEidolon(Eidolon newEidolon)
 AnalysisViewItem *CapInfo::toAnalysisViewItem() const
 {
     QString eidolonName = "N/A";
-    if (eidolon() == Eidolon::Terralyst) {
-        eidolonName = ANALYSIS_STAT_TERRALYST;
+    if (eidolon() == Eidolon::Teralyst) {
+        eidolonName = ANALYSIS_STAT_TERALYST;
     } else if (eidolon() == Eidolon::Gantulyst) {
          eidolonName = ANALYSIS_STAT_GANTULYST;
     } else if (eidolon() == Eidolon::Hydrolyst) {
@@ -530,7 +530,7 @@ AnalysisViewItem *CapInfo::toAnalysisViewItem() const
                 capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_BETWEEN_SHARDS, shardTimeStr}));
             }
             capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_SPAWN_DELAY, FORMAT_NUMBER(spawnDelay())}));
-            if(eidolon() != Eidolon::Terralyst) {
+            if(eidolon() != Eidolon::Teralyst) {
                 ws = ws + " (+";
                 ws = ws + FORMAT_NUMBER(spawnDelay());
                 ws = ws + " = ";

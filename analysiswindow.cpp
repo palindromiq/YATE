@@ -42,7 +42,7 @@ HuntInfo *AnalysisWindow::createDummyHunt()
     NightInfo night1;
     RunInfo night1Run1;
     CapInfo night1Run1TerryCap;
-    night1Run1TerryCap.setEidolon(Eidolon::Terralyst);
+    night1Run1TerryCap.setEidolon(Eidolon::Teralyst);
     night1Run1TerryCap.setCapshotTime(0.123);
     night1Run1TerryCap.setResult(CapState::Capture);
     night1Run1TerryCap.setShrineActivationTime(11.0);
@@ -64,7 +64,7 @@ HuntInfo *AnalysisWindow::createDummyHunt()
     CapInfo night1Run1HarryCap(night1Run1GarryCap);
     night1Run1HarryCap.setEidolon(Eidolon::Hydrolyst);
 
-    night1Run1.setTerralystCapInfo(night1Run1TerryCap);
+    night1Run1.setTeralystCapInfo(night1Run1TerryCap);
     night1Run1.setGantulystCapInfo(night1Run1GarryCap);
     night1Run1.setHydrolystCapInfo(night1Run1HarryCap);
 

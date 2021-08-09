@@ -8,7 +8,7 @@ namespace Yate {
 
 enum class LogEventType {
     NightBegin,
-    TerralystSpawn,
+    TeralystSpawn,
     DayBegin,
     LimbBreak,
     EidolonCapture,

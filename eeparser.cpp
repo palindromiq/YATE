@@ -85,7 +85,7 @@ void Yate::EEParser::parseLine(QString &line)
         if (evtType != LogEventType::Invalid) {
 
             if (hostJustUnloaded_) {
-                if (evtType != LogEventType::TerralystSpawn && evtType != LogEventType::NightBegin) {
+                if (evtType != LogEventType::TeralystSpawn && evtType != LogEventType::NightBegin) {
                     return;
                 }
             }
@@ -180,7 +180,7 @@ LogEventType EEParser::msgToEventType(QString msg, int &val)
         {"SnapPickupToGround.lua: Snapping pickup to ground (DefaultArcanePickup)", LogEventType::LootDrop},
         {"TeralystEncounter.lua: Shrine enabled", LogEventType::ShrineEnable},
 //        {"TeralystEncounter.lua: Shrine disabled", LogEventType::ShrineDisable},
-        {"EidolonMP.lua: EIDOLONMP: Finalize Eidolon transition", LogEventType::TerralystSpawn},
+        {"EidolonMP.lua: EIDOLONMP: Finalize Eidolon transition", LogEventType::TeralystSpawn},
         {"TeralystEncounter.lua:      Eidolon spawning SUCCESS", LogEventType::EidolonSpawn},
         {"EidolonMP.lua: EIDOLONMP: Level fully destroyed", LogEventType::HostUnload},
         {"TeralystEncounter.lua: Teralyst Escape complete. All Teralysts should be gone now", LogEventType::EidolonDespawn}

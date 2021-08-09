@@ -51,7 +51,7 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
     QMap<LogEventType, QString> logEvtTypName{
             {LogEventType::NightBegin, "NightBegin"},
             {LogEventType::DayBegin, "DayBegin"},
-            {LogEventType::TerralystSpawn, "TerralystSpawn"},
+            {LogEventType::TeralystSpawn, "TeralystSpawn"},
             {LogEventType::LimbBreak, "LimbBreak"},
             {LogEventType::EidolonCapture, "EidolonCapture"},
             {LogEventType::EidolonKill, "EidolonKill"},
@@ -95,7 +95,7 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
             currentCapIndex_ = 0;
 
             huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setValid(true);
-            huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setEidolon(Eidolon::Terralyst);
+            huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setEidolon(Eidolon::Teralyst);
             huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setSpawnDelay(0.0);
             huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setResult(CapState::Spawned);
             huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setSpawnTimestamp(timestamp);
@@ -137,7 +137,7 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
     } else {
         switch (state_.stage()) {
             case HuntStateStage::Initial: {
-                if (typ == LogEventType::TerralystSpawn) {
+                if (typ == LogEventType::TeralystSpawn) {
                     if (currentNightIndex_ == -1 || nightEnded_) {
                         currentNightIndex_++;
                         huntInfo()->addNight(NightInfo());
@@ -154,7 +154,7 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
 
 
                     huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setValid(true);
-                    huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setEidolon(Eidolon::Terralyst);
+                    huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setEidolon(Eidolon::Teralyst);
                     huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setSpawnDelay(0.0);
                     huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setResult(CapState::Spawned);
                     huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setSpawnTimestamp(timestamp);

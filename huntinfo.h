@@ -17,7 +17,7 @@ enum class CapState {
 };
 
 enum class Eidolon {
-    Terralyst,
+    Teralyst,
     Gantulyst,
     Hydrolyst
 };
@@ -110,8 +110,8 @@ private:
 class RunInfo {
 public:
     RunInfo();
-    CapInfo &terralystCapInfo();
-    void setTerralystCapInfo(const CapInfo &newTerralystCapInfo);
+    CapInfo &teralystCapInfo();
+    void setTeralystCapInfo(const CapInfo &newTeralystCapInfo);
 
     CapInfo &gantulystCapInfo();
     void setGantulystCapInfo(const CapInfo &newGantulystCapInfo);
@@ -136,7 +136,7 @@ public:
     void setStartTimestamp(float newStartTime);
 
 private:
-    CapInfo terralystCapInfo_;
+    CapInfo teralystCapInfo_;
     CapInfo gantulystCapInfo_;
     CapInfo hydrolystCapInfo_;
     float startTimestamp_;
