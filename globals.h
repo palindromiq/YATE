@@ -40,7 +40,7 @@ QT_END_NAMESPACE
 #define ANALYSIS_STAT_NIGHT_NO QObject::tr("Night #")
 #define ANALYSIS_STAT_RUNS QObject::tr("Runs")
 #define ANALYSIS_STAT_RUN_NO QObject::tr("Run #")
-#define ANALYSIS_STAT_TERRALYST QObject::tr("Terralyst")
+#define ANALYSIS_STAT_TERRALYST QObject::tr("Teralyst")
 #define ANALYSIS_STAT_GANTULYST QObject::tr("Gantulyst")
 #define ANALYSIS_STAT_HYDROLYST QObject::tr("Hydrolyst")
 #define ANALYSIS_STAT_TERRY QObject::tr("Terry")
