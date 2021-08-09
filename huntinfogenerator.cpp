@@ -79,6 +79,8 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
     float timestamp = e.timestamp();
     bool invalid = false;
 
+
+
     if (typ == LogEventType::NightBegin) {
         if (currentNightIndex_ == -1) {
             currentNightIndex_++;
@@ -300,7 +302,7 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                     state_.setStage(HuntStateStage::Spawned);
                     state_.setEidolonNumber(state_.eidolonNumber() + 1);
                     emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + HuntInfo::eidolonName(state_.eidolonNumber()) + tr(" spawned"));
-
+                    emit onLimbsChanged("");
                 } else {
                     invalid = true;
                 }

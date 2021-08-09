@@ -67,6 +67,7 @@ void Yate::EEParser::parseLine(QString &line)
     if (!line.length()) {
         return;
     }
+
     auto it = lineParseRegex_.globalMatch(line);
     bool matched = false;
     float timestamp;
@@ -84,7 +85,7 @@ void Yate::EEParser::parseLine(QString &line)
         if (evtType != LogEventType::Invalid) {
 
             if (hostJustUnloaded_) {
-                if (evtType != LogEventType::TerralystSpawn) {
+                if (evtType != LogEventType::TerralystSpawn && evtType != LogEventType::NightBegin) {
                     return;
                 }
             }
@@ -155,6 +156,7 @@ void EEParser::startLive()
     if(logFile.open(QIODevice::ReadOnly)) {
         fileContent =  QString(logFile.readAll());
         auto lines = fileContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
+
         for(int i = 0; i < lines.size(); i++) {
             parseLine(lines[i]);
         }
