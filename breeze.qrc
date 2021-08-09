@@ -86,5 +86,6 @@
         <file>light.qss</file>
         <file>dark.qss</file>
         <file>yate.ico</file>
+        <file>lock.png</file>
     </qresource>
 </RCC>

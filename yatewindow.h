@@ -33,6 +33,13 @@ public:
     YATEWindow(QWidget *parent = nullptr);
     ~YATEWindow();
 
+    bool isLogManuallySet() const;
+    void setIsLogManuallySet(bool newIsLogManuallySet);
+    void showLiveFeedback(bool lock);
+
+protected:
+    void changeEvent(QEvent* e);
+
 private slots:
     void on_btnSettings_clicked();
 
@@ -58,6 +65,8 @@ private slots:
     void onParserFinished();
     void onParserError(QString);
 
+    void lockFeedbackWindow();
+
 public slots:
     void setLogFilePath(QString path);
 
@@ -67,9 +76,9 @@ signals:
 private:
     void createTrayIcon();
 
+
     Ui::YATEWindow *ui;
     QFile eeLogFile_;
-    bool eeLogFileManuallySet_;
     SettingsDialog *settingsDialog_;
     LiveFeedbackOverlay *feedbackOverlay_;
     AnalysisWindow *analysisWindow_;
@@ -79,6 +88,8 @@ private:
     QAction *trayQuit_;
     EEParser *parser_;
     HuntInfoGenerator *huntInfoGenerator_;
+    bool isLogManuallySet_;
+    bool isLiveFeedbackRunning_;
 
 
 };

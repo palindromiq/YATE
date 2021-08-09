@@ -24,12 +24,13 @@ namespace Yate {
 YATEWindow::YATEWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::YATEWindow),
-      eeLogFileManuallySet_(false),
       settingsDialog_(new SettingsDialog(this)),
-      feedbackOverlay_(new LiveFeedbackOverlay(this)),
+      feedbackOverlay_(nullptr),
       analysisWindow_(new AnalysisWindow(this)),
       parser_(nullptr),
-      huntInfoGenerator_(nullptr)
+      huntInfoGenerator_(nullptr),
+      isLogManuallySet_(false),
+      isLiveFeedbackRunning_(false)
 
 {
     ui->setupUi(this);
@@ -48,8 +49,8 @@ YATEWindow::YATEWindow(QWidget *parent)
         eeLogFile_.setFileName(QDir(appDataPath).filePath(PATH_EE_LOG_RELATIVE));
     } else {
         eeLogFile_.setFileName(settings.value(SETTINGS_KEY_EE_LOG).toString());
-        eeLogFileManuallySet_ = true;
     }
+
     QString eePath(QFileInfo(eeLogFile_).filePath());
 
     ui->lblLogFilePath->setText(eePath);
@@ -81,6 +82,7 @@ void YATEWindow::dropEvent(QDropEvent *e)
         QString fileName = url.toLocalFile();
         ui->lblLogFilePath->setText(fileName);
         eeLogFile_.setFileName(fileName);
+        isLogManuallySet_ = true;
         break;
     }
 }
@@ -104,6 +106,7 @@ void YATEWindow::on_btnEditLogPath_clicked()
     if(newPath.length()) {
         ui->lblLogFilePath->setText(newPath);
         eeLogFile_.setFileName(newPath);
+        isLogManuallySet_ = true;
     }
 }
 
@@ -148,8 +151,9 @@ void YATEWindow::on_btnShrineWater_clicked()
 }
 
 
-void YATEWindow::on_btnLiveFeedback_clicked()
+void Yate::YATEWindow::showLiveFeedback(bool lock)
 {
+    feedbackOverlay_ = new LiveFeedbackOverlay(nullptr, lock);
     trayStopFeedback_->setVisible(true);
     parser_ = new EEParser(eeLogFile_.fileName(), false);
     huntInfoGenerator_ = new HuntInfoGenerator;
@@ -167,29 +171,55 @@ void YATEWindow::on_btnLiveFeedback_clicked()
     connect(parser_, &EEParser::parsingFinished, parser_, &EEParser::deleteLater);
     connect(parser_, &EEParser::parsingFinished, huntInfoGenerator_, &HuntInfoGenerator::deleteLater);
     connect(huntInfoGenerator_, &HuntInfoGenerator::onHuntStateChanged, feedbackOverlay_, &LiveFeedbackOverlay::onUpdateMessage);
+    connect(huntInfoGenerator_, &HuntInfoGenerator::onLimbsChanged, feedbackOverlay_, &LiveFeedbackOverlay::onUpdateLimbs);
     connect(parserThread, &QThread::finished, parserThread, &QThread::deleteLater);
     connect(this, &YATEWindow::exitFeebackOverlay, parser_, &EEParser::stopParsing);
     connect(feedbackOverlay_, &LiveFeedbackOverlay::onDoubleClicked, parser_, &EEParser::stopParsing);
     connect(feedbackOverlay_, &LiveFeedbackOverlay::onDoubleClicked, this, &YATEWindow::stopFeedback);
+    connect(feedbackOverlay_, &LiveFeedbackOverlay::onLockWindow, this, &YATEWindow::lockFeedbackWindow);
 
     parserThread->start();
+    isLiveFeedbackRunning_ = true;
 
-    feedbackOverlay_->show();
+    feedbackOverlay_->onUpdateMessage(LIVE_FEEDBACK_DEFAULT_MSG);
+
+    feedbackOverlay_->showNormal();
     trayIcon_->show();
-    hide();
+    showMinimized();
+}
+
+void YATEWindow::on_btnLiveFeedback_clicked()
+{
+    showLiveFeedback(false);
+
 }
 
 void YATEWindow::showWindow()
 {
     show();
 }
+void YATEWindow::changeEvent(QEvent* e)
+{
+    if( e->type() == QEvent::WindowStateChange )
+    {
+        QWindowStateChangeEvent* event = static_cast<QWindowStateChangeEvent*>(e);
+
+        if( event->oldState() & Qt::WindowMinimized )
+        {
+            if(isLiveFeedbackRunning_) {
+                stopFeedback();
+            }
+        }
+    }
+}
 
 void YATEWindow::stopFeedback()
 {
     trayStopFeedback_->setVisible(false);
-    feedbackOverlay_->hide();
+    feedbackOverlay_->close();
     trayIcon_->hide();
-    show();
+    isLiveFeedbackRunning_ = false;
+    showNormal();
 }
 
 void YATEWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
@@ -246,10 +276,17 @@ void YATEWindow::onParserError(QString err)
     enableUI();
 }
 
+void YATEWindow::lockFeedbackWindow()
+{
+    feedbackOverlay_->close();
+    showLiveFeedback(true);
+}
+
 void YATEWindow::setLogFilePath(QString path)
 {
     ui->lblLogFilePath->setText(path);
     eeLogFile_.setFileName(path);
+    isLogManuallySet_ = true;
 }
 
 void YATEWindow::createTrayIcon()
@@ -269,6 +306,16 @@ void YATEWindow::createTrayIcon()
     trayIcon_->setContextMenu(menu);
 
     connect(trayIcon_, &QSystemTrayIcon::activated, this, &YATEWindow::iconActivated);
+}
+
+bool YATEWindow::isLogManuallySet() const
+{
+    return isLogManuallySet_;
+}
+
+void YATEWindow::setIsLogManuallySet(bool newIsLogManuallySet)
+{
+    isLogManuallySet_ = newIsLogManuallySet;
 }
 
 }

@@ -16,7 +16,10 @@
 namespace Yate {
 
 EEParser::EEParser(QString logFilename, bool isLive, QObject *parent):
-    QObject(parent), filename_(logFilename), liveParsing_(isLive), currentPosition_(0), evtId_(0), lineParseRegex_("(\\d+\\.\\d+)\\s+(\\w+)\\s+\\[(\\w+)\\]\\s*\\:\\s*(.*)"), logDoesNotExist_(true)
+    QObject(parent), filename_(logFilename), liveParsing_(isLive),
+    currentPosition_(0), evtId_(0),
+    lineParseRegex_("(\\d+\\.\\d+)\\s+(\\w+)\\s+\\[(\\w+)\\]\\s*\\:\\s*(.*)"),
+    logDoesNotExist_(true), hostJustUnloaded_(true)
 {
 
 }
@@ -55,6 +58,7 @@ void EEParser::reset()
 {
     setCurrentPosition(0);
     evtId_ = 0;
+    hostJustUnloaded_ = true;
 }
 
 void Yate::EEParser::parseLine(QString &line)
@@ -78,7 +82,18 @@ void Yate::EEParser::parseLine(QString &line)
         int val;
         auto evtType = EEParser::msgToEventType(msgText, val);
         if (evtType != LogEventType::Invalid) {
+
+            if (hostJustUnloaded_) {
+                if (evtType != LogEventType::TerralystSpawn) {
+                    return;
+                }
+            }
             LogEvent evt(evtId_++, evtType, timestamp, val);
+            if (evtType == LogEventType::HostUnload) {
+                hostJustUnloaded_ = true;
+            } else {
+                hostJustUnloaded_ = false;
+            }
             emit logEvent(evt);
         }
     }

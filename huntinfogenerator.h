@@ -4,6 +4,7 @@
 #include <QObject>
 #include "logevent.h"
 
+class QSettings;
 
 namespace Yate  {
 class HuntInfo;
@@ -63,6 +64,7 @@ public:
 
     float getLastEventTime() const;
     void setLastEventTime(float newLastEventTime);
+    void emitLimbsUpdate();
 
 public slots:
     void onLogEvent(LogEvent &e);
@@ -70,9 +72,11 @@ public slots:
 
 signals:
     void onHuntStateChanged(QString);
+    void onLimbsChanged(QString);
 
 private:
     HuntInfo* huntInfo_;
+    QSettings *settings_;
     HuntState state_;
     float lastEventTime_;
     float firstSetStartTime_;
@@ -82,6 +86,9 @@ private:
     int currentNightIndex_;
     bool nightEnded_;
     float shrineDelay_;
+    bool showLimbsSummary_;
+    bool showLimbsSummaryAfterLast_;
+    int limbsSummaryPrec_;
 };
 }
 

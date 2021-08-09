@@ -8,32 +8,69 @@
 #include "globals.h"
 
 namespace Yate {
-LiveFeedbackOverlay::LiveFeedbackOverlay(QWidget *parent) :
+LiveFeedbackOverlay::LiveFeedbackOverlay(QWidget *parent, bool locked) :
     QMainWindow(parent),
-    ui(new Ui::LiveFeedbackOverlay), isMoving_(false),settings_(new QSettings(this))
+    ui(new Ui::LiveFeedbackOverlay), isMoving_(false),settings_(new QSettings(this)), isLocked_(false)
 {
     ui->setupUi(this);
     setStyleSheet("background:transparent");
-    ui->lblFeedback->setStyleSheet("background:rgba(0,0,0,0.7)");
+    ui->lblFeedback->setStyleSheet("background:rgba(0,0,0,0.7); font-weight: 500;");
+    ui->lblLimbs->setStyleSheet("background:rgba(0,0,0,0.7)");
+    ui->btnLockFeedback->setVisible(settings_->value(SETTINGS_KEY_LOCK_FEEDBACK_BTN, true).toBool());
+
+
     setAttribute(Qt::WA_TranslucentBackground);
-    setWindowFlags(windowFlags() | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+    setAttribute(Qt::WA_DeleteOnClose);
+    setAttribute(Qt::WA_ShowWithoutActivating);
+    setFocusPolicy(Qt::NoFocus);
+    if (locked) {
+        ui->btnLockFeedback->setVisible(false);
+        setAttribute(Qt::WA_TransparentForMouseEvents);
+    }
+
+    setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::SubWindow);
     if(!settings_->value(SETTINGS_KEY_FEEDBACK_POS_X).isNull()) {
         int xpos = settings_->value(SETTINGS_KEY_FEEDBACK_POS_X).toInt();
         int ypos = settings_->value(SETTINGS_KEY_FEEDBACK_POS_Y).toInt();
         move(xpos, ypos);
     }
 
+    ui->lblFeedback->setMouseTracking(true);
+    ui->lblFeedback->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->lblLimbs->setMouseTracking(true);
+    ui->lblLimbs->setAttribute(Qt::WA_TransparentForMouseEvents);
+}
+
+void Yate::LiveFeedbackOverlay::refreshSize()
+{
+    int fontSz = settings_->value(SETTINGS_KEY_FEEDBACK_FONT, SETTINGS_FEEDBACK_FONT_DEFAULT).toInt();
+    bool showLimbs = settings_->value(SETTINGS_KEY_SHOW_LIMBS, "true") == "true";
+    bool showLimbsLabel = showLimbs && ui->lblLimbs->text().trimmed() != "";
+    if (showLimbsLabel) {
+        ui->lblLimbs->show();
+    } else {
+        ui->lblLimbs->hide();
+    }
+
+    QFont lblFont = ui->lblFeedback->font();
+    QFont lblLimbsFont = ui->lblFeedback->font();
+    lblFont.setPointSize(fontSz);
+    lblLimbsFont.setPointSize(fontSz);
+    ui->lblFeedback->setFont(lblFont);
+    ui->lblLimbs->setFont(lblLimbsFont);
+
+    ui->btnLockFeedback->setSizePolicy (ui->btnLockFeedback->sizePolicy().horizontalPolicy(), QSizePolicy::Ignored);
+    float h = ui->lblFeedback->height();
+    if (ui->lblLimbs->isVisible()) {
+        h += ui->lblLimbs->height();
+    }
+    ui->btnLockFeedback->setFixedHeight(h);
+    return;
+
 }
 
 void LiveFeedbackOverlay::showEvent(QShowEvent *evt) {
-    int fontSz = settings_->value(SETTINGS_KEY_FEEDBACK_FONT, SETTINGS_FEEDBACK_FONT_DEFAULT).toInt();
-    int winWidth = 23 * fontSz;
-    int winHeight = 3.5 * fontSz;
-    QFont lblFont = ui->lblFeedback->font();
-    lblFont.setPointSize(fontSz);
-    ui->lblFeedback->setFont(lblFont);
-    resize(winWidth, winHeight);
-    ui->lblFeedback->resize(winWidth, winHeight);
+    refreshSize();
     QMainWindow::showEvent(evt);
 }
 
@@ -41,6 +78,7 @@ void LiveFeedbackOverlay::mousePressEvent(QMouseEvent *evt)
 {
     oldPos_ = evt->globalPosition();
     isMoving_ = true;
+    QMainWindow::mousePressEvent(evt);
 }
 
 void LiveFeedbackOverlay::mouseDoubleClickEvent(QMouseEvent *evt) {
@@ -52,14 +90,25 @@ void LiveFeedbackOverlay::mouseReleaseEvent(QMouseEvent *evt)
 {
     oldPos_ = evt->globalPosition();
     isMoving_ = false;
+    QMainWindow::mouseReleaseEvent(evt);
 }
 
 void LiveFeedbackOverlay::onUpdateMessage(QString msg)
 {
-//    ui->lblFeedback->setText(QString("[") + QDateTime::currentDateTime().toString("HH:mm:ss") + "] " + msg);
-    ui->lblFeedback->setText(" " + msg);
+    ui->lblFeedback->setText("" + msg);
+    refreshSize();
 }
 
+void LiveFeedbackOverlay::onUpdateLimbs(QString msg)
+{
+    if (msg.trimmed() == "") {
+        ui->lblLimbs->hide();
+    } else {
+        ui->lblLimbs->show();
+    }
+    ui->lblLimbs->setText("" + msg + " ");
+    refreshSize();
+}
 void LiveFeedbackOverlay::mouseMoveEvent(QMouseEvent *evt)
 {
     if(isMoving_) {
@@ -70,10 +119,20 @@ void LiveFeedbackOverlay::mouseMoveEvent(QMouseEvent *evt)
         settings_->setValue(SETTINGS_KEY_FEEDBACK_POS_X, newPos.x());
         settings_->setValue(SETTINGS_KEY_FEEDBACK_POS_Y, newPos.y());
     }
+    QMainWindow::mouseMoveEvent(evt);
 }
 
 LiveFeedbackOverlay::~LiveFeedbackOverlay()
 {
     delete ui;
 }
+
+
+void LiveFeedbackOverlay::on_btnLockFeedback_clicked()
+{
+  if(!isLocked_) {
+    emit onLockWindow();
+  }
+}
+
 }

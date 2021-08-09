@@ -18,12 +18,23 @@ QT_END_NAMESPACE
 #define SETTINGS_KEY_FEEDBACK_POS_X "feedback_xpos"
 #define SETTINGS_KEY_FEEDBACK_POS_Y "feedback_ypos"
 #define SETTINGS_KEY_FEEDBACK_FONT "feedback_font"
+#define SETTINGS_KEY_SHOW_LIMBS "show_limbs"
+#define SETTINGS_KEY_SHOW_LIMBS_AFTER_LAST "show_limbs_after_last"
 #define SETTINGS_FEEDBACK_FONT_DEFAULT 10
+#define SETTINGS_KEY_LIMBS_PREC "limbs_precision"
+#define SETTINGS_LIMBS_PREC_DEFAULT 3
+#define SETTINGS_KEY_LOCK_FEEDBACK_BTN "lock_feedback_btn"
+
+#define EMOJI_LOCKED "🔒"
+#define EMOJI_UNLOCKED "🔓︎"
+
 
 #define LIMB_BREAK_ANIMATION_TIME 17.186
 #define CAPSHOT_ANIMATION_TIME 48.109
 #define MAX_NIGHT_DURATION 4800.0
 #define FIRST_SET_NIGHT_START_THRESHOLD 6.0
+
+#define LIVE_FEEDBACK_DEFAULT_MSG QObject::tr(" [Live Feedback will show here]")
 
 #define ANALYSIS_STAT_NIGHTS QObject::tr("Nights")
 #define ANALYSIS_STAT_NIGHT_NO QObject::tr("Night #")
@@ -54,10 +65,12 @@ QT_END_NAMESPACE
 #define ANALYSIS_STAT_RESULT QObject::tr("Result")
 #define ANALYSIS_STAT_HEADER1 QObject::tr("Attribute")
 #define ANALYSIS_STAT_HEADER2 QObject::tr("Value")
+#define ANALYSIS_STAT_LIMBS QObject::tr("Limbs: ")
 
 #define THREADED_PARSING
 
 #define FORMAT_NUMBER(x) QString::number(x, 'f', 3)
+#define FORMAT_NUMBER_PREC(x, y) QString::number(x, 'f', y)
 
 
 

@@ -154,6 +154,8 @@ public:
 
     AnalysisViewItem *toAnalysisViewItem(int nightNo) const;
     QString getNightResult() const;
+    QString getAverage() const;
+    int getNumberOfHydrolysts() const;
 
 
     float startTimestamp() const;

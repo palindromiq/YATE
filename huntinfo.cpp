@@ -131,7 +131,11 @@ void NightInfo::clear()
 
 AnalysisViewItem *NightInfo::toAnalysisViewItem(int nightNo) const
 {
-    AnalysisViewItem *nightItem = new AnalysisViewItem({ANALYSIS_STAT_NIGHT_NO + QString::number(nightNo), getNightResult()});
+    QString nightRes = getNightResult();
+    if (getNumberOfHydrolysts()) {
+        nightRes = nightRes + " (Average: " + getAverage() + ")";
+    }
+    AnalysisViewItem *nightItem = new AnalysisViewItem({ANALYSIS_STAT_NIGHT_NO + QString::number(nightNo), nightRes});
     auto nightRuns = runs();
     for (int i = 0; i < nightRuns.size(); i++) {
         if (nightRuns[i].getNumberOfCaps() || nightRuns[i].getNumberOfKills()) {
@@ -170,6 +174,35 @@ QString NightInfo::getNightResult() const
     }
 
     return results.join("+");
+}
+
+QString NightInfo::getAverage() const
+{
+    int count = 0;
+    float total = 0;
+    auto nightRuns = runs();
+    for (auto &r: nightRuns) {
+        int numCaps = r.getNumberOfCaps();
+        if (numCaps == 3) {
+            count++;
+            total += r.hydrolystCapInfo().lastLimbProgressTime();
+        }
+    }
+    return HuntInfo::timestampToProgressString(total*1.0/count);
+
+}
+
+int NightInfo::getNumberOfHydrolysts() const
+{
+    int x3s = 0;
+    auto nightRuns = runs();
+    for (auto &r: nightRuns) {
+        int numCaps = r.getNumberOfCaps();
+        if (numCaps == 3) {
+            x3s++;
+        }
+    }
+    return x3s;
 }
 
 float NightInfo::startTimestamp() const
@@ -238,7 +271,11 @@ void RunInfo::clear()
 
 AnalysisViewItem *RunInfo::toAnalysisViewItem(int runNo)
 {
-    AnalysisViewItem *runItem = new AnalysisViewItem({ANALYSIS_STAT_RUN_NO + QString::number(runNo), getRunResult()});
+    QString runRes = getRunResult();
+    if(getNumberOfCaps() == 3) {
+        runRes = runRes + " (" + HuntInfo::timestampToProgressString(hydrolystCapInfo().lastLimbProgressTime()) + ")";
+    }
+    AnalysisViewItem *runItem = new AnalysisViewItem({ANALYSIS_STAT_RUN_NO + QString::number(runNo), runRes});
     if(terralystCapInfo().valid()) {
         runItem->appendChild(terralystCapInfo().toAnalysisViewItem());
     }

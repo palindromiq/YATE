@@ -36,6 +36,18 @@ void SettingsDialog::reloadSettings()
         int font = settings_->value(SETTINGS_KEY_FEEDBACK_FONT).toInt();
         ui->spnFeedbackFont->setValue(font);
     }
+    bool showLimbsSummary = true;
+    if (!settings_->value(SETTINGS_KEY_SHOW_LIMBS).isNull()) {
+        showLimbsSummary = settings_->value(SETTINGS_KEY_SHOW_LIMBS) == "true";
+        ui->chkShowLimbs->setChecked(showLimbsSummary);
+    }
+    if (!settings_->value(SETTINGS_KEY_SHOW_LIMBS_AFTER_LAST).isNull()) {
+        bool showLimbsSummaryAfterLast = settings_->value(SETTINGS_KEY_SHOW_LIMBS_AFTER_LAST) == "true";
+        ui->chkShowLimbsAfterLast->setChecked(showLimbsSummaryAfterLast);
+    }
+    ui->spnLimbsPrec->setValue(settings_->value(SETTINGS_KEY_LIMBS_PREC, SETTINGS_LIMBS_PREC_DEFAULT).toInt());
+    ui->chkLockFeedbackButton->setChecked(settings_->value(SETTINGS_KEY_LOCK_FEEDBACK_BTN, true).toBool());
+    on_chkShowLimbs_toggled(showLimbsSummary);
 }
 
 void SettingsDialog::dragEnterEvent(QDragEnterEvent *e)
@@ -66,11 +78,23 @@ void SettingsDialog::on_btnSave_clicked()
   if(!ui->lblLogFilePath->text().isEmpty()) {
       settings_->setValue(SETTINGS_KEY_EE_LOG, ui->lblLogFilePath->text().trimmed());
       YATEWindow *parentW = dynamic_cast<YATEWindow*>(parentWidget());
-      if (parentW) {
+      if (parentW && !parentW->isLogManuallySet()) {
         parentW->setLogFilePath(ui->lblLogFilePath->text().trimmed());
       }
   }
   settings_->setValue(SETTINGS_KEY_FEEDBACK_FONT, ui->spnFeedbackFont->value());
+  if(ui->chkShowLimbs->isChecked()) {
+      settings_->setValue((SETTINGS_KEY_SHOW_LIMBS), "true");
+  } else {
+      settings_->setValue((SETTINGS_KEY_SHOW_LIMBS), "false");
+  }
+  if(ui->chkShowLimbsAfterLast->isChecked()) {
+      settings_->setValue((SETTINGS_KEY_SHOW_LIMBS_AFTER_LAST), "true");
+  } else {
+      settings_->setValue((SETTINGS_KEY_SHOW_LIMBS_AFTER_LAST), "false");
+  }
+  settings_->setValue(SETTINGS_KEY_LIMBS_PREC, ui->spnLimbsPrec->value());
+  settings_->setValue(SETTINGS_KEY_LOCK_FEEDBACK_BTN, ui->chkLockFeedbackButton->isChecked());
 }
 
 
@@ -110,5 +134,13 @@ void SettingsDialog::on_btnDefaultPath_clicked()
     QString path = QDir(appDataPath).filePath(PATH_EE_LOG_RELATIVE);
     setEEFilePath(path);
 }
+
+
+void SettingsDialog::on_chkShowLimbs_toggled(bool checked)
+{
+    ui->chkShowLimbsAfterLast->setEnabled(checked);
+    ui->spnLimbsPrec->setEnabled(checked);
+}
+
 
 }

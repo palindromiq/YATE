@@ -37,6 +37,9 @@ private slots:
 
     void on_btnDefaultPath_clicked();
 
+
+    void on_chkShowLimbs_toggled(bool checked);
+
 private:
     Ui::SettingsDialog *ui;
     QSettings *settings_;

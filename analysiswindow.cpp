@@ -21,7 +21,6 @@ AnalysisWindow::AnalysisWindow(QWidget *parent) :
 
 AnalysisWindow::~AnalysisWindow()
 {
-    delete hunt_;
     delete ui;
 }
 

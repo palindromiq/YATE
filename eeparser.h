@@ -52,6 +52,7 @@ private:
     QRegularExpression lineParseRegex_;
     FileWatcher *watcher_;
     bool logDoesNotExist_;
+    bool hostJustUnloaded_;
 };
 }
 

@@ -3,11 +3,15 @@
 #include "globals.h"
 
 #include <QDebug>
+#include <QSettings>
 
 namespace  Yate {
 
-HuntInfoGenerator::HuntInfoGenerator(QObject *parent): QObject(parent), huntInfo_(nullptr)
+HuntInfoGenerator::HuntInfoGenerator(QObject *parent): QObject(parent), huntInfo_(nullptr), settings_(new QSettings(this))
 {
+    showLimbsSummary_ = settings_->value(SETTINGS_KEY_SHOW_LIMBS, "true") == "true";
+    showLimbsSummaryAfterLast_ = settings_->value(SETTINGS_KEY_SHOW_LIMBS_AFTER_LAST, "false") == "true";
+    limbsSummaryPrec_ = settings_->value(SETTINGS_KEY_LIMBS_PREC, SETTINGS_LIMBS_PREC_DEFAULT).toInt();
     resetHuntInfo();
 }
 
@@ -29,7 +33,8 @@ void HuntInfoGenerator::resetHuntInfo()
     currentRunIndex_ = -1;
     currentNightIndex_ = -1;
     nightEnded_ = false;
-    emit onHuntStateChanged(" [Live Feedback will show here]");
+    emit onHuntStateChanged(LIVE_FEEDBACK_DEFAULT_MSG);
+    emit onLimbsChanged("");
 
 
 }
@@ -101,7 +106,7 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
         }
         state_.setStage(HuntStateStage::Spawned);
         emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + HuntInfo::eidolonName(state_.eidolonNumber()) + tr(" spawned"));
-
+        emit onLimbsChanged("");
     } else if (typ == LogEventType::DayBegin) {
          nightEnded_ = true;
          return;
@@ -111,7 +116,8 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
         }
         state_.setStage(HuntStateStage::Initial);
         state_.setEidolonNumber(0);
-        emit onHuntStateChanged(" [Live Feedback will show here]");
+        emit onHuntStateChanged(LIVE_FEEDBACK_DEFAULT_MSG);
+        emit onLimbsChanged("");
     } else if (typ == LogEventType::EidolonDespawn) {
         auto capState = huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).result();
          state_.setStage(HuntStateStage::Initial);
@@ -135,6 +141,7 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                         huntInfo()->addNight(NightInfo());
                         huntInfo()->night(currentNightIndex_).setStartTimestamp(timestamp);
                         nightEnded_ = false;
+                        currentRunIndex_ = -1;
                     }
 
                     currentRunIndex_++;
@@ -142,6 +149,7 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                     huntInfo()->night(currentNightIndex_).addRun(RunInfo());
 
                     currentCapIndex_ = 0;
+
 
                     huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setValid(true);
                     huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setEidolon(Eidolon::Terralyst);
@@ -173,6 +181,7 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                         statStr = statStr + ")";
                     }
                     emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + statStr);
+                    emitLimbsUpdate();
                 } else {
                     invalid = true;
                 }
@@ -193,6 +202,8 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                         huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setLastLimbProgressTime(limbProgressTime);
                         state_.setStage(HuntStateStage::Healing);
                     }
+                    emitLimbsUpdate();
+
                 } else {
                     invalid = true;
                 }
@@ -302,7 +313,6 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
        }
     }
     if (invalid) {
-        //qDebug() << "Failed!" << int(typ) << state_.eidolonNumber() << int(state_.stage());
         qDebug () << stateStageName[state_.stage()] << "" << int(typ) << logEvtTypName[typ] << "  " << timestamp;
         emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] Error: at phase " +
                                 stateStageName[state_.stage()] + " received " + logEvtTypName[typ]);
@@ -320,6 +330,35 @@ float HuntInfoGenerator::getLastEventTime() const
 void HuntInfoGenerator::setLastEventTime(float newLastEventTime)
 {
     lastEventTime_ = newLastEventTime;
+}
+
+void HuntInfoGenerator::emitLimbsUpdate()
+{
+    if(!showLimbsSummary_) {
+        return;
+    }
+    QStringList limbBreaks;
+    auto &currentRun = huntInfo()->night(currentNightIndex_).run(currentRunIndex_);
+    auto &currentCap = currentRun.capInfoByIndex(currentCapIndex_);
+    int maxLimbs = currentCap.numberOfLimbs();
+
+    if(currentCap.waterShield()) {
+         limbBreaks.push_back(FORMAT_NUMBER_PREC(currentCap.waterShield(), limbsSummaryPrec_));
+    }
+    for(auto &brk: currentCap.limbBreaks()) {
+        limbBreaks.push_back(FORMAT_NUMBER_PREC(brk, limbsSummaryPrec_));
+    }
+    bool lastLimb = (limbBreaks.size() == maxLimbs);
+
+    QString updateStr = " " + ANALYSIS_STAT_LIMBS + limbBreaks.join(", ");
+
+
+    if (lastLimb) {
+        updateStr = updateStr + " [" + HuntInfo::timestampToProgressString(currentCap.lastLimbProgressTime()) + "]";
+    }
+    if (lastLimb || !showLimbsSummaryAfterLast_) {
+        emit onLimbsChanged(updateStr);
+    }
 }
 
 HuntState::HuntState():limbNumber_(-1)
