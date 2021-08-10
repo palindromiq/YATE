@@ -53,6 +53,7 @@ YATEWindow::YATEWindow(QWidget *parent)
 
     QString eePath(QFileInfo(eeLogFile_).filePath());
 
+
     ui->lblLogFilePath->setText(eePath);
     settingsDialog_->setEEFilePath(eePath);
     settings.setValue(SETTINGS_KEY_EE_LOG, eePath);

@@ -24,6 +24,7 @@ QT_END_NAMESPACE
 #define SETTINGS_KEY_LIMBS_PREC "limbs_precision"
 #define SETTINGS_LIMBS_PREC_DEFAULT 3
 #define SETTINGS_KEY_LOCK_FEEDBACK_BTN "lock_feedback_btn"
+#define SETTINGS_KEY_STREAMER_MODE "streamer_mode"
 
 #define EMOJI_LOCKED "🔒"
 #define EMOJI_UNLOCKED "🔓︎"
