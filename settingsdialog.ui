@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>YATE Settings</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -103,6 +103,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="chkStreamer">
+       <property name="text">
+        <string>Streamer Mode</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QWidget" name="widget_2" native="true">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -135,6 +142,9 @@
      </item>
      <item>
       <layout class="QFormLayout" name="formLayout">
+       <property name="formAlignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
        <item row="0" column="0">
         <widget class="QLabel" name="lblLimbsPrec">
          <property name="text">
@@ -181,7 +191,7 @@
       <item>
        <widget class="QLabel" name="lblVersion">
         <property name="text">
-         <string>YATE 0.5-beta</string>
+         <string>YATE 0.5.1-beta</string>
         </property>
        </widget>
       </item>

@@ -28,7 +28,13 @@ LiveFeedbackOverlay::LiveFeedbackOverlay(QWidget *parent, bool locked) :
         setAttribute(Qt::WA_TransparentForMouseEvents);
     }
 
-    setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::SubWindow);
+    if (settings_->value(SETTINGS_KEY_STREAMER_MODE, false).toBool()) {
+        setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+    } else {
+        setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::SubWindow);
+    }
+
+
     if(!settings_->value(SETTINGS_KEY_FEEDBACK_POS_X).isNull()) {
         int xpos = settings_->value(SETTINGS_KEY_FEEDBACK_POS_X).toInt();
         int ypos = settings_->value(SETTINGS_KEY_FEEDBACK_POS_Y).toInt();

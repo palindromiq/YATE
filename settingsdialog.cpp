@@ -47,6 +47,7 @@ void SettingsDialog::reloadSettings()
     }
     ui->spnLimbsPrec->setValue(settings_->value(SETTINGS_KEY_LIMBS_PREC, SETTINGS_LIMBS_PREC_DEFAULT).toInt());
     ui->chkLockFeedbackButton->setChecked(settings_->value(SETTINGS_KEY_LOCK_FEEDBACK_BTN, true).toBool());
+    ui->chkStreamer->setChecked(settings_->value(SETTINGS_KEY_STREAMER_MODE, false).toBool());
     on_chkShowLimbs_toggled(showLimbsSummary);
 }
 
@@ -95,6 +96,7 @@ void SettingsDialog::on_btnSave_clicked()
   }
   settings_->setValue(SETTINGS_KEY_LIMBS_PREC, ui->spnLimbsPrec->value());
   settings_->setValue(SETTINGS_KEY_LOCK_FEEDBACK_BTN, ui->chkLockFeedbackButton->isChecked());
+  settings_->setValue(SETTINGS_KEY_STREAMER_MODE, ui->chkStreamer->isChecked());
 }
 
 
