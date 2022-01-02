@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 
     QCoreApplication::setOrganizationName(SETTINGS_ORGANIZATION);
     QCoreApplication::setApplicationName(SETTINGS_APPLICATION);
-    QFile file(":/dark.qss");
+    QFile file(":/MaterialDark.qss");
     file.open(QFile::ReadOnly | QFile::Text);
     QTextStream stream(&file);
     a.setStyleSheet(stream.readAll());
