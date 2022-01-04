@@ -20,6 +20,11 @@ void HuntInfo::setNights(const QVector<NightInfo> &newNights)
     nights_ = newNights;
 }
 
+int HuntInfo::nightCount() const
+{
+    return nights_.size();
+}
+
 void HuntInfo::addNight(NightInfo nightInfo)
 {
     nights_.push_back(nightInfo);
@@ -92,6 +97,36 @@ QVector<AnalysisViewItem *> HuntInfo::toAnalysisViewItem() const
         items.push_back(nightItem);
     }
     return items;
+}
+
+const QString &HuntInfo::host() const
+{
+    return host_;
+}
+
+void HuntInfo::setHost(const QString &newHost)
+{
+    host_ = newHost;
+}
+
+void HuntInfo::addSquadMember(const QString &member)
+{
+    squad_.insert(member);
+}
+
+void HuntInfo::removeSquadMember(const QString &member)
+{
+    squad_.remove(member);
+}
+
+const QSet<QString> &HuntInfo::squad() const
+{
+    return squad_;
+}
+
+void HuntInfo::setSquad(const QSet<QString> &newSquad)
+{
+    squad_ = newSquad;
 }
 
 NightInfo::NightInfo()

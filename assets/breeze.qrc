@@ -88,5 +88,6 @@
         <file>yate.ico</file>
         <file>lock.png</file>
         <file>MaterialDark.qss</file>
+        <file>png.svg</file>
     </qresource>
 </RCC>

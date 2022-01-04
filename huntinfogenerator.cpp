@@ -41,7 +41,8 @@ void HuntInfoGenerator::resetHuntInfo()
 
 HuntInfoGenerator::~HuntInfoGenerator()
 {
-    delete huntInfo_;
+// TODO: Fix GC
+//    delete huntInfo_;
 }
 
 
@@ -61,6 +62,8 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
             {LogEventType::ShardRemove, "ShardRemove"},
             {LogEventType::ShrineDisable, "ShrineDisable"},
             {LogEventType::EidolonSpawn, "EidolonSpawn"},
+            {LogEventType::HostJoin, "HostJoin"},
+            {LogEventType::SquadJoin, "SquadJoin"},
             {LogEventType::HostUnload, "HostUnload"},
             {LogEventType::Invalid, "Invalid"}
         };
@@ -81,7 +84,13 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
 
 
 
-    if (typ == LogEventType::NightBegin) {
+    if (typ == LogEventType::HostJoin) {
+        host_ = e.strValue();
+        huntInfo()->setHost(host_);
+    } else if (typ == LogEventType::SquadJoin) {
+        QString member = e.strValue();
+        huntInfo()->addSquadMember(member);
+    } else if (typ == LogEventType::NightBegin) {
         if (currentNightIndex_ == -1) {
             currentNightIndex_++;
             huntInfo()->addNight(NightInfo());

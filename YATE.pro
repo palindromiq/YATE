@@ -14,6 +14,7 @@ SOURCES += \
     analysiswindow.cpp \
     eeparser.cpp \
     filewatcher.cpp \
+    huntimagegenerator.cpp \
     huntinfo.cpp \
     huntinfogenerator.cpp \
     livefeedbackoverlay.cpp \
@@ -29,6 +30,7 @@ HEADERS += \
     eeparser.h \
     filewatcher.h \
     globals.h \
+    huntimagegenerator.h \
     huntinfo.h \
     huntinfogenerator.h \
     livefeedbackoverlay.h \
@@ -42,7 +44,7 @@ FORMS += \
     settingsdialog.ui \
     yatewindow.ui
 
-RESOURCES = breeze.qrc
+RESOURCES = assets/breeze.qrc
 
 RC_ICONS = yate.ico
 

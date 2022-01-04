@@ -32,15 +32,15 @@
       </item>
       <item>
        <widget class="QPushButton" name="btnExport">
-        <property name="text">
-         <string>Export</string>
+        <property name="enabled">
+         <bool>false</bool>
         </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="btnImport">
         <property name="text">
-         <string>Import</string>
+         <string>Export Image</string>
+        </property>
+        <property name="icon">
+         <iconset resource="assets/breeze.qrc">
+          <normaloff>:/png.svg</normaloff>:/png.svg</iconset>
         </property>
        </widget>
       </item>
@@ -56,6 +56,8 @@
    </layout>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="assets/breeze.qrc"/>
+ </resources>
  <connections/>
 </ui>

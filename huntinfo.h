@@ -2,6 +2,7 @@
 #define HUNTINFO_H
 
 #include <QVector>
+#include <QSet>
 #include "globals.h"
 
 namespace Yate {
@@ -172,6 +173,7 @@ public:
     HuntInfo();
     const QVector<NightInfo> &nights() const;
     void setNights(const QVector<NightInfo> &newNights);
+    int nightCount() const;
     void addNight(NightInfo nightInfo);
     NightInfo &night(int index);
     void removeNight(int index);
@@ -182,8 +184,19 @@ public:
     static QString timestampToProgressString(float timestamp);
 
     QVector<AnalysisViewItem *> toAnalysisViewItem() const;
+    const QString &host() const;
+    void setHost(const QString &newHost);
+
+    void addSquadMember(const QString &member);
+    void removeSquadMember(const QString &member);
+
+    const QSet<QString> &squad() const;
+    void setSquad(const QSet<QString> &newSquad);
+
 private:
     QVector<NightInfo> nights_;
+    QString host_;
+    QSet<QString> squad_;
 };
 
 #pragma GCC diagnostic pop

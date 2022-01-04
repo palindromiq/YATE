@@ -25,10 +25,16 @@ public:
 private slots:
     void on_btnClose_clicked();
 
+    void on_treAnalysisView_clicked(const QModelIndex &index);
+    void highlightNight(int night);
+    void unhighlightNight();
+    void on_btnExport_clicked();
+
 private:
     Ui::AnalysisWindow *ui;
     AnalysisViewModel *model_;
     HuntInfo *hunt_;
+    int selectedNight_;
 };
 }
 

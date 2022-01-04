@@ -3,7 +3,7 @@
 namespace Yate {
 
 
-LogEvent::LogEvent(int eId, LogEventType eType, float eTimestamp, int eValue):id_(eId), type_(eType), timestamp_(eTimestamp), value_(eValue)
+LogEvent::LogEvent(int eId, LogEventType eType, float eTimestamp, int eValue, QString eStrVal):id_(eId), type_(eType), timestamp_(eTimestamp), value_(eValue), strValue_(eStrVal)
 {
 
 
@@ -48,6 +48,16 @@ int LogEvent::value() const
 void LogEvent::setValue(int newValue)
 {
     value_ = newValue;
+}
+
+const QString &LogEvent::strValue() const
+{
+    return strValue_;
+}
+
+void LogEvent::setStrValue(const QString &newStrValue)
+{
+    strValue_ = newStrValue;
 }
 
 }

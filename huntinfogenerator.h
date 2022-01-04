@@ -89,6 +89,7 @@ private:
     bool showLimbsSummary_;
     bool showLimbsSummaryAfterLast_;
     int limbsSummaryPrec_;
+    QString host_;
 };
 }
 
