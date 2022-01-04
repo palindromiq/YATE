@@ -539,6 +539,11 @@ AnalysisViewItem *CapInfo::toAnalysisViewItem() const
             }
           }
         capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_WATERSHIELD, ws}));
+        QStringList limbsList;
+        for (auto &l: limbBreaks()) {
+            limbsList.push_back(FORMAT_NUMBER(l));
+        }
+        capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_LIMBS, limbsList.join("  ")}));
         if (numberOfLimbs() == limbBreaks().size()) {
             capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_LAST_LIMB, FORMAT_NUMBER(lastLimbProgressTime())}));
         }

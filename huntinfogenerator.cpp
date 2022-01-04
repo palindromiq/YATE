@@ -356,7 +356,7 @@ void HuntInfoGenerator::emitLimbsUpdate()
     }
     bool lastLimb = (limbBreaks.size() == maxLimbs);
 
-    QString updateStr = " " + ANALYSIS_STAT_LIMBS + limbBreaks.join(", ");
+    QString updateStr = " " + ANALYSIS_STAT_LIMBS + ": " + limbBreaks.join(", ");
 
 
     if (lastLimb) {

@@ -66,7 +66,7 @@ QT_END_NAMESPACE
 #define ANALYSIS_STAT_RESULT QObject::tr("Result")
 #define ANALYSIS_STAT_HEADER1 QObject::tr("Attribute")
 #define ANALYSIS_STAT_HEADER2 QObject::tr("Value")
-#define ANALYSIS_STAT_LIMBS QObject::tr("Limbs: ")
+#define ANALYSIS_STAT_LIMBS QObject::tr("Limbs")
 
 #define THREADED_PARSING
 
