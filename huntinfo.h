@@ -157,6 +157,7 @@ public:
     QString getNightResult() const;
     QString getAverage() const;
     int getNumberOfHydrolysts() const;
+    int validRunCount() const;
 
 
     float startTimestamp() const;

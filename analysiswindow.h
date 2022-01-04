@@ -2,6 +2,7 @@
 #define ANALYSISWINDOW_H
 
 #include <QMainWindow>
+#include <QAtomicInt>
 
 namespace Ui {
 class AnalysisWindow;
@@ -29,12 +30,15 @@ private slots:
     void highlightNight(int night);
     void unhighlightNight();
     void on_btnExport_clicked();
+    void generationFinished(bool);
 
 private:
     Ui::AnalysisWindow *ui;
     AnalysisViewModel *model_;
     HuntInfo *hunt_;
     int selectedNight_;
+    QAtomicInt isGenerating_;
+    QString savePath_;
 };
 }
 

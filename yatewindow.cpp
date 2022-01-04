@@ -19,7 +19,6 @@
 #include "eeparser.h"
 #include "huntinfogenerator.h"
 
-
 namespace Yate {
 YATEWindow::YATEWindow(QWidget *parent)
     : QMainWindow(parent)

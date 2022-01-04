@@ -9,15 +9,18 @@ class HuntImageGenerator : public QObject
 {
     Q_OBJECT
 public:
-    explicit HuntImageGenerator(NightInfo &night, QString host, QSet<QString> squad, QObject *parent = nullptr);
-    bool saveImage(QString path) const;
+    explicit HuntImageGenerator(QString path, NightInfo &night, QString host, QSet<QString> squad, QObject *parent = nullptr);
 
 signals:
+    void generationFinished(bool);
+
+public slots:
+    void generateImage();
 private:
+    QString path_;
     NightInfo night_;
     QString host_;
     QSet<QString> squad_;
-
 };
 }
 

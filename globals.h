@@ -28,6 +28,7 @@ QT_END_NAMESPACE
 #define SETTINGS_LIMBS_PREC_DEFAULT 3
 #define SETTINGS_KEY_LOCK_FEEDBACK_BTN "lock_feedback_btn"
 #define SETTINGS_KEY_STREAMER_MODE "streamer_mode"
+#define SETTINGS_KEY_LAST_SAVE_DIR "img_save_dir"
 
 #define EMOJI_LOCKED "🔒"
 #define EMOJI_UNLOCKED "🔓︎"
@@ -75,6 +76,13 @@ QT_END_NAMESPACE
 
 #define FORMAT_NUMBER(x) QString::number(x, 'f', 3)
 #define FORMAT_NUMBER_PREC(x, y) QString::number(x, 'f', y)
+
+
+#define SUMMARY_COLOR_BG "#031a1e"
+#define SUMMARY_COLOR_TITLE "#941c2f"
+#define SUMMARY_COLOR_LIMBS "#c1cfda"
+#define SUMMARY_COLOR_LAST_LIMB "#20a4f3"
+#define SUMMARY_COLOR_AVERAGE "#59f8e8"
 
 
 

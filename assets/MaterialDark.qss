@@ -60,7 +60,7 @@ QPushButton:disabled{
         border-bottom-color: rgb(58, 58, 58);
         border-bottom-width: 1px;
         border-style: solid;
-        color: rgb(0, 0, 0);
+        color: rgb(150, 150, 150);
         padding: 2px;
         background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(57, 57, 57, 255), stop:1 rgba(77, 77, 77, 255));
 }

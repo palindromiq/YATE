@@ -4,12 +4,16 @@
 #include "huntimagegenerator.h"
 #include "huntinfo.h"
 #include <QFileDialog>
+#include <QDesktopServices>
+#include <QThread>
+#include <QSettings>
 
 namespace Yate {
 AnalysisWindow::AnalysisWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::AnalysisWindow),
     model_(nullptr), hunt_(nullptr), selectedNight_(-1)
 {
+    isGenerating_.storeRelaxed(0);
     ui->setupUi(this);
     unhighlightNight();
 //    HuntInfo *huntInfo = new HuntInfo;
@@ -117,8 +121,15 @@ void AnalysisWindow::on_treAnalysisView_clicked(const QModelIndex &index)
 
 void AnalysisWindow::highlightNight(int night)
 {
+    if (night == -1) {
+        unhighlightNight();
+        return;
+    }
     selectedNight_ = night;
-    ui->btnExport->setEnabled(true);
+    if (isGenerating_.loadRelaxed() != 1) {
+        ui->btnExport->setEnabled(true);
+    }
+
     ui->btnExport->setToolTip("");
 }
 
@@ -136,9 +147,23 @@ void AnalysisWindow::on_btnExport_clicked()
       unhighlightNight();
       return;
   }
+  QSettings settings;
   NightInfo &night = hunt_->night(selectedNight_);
-  QString savePath = QFileDialog::getSaveFileName(this, "Export Hunt Summary", "Hunt_" + QDateTime::currentDateTime().toString("MM_dd_yy_hh") + ".png", ".png");
-
+  QString defaultSavePath = "";
+  if (!settings.value(SETTINGS_KEY_LAST_SAVE_DIR).isNull()) {
+      defaultSavePath = settings.value(SETTINGS_KEY_LAST_SAVE_DIR).toString();
+      if (!QFileInfo(defaultSavePath).exists() || !QFileInfo(defaultSavePath).isDir()) {
+          defaultSavePath = "";
+          settings.remove(SETTINGS_KEY_LAST_SAVE_DIR);
+      }
+  }
+  QString saveFileDir;
+  if(defaultSavePath.size()) {
+      saveFileDir = defaultSavePath + QDir::separator() + "Hunt_" + QDateTime::currentDateTime().toString("MM_dd_yy_hh") + ".png";
+  } else {
+      saveFileDir = "Hunt_" + QDateTime::currentDateTime().toString("MM_dd_yy_hh") + ".png";
+  }
+  QString savePath = QFileDialog::getSaveFileName(this, "Export Hunt Summary", saveFileDir, ".png (PNG)");
   if (!savePath.size()) {
       return;
   }
@@ -149,12 +174,29 @@ void AnalysisWindow::on_btnExport_clicked()
       }
       savePath = savePath + "png";
   }
+  QString parentSavePath = QFileInfo(savePath).absoluteDir().absolutePath();
+  settings.setValue(SETTINGS_KEY_LAST_SAVE_DIR, parentSavePath);
+  savePath_ = savePath;
+  ui->btnExport->setEnabled(false);
+  isGenerating_.storeRelaxed(1);
+  HuntImageGenerator *gen = new HuntImageGenerator(savePath, night, hunt_->host(), hunt_->squad());
+  QThread *genThread = new QThread;
+  gen->moveToThread(genThread);
+  connect(genThread, &QThread::finished, genThread, &QThread::deleteLater);
+  connect(genThread, &QThread::finished, gen, &QThread::deleteLater);
+  connect(genThread, &QThread::started, gen, &HuntImageGenerator::generateImage);
+  connect(gen, &HuntImageGenerator::generationFinished, this, &AnalysisWindow::generationFinished);
+  genThread->start();
 
-  HuntImageGenerator gen(night, hunt_->host(), hunt_->squad());
-//  qDebug() << gen.saveImage(savePath);
 }
 
-
-
+void AnalysisWindow::generationFinished(bool success)
+{
+    isGenerating_.storeRelaxed(0);
+    highlightNight(selectedNight_);
+    if (success) {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(savePath_));
+    }
+}
 
 }

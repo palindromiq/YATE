@@ -89,5 +89,6 @@
         <file>lock.png</file>
         <file>MaterialDark.qss</file>
         <file>png.svg</file>
+        <file>RobotoMonoV.ttf</file>
     </qresource>
 </RCC>

@@ -240,6 +240,18 @@ int NightInfo::getNumberOfHydrolysts() const
     return x3s;
 }
 
+int NightInfo::validRunCount() const
+{
+    int count = 0;
+    auto nightRuns = runs();
+    for (int i = 0; i < nightRuns.size(); i++) {
+        if (nightRuns[i].getNumberOfCaps() || nightRuns[i].getNumberOfKills()) {
+            count++;
+        }
+    }
+    return count;
+}
+
 float NightInfo::startTimestamp() const
 {
     return startTimestamp_;
