@@ -8,10 +8,11 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QProcess>
+#include <QTemporaryDir>
 #include "updater.h"
 #include "globals.h"
 #include "downloader.h"
-
+#include "zipmanager.h"
 
 namespace Yate {
 
@@ -164,33 +165,62 @@ void Updater::startUpdate()
 
 void Updater::onDownloadFinished(QString filePath, QString) {
     setStatus(UpdaterStatus::Downloaded);
+
     QString selfPath = QCoreApplication::applicationFilePath();
-    QFile currentSelf(selfPath);
-    QString newPath = selfPath + "~";
-    if (QFileInfo::exists(newPath)) {
-        if(!QFile::remove(newPath)) {
+    QString selfDir = QCoreApplication::applicationDirPath();
+    QTemporaryDir extractionDir;
+    QStringList toRmList;
+
+    if (!extractionDir.isValid()) {
+        setStatus(UpdaterStatus::UpdateFailed);
+        emit errorOccurred("Update failed.");
+        return;
+    }
+    extractionDir.setAutoRemove(false);
+    ZipManager zip;
+    if (!zip.unzip(filePath, extractionDir.path())) {
+        setStatus(UpdaterStatus::UpdateFailed);
+        emit errorOccurred("Update failed.");
+        return;
+    }
+    QString newExec;
+    for(auto &f: QDir(extractionDir.path()).entryList(QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot)) {
+        QFile extractedFile(extractionDir.path() + QDir::separator() + f);
+        if (f.endsWith(".exe")) {
+            newExec = extractedFile.fileName();
+        }
+        QString existingFilePath = selfDir + QDir::separator() + f;
+        QString tempPath = existingFilePath + "~";
+        if (QFileInfo::exists(tempPath)) {
+            if(!QFile::remove(tempPath)) {
+                setStatus(UpdaterStatus::UpdateFailed);
+                emit errorOccurred("Update failed.");
+                return;
+            }
+        }
+        if (QFileInfo::exists(existingFilePath)) {
+            QFile existingFile(existingFilePath);
+            if (!existingFile.rename(tempPath)) {
+                setStatus(UpdaterStatus::UpdateFailed);
+                qDebug() << existingFilePath << "To: " << tempPath << existingFile.errorString();
+                emit errorOccurred("[1] Update failed, you may need to redownload the tool from " + SETTINGS_WEBSITE_HTTPS);
+                return;
+            }
+            toRmList.push_back(tempPath);
+        }
+        if (!extractedFile.rename(existingFilePath)) {
             setStatus(UpdaterStatus::UpdateFailed);
-            emit errorOccurred("Update failed.");
+            qDebug() << extractedFile.fileName() << "To: " << existingFilePath  << extractedFile.errorString();
+            emit errorOccurred("[2] Update failed, you may need to redownload the tool from " + SETTINGS_WEBSITE_HTTPS);
             return;
         }
     }
-    if (!currentSelf.rename(newPath)) {
-        setStatus(UpdaterStatus::UpdateFailed);
-        qDebug() << "1: " << currentSelf.errorString();
-        emit errorOccurred("Update failed.");
-        return;
-    }
-
-    QFile newVersion(filePath);
-    if (!newVersion.rename(selfPath)) {
-        setStatus(UpdaterStatus::UpdateFailed);
-        qDebug() << "2: " << newVersion.errorString();
-        currentSelf.rename(selfPath);
-        emit errorOccurred("Update failed.");
-        return;
+    QStringList argList({"update", QString::number(QCoreApplication::applicationPid()),latestVersion_});
+    for(auto &rm: toRmList) {
+        argList.push_back(rm);
     }
     setStatus(UpdaterStatus::PendingRestart);
-    QProcess::startDetached(selfPath, {"update", newPath, QString::number(QCoreApplication::applicationPid()),latestVersion_});
+    QProcess::startDetached(selfPath, argList);
     QCoreApplication::exit(0);
 }
 

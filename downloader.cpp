@@ -43,7 +43,7 @@ void Downloader::onManagerFinished(QNetworkReply *reply)
 
 QString Downloader::saveToDisk(QIODevice *reply, bool &result)
 {
-    QTemporaryFile file(QDir::tempPath() + QDir::separator() + "XXXXXX_YATE.exe");
+    QTemporaryFile file(QDir::tempPath() + QDir::separator() + "XXXXXX_YATE.zip");
     if (!file.open()) {
         saveError_ = file.errorString();
         result = false;

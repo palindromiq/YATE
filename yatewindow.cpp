@@ -21,6 +21,10 @@
 #include "huntinfogenerator.h"
 #include "updater.h"
 
+#ifdef DISCORD_ENABLED
+#include "discord_game_sdk/discord.h"
+#endif
+
 namespace Yate {
 YATEWindow::YATEWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -80,6 +84,10 @@ YATEWindow::YATEWindow(QWidget *parent)
     if (settings.value(SETTINGS_KEY_UPDATE_ON_STARTUP, true).toBool()) {
         emit checkForUpdate();
     }
+#ifdef DISCORD_ENABLED
+   discord::Core* core{};
+   auto result = discord::Core::Create(DISCORD_CLIENT_ID, DiscordCreateFlags_Default, &core);
+#endif
 
 }
 
