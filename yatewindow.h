@@ -69,9 +69,11 @@ private slots:
 
 public slots:
     void setLogFilePath(QString path);
+    void onUpdaterBusy(bool busy);
 
 signals:
     void exitFeebackOverlay();
+    void checkForUpdate();
 
 private:
     void createTrayIcon();

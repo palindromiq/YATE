@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -12,6 +12,7 @@ SOURCES += \
     analysisviewitem.cpp \
     analysisviewmodel.cpp \
     analysiswindow.cpp \
+    downloader.cpp \
     eeparser.cpp \
     filewatcher.cpp \
     huntimagegenerator.cpp \
@@ -21,12 +22,14 @@ SOURCES += \
     logevent.cpp \
     main.cpp \
     settingsdialog.cpp \
+    updater.cpp \
     yatewindow.cpp
 
 HEADERS += \
     analysisviewitem.h \
     analysisviewmodel.h \
     analysiswindow.h \
+    downloader.h \
     eeparser.h \
     filewatcher.h \
     globals.h \
@@ -36,6 +39,7 @@ HEADERS += \
     livefeedbackoverlay.h \
     logevent.h \
     settingsdialog.h \
+    updater.h \
     yatewindow.h
 
 FORMS += \

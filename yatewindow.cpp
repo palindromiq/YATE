@@ -11,6 +11,7 @@
 #include <QMenu>
 #include <QThread>
 #include <QStatusBar>
+#include <QMessageBox>
 
 #include "globals.h"
 #include "settingsdialog.h"
@@ -18,6 +19,7 @@
 #include "livefeedbackoverlay.h"
 #include "eeparser.h"
 #include "huntinfogenerator.h"
+#include "updater.h"
 
 namespace Yate {
 YATEWindow::YATEWindow(QWidget *parent)
@@ -51,6 +53,7 @@ YATEWindow::YATEWindow(QWidget *parent)
     }
 
     QString eePath(QFileInfo(eeLogFile_).filePath());
+    Updater::getInstance(this);
 
 
     ui->lblLogFilePath->setText(eePath);
@@ -66,6 +69,18 @@ YATEWindow::YATEWindow(QWidget *parent)
     connect(this, &YATEWindow::exitFeebackOverlay, this, &YATEWindow::stopFeedback);
 
     setAcceptDrops(true);
+    auto updater = Updater::getInstance(this);
+    connect(this, &YATEWindow::checkForUpdate, updater, &Updater::checkForUpdate);
+    connect(settingsDialog_, &SettingsDialog::checkForUpdate, updater, &Updater::checkForUpdate);
+    connect(updater, &Updater::updateStatusUpdate, settingsDialog_, &SettingsDialog::onUpdateStatusUpdate);
+    connect(updater, &Updater::updateAvailable, settingsDialog_, &SettingsDialog::onUpdateAvailable);
+    connect(updater, &Updater::errorOccurred, settingsDialog_, &SettingsDialog::onUpdaterError);
+    connect(updater, &Updater::onBusyUpdate, settingsDialog_, &SettingsDialog::lockUpdateBtn);
+//    connect(updater, &Updater::onBusyUpdate, this, &YATEWindow::onUpdaterBusy);
+    if (settings.value(SETTINGS_KEY_UPDATE_ON_STARTUP, true).toBool()) {
+        emit checkForUpdate();
+    }
+
 }
 
 
@@ -287,6 +302,10 @@ void YATEWindow::setLogFilePath(QString path)
     ui->lblLogFilePath->setText(path);
     eeLogFile_.setFileName(path);
     isLogManuallySet_ = true;
+}
+
+void YATEWindow::onUpdaterBusy(bool busy) {
+    setEnabled(!busy);
 }
 
 void YATEWindow::createTrayIcon()

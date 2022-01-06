@@ -12,8 +12,10 @@ QT_END_NAMESPACE
 #define SETTINGS_ORGANIZATION "palindromiq"
 #define SETTINGS_APPLICATION "yate"
 #define SETTINGS_WEBSITE QString("yate.app")
-#define SETTINGS_WEBSITE_HTTPS QString("http://") + SETTINGS_WEBSITE
-#define SETTINGS_WEBSITE_API_HTTPS QString("http://api.") + SETTINGS_WEBSITE
+#define SETTINGS_WEBSITE_HTTPS QString("https://") + SETTINGS_WEBSITE
+#define SETTINGS_URL_API_BASE QString("https://api.") + SETTINGS_WEBSITE
+#define SETTINGS_API_VERSION "v1.0"
+#define SETTINGS_URL_API_CHECK_VERSION SETTINGS_URL_API_BASE + "/" + SETTINGS_API_VERSION + "/update"
 #define SETTINGS_KEY_EE_LOG "eelogpath"
 #define SETTINGS_KEY_WATERSHIELD "watershield"
 #define SETTINGS_OPT_EXACT "exact"
@@ -29,6 +31,7 @@ QT_END_NAMESPACE
 #define SETTINGS_KEY_LOCK_FEEDBACK_BTN "lock_feedback_btn"
 #define SETTINGS_KEY_STREAMER_MODE "streamer_mode"
 #define SETTINGS_KEY_LAST_SAVE_DIR "img_save_dir"
+#define SETTINGS_KEY_UPDATE_ON_STARTUP "update_on_start"
 
 #define EMOJI_LOCKED "🔒"
 #define EMOJI_UNLOCKED "🔓︎"
