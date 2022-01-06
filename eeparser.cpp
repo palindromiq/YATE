@@ -90,6 +90,7 @@ void Yate::EEParser::parseLine(QString &line)
                     return;
                 }
             }
+
             LogEvent evt(evtId_++, evtType, timestamp, val, strVal);
             if (evtType == LogEventType::HostUnload) {
                 hostJustUnloaded_ = true;

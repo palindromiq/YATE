@@ -7,6 +7,8 @@
 #include <QString>
 #include <QSystemTrayIcon>
 
+#include "globals.h"
+
 
 
 
@@ -17,6 +19,10 @@ namespace Ui { class YATEWindow; }
 class QAction;
 
 QT_END_NAMESPACE
+
+
+
+
 namespace Yate {
 
 class SettingsDialog;
@@ -24,6 +30,7 @@ class LiveFeedbackOverlay;
 class AnalysisWindow;
 class EEParser;
 class HuntInfoGenerator;
+class DiscordManager;
 
 class YATEWindow : public QMainWindow
 {
@@ -70,10 +77,14 @@ private slots:
 public slots:
     void setLogFilePath(QString path);
     void onUpdaterBusy(bool busy);
+    void refreshDiscordSettings();
 
 signals:
     void exitFeebackOverlay();
     void checkForUpdate();
+    void feedbackWindowClosed();
+    void discordStop();
+    void discordStart();
 
 private:
     void createTrayIcon();
@@ -93,7 +104,12 @@ private:
     bool isLogManuallySet_;
     bool isLiveFeedbackRunning_;
 
+#ifdef DISCORD_ENABLED
+    DiscordManager *discord_;
+    QThread *discordThread_;
+#endif
 
+    void initDiscord();
 };
 }
 #endif // YATEWINDOW_H

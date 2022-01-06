@@ -12,20 +12,7 @@ SOURCES += \
     analysisviewitem.cpp \
     analysisviewmodel.cpp \
     analysiswindow.cpp \
-    discord_game_sdk/achievement_manager.cpp \
-    discord_game_sdk/activity_manager.cpp \
-    discord_game_sdk/application_manager.cpp \
-    discord_game_sdk/core.cpp \
-    discord_game_sdk/image_manager.cpp \
-    discord_game_sdk/lobby_manager.cpp \
-    discord_game_sdk/network_manager.cpp \
-    discord_game_sdk/overlay_manager.cpp \
-    discord_game_sdk/relationship_manager.cpp \
-    discord_game_sdk/storage_manager.cpp \
-    discord_game_sdk/store_manager.cpp \
-    discord_game_sdk/types.cpp \
-    discord_game_sdk/user_manager.cpp \
-    discord_game_sdk/voice_manager.cpp \
+    discordmanager.cpp \
     downloader.cpp \
     eeparser.cpp \
     filewatcher.cpp \
@@ -41,10 +28,43 @@ SOURCES += \
     yatewindow.cpp \
     zipmanager.cpp
 
+SOURCES += \
+    discord_game_sdk/achievement_manager.cpp \
+    discord_game_sdk/activity_manager.cpp \
+    discord_game_sdk/application_manager.cpp \
+    discord_game_sdk/core.cpp \
+    discord_game_sdk/image_manager.cpp \
+    discord_game_sdk/lobby_manager.cpp \
+    discord_game_sdk/network_manager.cpp \
+    discord_game_sdk/overlay_manager.cpp \
+    discord_game_sdk/relationship_manager.cpp \
+    discord_game_sdk/storage_manager.cpp \
+    discord_game_sdk/store_manager.cpp \
+    discord_game_sdk/types.cpp \
+    discord_game_sdk/user_manager.cpp \
+    discord_game_sdk/voice_manager.cpp
+
 HEADERS += \
     analysisviewitem.h \
     analysisviewmodel.h \
     analysiswindow.h \
+    discordmanager.h \
+    downloader.h \
+    eeparser.h \
+    filewatcher.h \
+    globals.h \
+    huntimagegenerator.h \
+    huntinfo.h \
+    huntinfogenerator.h \
+    livefeedbackoverlay.h \
+    logevent.h \
+    miniz.h \
+    settingsdialog.h \
+    updater.h \
+    yatewindow.h \
+    zipmanager.h
+
+HEADERS += \
     discord_game_sdk/achievement_manager.h \
     discord_game_sdk/activity_manager.h \
     discord_game_sdk/application_manager.h \
@@ -61,21 +81,7 @@ HEADERS += \
     discord_game_sdk/store_manager.h \
     discord_game_sdk/types.h \
     discord_game_sdk/user_manager.h \
-    discord_game_sdk/voice_manager.h \
-    downloader.h \
-    eeparser.h \
-    filewatcher.h \
-    globals.h \
-    huntimagegenerator.h \
-    huntinfo.h \
-    huntinfogenerator.h \
-    livefeedbackoverlay.h \
-    logevent.h \
-    miniz.h \
-    settingsdialog.h \
-    updater.h \
-    yatewindow.h \
-    zipmanager.h
+    discord_game_sdk/voice_manager.h
 
 FORMS += \
     analysiswindow.ui \
@@ -96,7 +102,7 @@ DISTFILES +=
 
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/discord_game_sdk/lib/x86_64/ -ldiscord_game_sdk.dll
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/discord_game_sdk/lib/x86_64/ -ldiscord_game_sdk.dlld
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/discord_game_sdk/lib/x86_64/ -ldiscord_game_sdk.dll
 
 INCLUDEPATH += $$PWD/discord_game_sdk/lib/x86_64
 DEPENDPATH += $$PWD/discord_game_sdk/lib/x86_64

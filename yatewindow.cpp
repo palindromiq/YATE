@@ -12,6 +12,8 @@
 #include <QThread>
 #include <QStatusBar>
 #include <QMessageBox>
+#include <QTimer>
+#include <iostream>
 
 #include "globals.h"
 #include "settingsdialog.h"
@@ -22,10 +24,22 @@
 #include "updater.h"
 
 #ifdef DISCORD_ENABLED
-#include "discord_game_sdk/discord.h"
+#include "discordmanager.h"
 #endif
 
 namespace Yate {
+void Yate::YATEWindow::initDiscord()
+{
+    discordThread_ = new QThread;
+    discord_ = new DiscordManager;
+    discord_->moveToThread(discordThread_);
+    connect(discordThread_, &QThread::started, discord_, &DiscordManager::start);
+    connect(discordThread_, &QThread::finished, discordThread_, &QThread::deleteLater);
+    connect(this, &YATEWindow::discordStart, discord_, &DiscordManager::start);
+    connect(this, &YATEWindow::discordStop, discord_, &DiscordManager::stop);
+    discordThread_->start();
+}
+
 YATEWindow::YATEWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::YATEWindow),
@@ -85,8 +99,13 @@ YATEWindow::YATEWindow(QWidget *parent)
         emit checkForUpdate();
     }
 #ifdef DISCORD_ENABLED
-   discord::Core* core{};
-   auto result = discord::Core::Create(DISCORD_CLIENT_ID, DiscordCreateFlags_Default, &core);
+    if (settings.value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool()) {
+        initDiscord();
+    } else {
+        discordThread_ = nullptr;
+        discord_ = nullptr;
+    }
+
 #endif
 
 }
@@ -189,6 +208,8 @@ void Yate::YATEWindow::showLiveFeedback(bool lock)
     connect(parser_, &EEParser::logEvent, huntInfoGenerator_, &HuntInfoGenerator::onLogEvent);
     connect(parser_, &EEParser::parsingReset, huntInfoGenerator_, &HuntInfoGenerator::resetHuntInfo);
 
+
+
     connect(parserThread, &QThread::started, parser_, &EEParser::startLive);
     connect(parser_, &EEParser::parsingFinished, parserThread, &QThread::quit);
     connect(parser_, &EEParser::parsingFinished, parser_, &EEParser::deleteLater);
@@ -200,6 +221,16 @@ void Yate::YATEWindow::showLiveFeedback(bool lock)
     connect(feedbackOverlay_, &LiveFeedbackOverlay::onDoubleClicked, parser_, &EEParser::stopParsing);
     connect(feedbackOverlay_, &LiveFeedbackOverlay::onDoubleClicked, this, &YATEWindow::stopFeedback);
     connect(feedbackOverlay_, &LiveFeedbackOverlay::onLockWindow, this, &YATEWindow::lockFeedbackWindow);
+
+#ifdef DISCORD_ENABLED
+    QSettings settings;
+    if (settings.value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool()) {
+        connect(huntInfoGenerator_, &HuntInfoGenerator::onHuntStateChanged, discord_, &DiscordManager::setActivityDetails);
+        connect(huntInfoGenerator_, &HuntInfoGenerator::onLimbsChanged, discord_, &DiscordManager::setActivityState);
+        connect(huntInfoGenerator_, &HuntInfoGenerator::onSquadChanged, discord_, &DiscordManager::setSquad);
+        connect(this, &YATEWindow::feedbackWindowClosed, discord_, &DiscordManager::clearActivity);
+    }
+#endif
 
     parserThread->start();
     isLiveFeedbackRunning_ = true;
@@ -243,6 +274,7 @@ void YATEWindow::stopFeedback()
     trayIcon_->hide();
     isLiveFeedbackRunning_ = false;
     showNormal();
+    emit feedbackWindowClosed();
 }
 
 void YATEWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
@@ -314,6 +346,23 @@ void YATEWindow::setLogFilePath(QString path)
 
 void YATEWindow::onUpdaterBusy(bool busy) {
     setEnabled(!busy);
+}
+
+void YATEWindow::refreshDiscordSettings()
+{
+#ifdef DISCORD_ENABLED
+    QSettings settings;
+    if (settings.value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool()) {
+        if (!discord_) {
+            initDiscord();
+        } else {
+            emit discordStart();
+        }
+
+    } else {
+        emit discordStop();
+    }
+#endif
 }
 
 void YATEWindow::createTrayIcon()

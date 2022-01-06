@@ -87,9 +87,11 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
     if (typ == LogEventType::HostJoin) {
         host_ = e.strValue();
         huntInfo()->setHost(host_);
+        emit onHostChanged(host_);
     } else if (typ == LogEventType::SquadJoin) {
         QString member = e.strValue();
         huntInfo()->addSquadMember(member);
+        emit onSquadChanged(huntInfo()->squad());
     } else if (typ == LogEventType::NightBegin) {
         if (currentNightIndex_ == -1) {
             currentNightIndex_++;
@@ -375,6 +377,8 @@ void HuntInfoGenerator::emitLimbsUpdate()
         emit onLimbsChanged(updateStr);
     }
 }
+
+
 
 HuntState::HuntState():limbNumber_(-1)
 {

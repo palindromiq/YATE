@@ -56,6 +56,7 @@ void SettingsDialog::reloadSettings()
     ui->spnLimbsPrec->setValue(settings_->value(SETTINGS_KEY_LIMBS_PREC, SETTINGS_LIMBS_PREC_DEFAULT).toInt());
     ui->chkLockFeedbackButton->setChecked(settings_->value(SETTINGS_KEY_LOCK_FEEDBACK_BTN, true).toBool());
     ui->chkStreamer->setChecked(settings_->value(SETTINGS_KEY_STREAMER_MODE, false).toBool());
+    ui->chkDiscordActivity->setChecked(settings_->value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool());
     on_chkShowLimbs_toggled(showLimbsSummary);
 }
 
@@ -110,9 +111,9 @@ void SettingsDialog::lockUpdateBtn(bool busy)
 void SettingsDialog::on_btnSave_clicked()
 {
   this->accept();
+  YATEWindow *parentW = dynamic_cast<YATEWindow*>(parentWidget());
   if(!ui->lblLogFilePath->text().isEmpty()) {
       settings_->setValue(SETTINGS_KEY_EE_LOG, ui->lblLogFilePath->text().trimmed());
-      YATEWindow *parentW = dynamic_cast<YATEWindow*>(parentWidget());
       if (parentW && !parentW->isLogManuallySet()) {
         parentW->setLogFilePath(ui->lblLogFilePath->text().trimmed());
       }
@@ -132,6 +133,8 @@ void SettingsDialog::on_btnSave_clicked()
   settings_->setValue(SETTINGS_KEY_LOCK_FEEDBACK_BTN, ui->chkLockFeedbackButton->isChecked());
   settings_->setValue(SETTINGS_KEY_STREAMER_MODE, ui->chkStreamer->isChecked());
   settings_->setValue(SETTINGS_KEY_UPDATE_ON_STARTUP, ui->chkAutoUpdate->isChecked());
+  settings_->setValue(SETTINGS_KEY_DISCORD_ACTIVITY, ui->chkDiscordActivity->isChecked());
+  parentW->refreshDiscordSettings();
 }
 
 

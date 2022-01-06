@@ -1,9 +1,9 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-QT_BEGIN_NAMESPACE
+namespace Qt {
 class QString;
-QT_END_NAMESPACE
+}
 
 // that way you aren't compiling QString into every header file you put this in...
 // aka faster build times.
@@ -32,12 +32,15 @@ QT_END_NAMESPACE
 #define SETTINGS_KEY_STREAMER_MODE "streamer_mode"
 #define SETTINGS_KEY_LAST_SAVE_DIR "img_save_dir"
 #define SETTINGS_KEY_UPDATE_ON_STARTUP "update_on_start"
+#define SETTINGS_KEY_DISCORD_ACTIVITY "discord_activity"
+
+#define DISCORD_UPDATE_TIMER 50
 
 #define EMOJI_LOCKED "🔒"
 #define EMOJI_UNLOCKED "🔓︎"
 
 #define DISCORD_ENABLED
-#define DISCORD_CLIENT_ID 928504225045045249
+#define DISCORD_CLIENT_ID 928576870478381096
 
 #define LIMB_BREAK_ANIMATION_TIME 17.186
 #define CAPSHOT_ANIMATION_TIME 48.109
