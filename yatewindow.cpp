@@ -95,8 +95,11 @@ YATEWindow::YATEWindow(bool clientVersion, QWidget *parent)
         discordThread_ = nullptr;
         discord_ = nullptr;
     }
-
+#else
+    ui->btnLiveFeedbackVS->setVisible(false);
+    ui->btnLiveFeedback->setText(tr("Live Feedback"));
 #endif
+
 
 }
 
@@ -400,6 +403,21 @@ bool YATEWindow::isLogManuallySet() const
 void YATEWindow::setIsLogManuallySet(bool newIsLogManuallySet)
 {
     isLogManuallySet_ = newIsLogManuallySet;
+}
+
+
+void YATEWindow::on_btnLiveFeedbackVS_clicked()
+{
+#ifdef DISCORD_ENABLED
+    QSettings settings;
+    if (!settings.value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool()) {
+        QMessageBox::critical(this, "Discord Features Required", "You must enable Discord features from the settings to use this feature.");
+        return;
+    }
+#else
+    QMessageBox::critical(this, "Discord Features Required", "Discord features are need but not supported by this version.");
+    return;
+#endif
 }
 
 }

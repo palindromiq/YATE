@@ -9,7 +9,7 @@
 
 namespace Yate {
 DiscordManager::DiscordManager(QObject *parent)
-    : QObject{parent}, currentUser_(new discord::User), updateTimer_(new QTimer(this)), settings_(new QSettings), ready_(false), failed_(false), activityInit_(false)
+    : QObject{parent}, currentUser_(new discord::User), updateTimer_(new QTimer(this)), settings_(new QSettings), ready_(false), failed_(false), running_(false), activityInit_(false)
 {
     connect(updateTimer_, &QTimer::timeout, this, &DiscordManager::update);
     setup();
@@ -115,6 +115,7 @@ void DiscordManager::setup(bool emitErrors)
         core_->UserManager().GetCurrentUser(currentUser_);
         ready_ = true;
         emit ready();
+
     });
 
 

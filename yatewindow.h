@@ -74,6 +74,8 @@ private slots:
 
     void lockFeedbackWindow();
 
+    void on_btnLiveFeedbackVS_clicked();
+
 public slots:
     void setLogFilePath(QString path);
     void onUpdaterBusy(bool busy);
