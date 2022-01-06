@@ -37,7 +37,7 @@ class YATEWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    YATEWindow(QWidget *parent = nullptr);
+    YATEWindow(bool clientVersion = false, QWidget *parent = nullptr);
     ~YATEWindow();
 
     bool isLogManuallySet() const;
@@ -104,6 +104,7 @@ private:
     HuntInfoGenerator *huntInfoGenerator_;
     bool isLogManuallySet_;
     bool isLiveFeedbackRunning_;
+    bool clientVersion_;
 
 #ifdef DISCORD_ENABLED
     DiscordManager *discord_;

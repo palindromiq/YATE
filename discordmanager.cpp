@@ -43,7 +43,7 @@ void DiscordManager::update()
         return;
     }
     core_->RunCallbacks();
-    if (settings_->value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool()) {
+    if (settings_->value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool() && settings_->value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool()) {
         if(!activityInit_ || currentActivityDetails_ != activityDetails_ || currentActivityState_ != activityState_ || currentActivityImageText_ != activityImageText_) {
             updateActivity();
         }

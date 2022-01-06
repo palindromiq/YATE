@@ -48,7 +48,14 @@ int main(int argc, char *argv[])
     file.open(QFile::ReadOnly | QFile::Text);
     QTextStream stream(&file);
     a.setStyleSheet(stream.readAll());
-    Yate::YATEWindow w;
+    bool clientVersion = false;
+    if (argc > 1 && QString(argv[1]) == "client") {
+        clientVersion = true;
+    }
+#ifdef YATE_CLIENT_VERSION
+    clientVersion = true;
+#endif
+    Yate::YATEWindow w(clientVersion);
     w.show();
     return a.exec();
 }

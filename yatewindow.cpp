@@ -28,20 +28,9 @@
 #endif
 
 namespace Yate {
-void Yate::YATEWindow::initDiscord()
-{
-    discordThread_ = new QThread;
-    discord_ = new DiscordManager;
-    discord_->moveToThread(discordThread_);
-    connect(discordThread_, &QThread::started, discord_, &DiscordManager::start);
-    connect(discordThread_, &QThread::finished, discordThread_, &QThread::deleteLater);
-    connect(this, &YATEWindow::discordStart, discord_, &DiscordManager::start);
-    connect(this, &YATEWindow::discordStop, discord_, &DiscordManager::stop);
-    connect(this, &YATEWindow::discordClearActivity, discord_, &DiscordManager::clearActivity);
-    discordThread_->start();
-}
 
-YATEWindow::YATEWindow(QWidget *parent)
+
+YATEWindow::YATEWindow(bool clientVersion, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::YATEWindow),
       settingsDialog_(new SettingsDialog(this)),
@@ -50,7 +39,8 @@ YATEWindow::YATEWindow(QWidget *parent)
       parser_(nullptr),
       huntInfoGenerator_(nullptr),
       isLogManuallySet_(false),
-      isLiveFeedbackRunning_(false)
+      isLiveFeedbackRunning_(false),
+      clientVersion_(clientVersion)
 
 {
     ui->setupUi(this);
@@ -95,7 +85,6 @@ YATEWindow::YATEWindow(QWidget *parent)
     connect(updater, &Updater::updateAvailable, settingsDialog_, &SettingsDialog::onUpdateAvailable);
     connect(updater, &Updater::errorOccurred, settingsDialog_, &SettingsDialog::onUpdaterError);
     connect(updater, &Updater::onBusyUpdate, settingsDialog_, &SettingsDialog::lockUpdateBtn);
-//    connect(updater, &Updater::onBusyUpdate, this, &YATEWindow::onUpdaterBusy);
     if (settings.value(SETTINGS_KEY_UPDATE_ON_STARTUP, true).toBool()) {
         emit checkForUpdate();
     }
@@ -109,6 +98,21 @@ YATEWindow::YATEWindow(QWidget *parent)
 
 #endif
 
+}
+
+void Yate::YATEWindow::initDiscord()
+{
+#ifdef DISCORD_ENABLED
+    discordThread_ = new QThread;
+    discord_ = new DiscordManager;
+    discord_->moveToThread(discordThread_);
+    connect(discordThread_, &QThread::started, discord_, &DiscordManager::start);
+    connect(discordThread_, &QThread::finished, discordThread_, &QThread::deleteLater);
+    connect(this, &YATEWindow::discordStart, discord_, &DiscordManager::start);
+    connect(this, &YATEWindow::discordStop, discord_, &DiscordManager::stop);
+    connect(this, &YATEWindow::discordClearActivity, discord_, &DiscordManager::clearActivity);
+    discordThread_->start();
+#endif
 }
 
 
