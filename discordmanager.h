@@ -12,6 +12,7 @@ namespace discord {
 }
 
 class QTimer;
+class QSettings;
 
 namespace Yate {
 
@@ -60,9 +61,11 @@ private:
     QString activityImageText_;
     QString host_;
     QSet<QString> squad_;
+    QSettings *settings_;
     bool ready_;
     bool failed_;
     bool running_;
+    bool activityInit_;
 };
 
 }

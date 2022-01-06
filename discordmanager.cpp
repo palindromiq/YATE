@@ -4,11 +4,12 @@
 #include <QDebug>
 #include <QTimer>
 #include <QThread>
+#include <QSettings>
 #include "discord_game_sdk/discord.h"
 
 namespace Yate {
 DiscordManager::DiscordManager(QObject *parent)
-    : QObject{parent}, currentUser_(new discord::User), updateTimer_(new QTimer(this)), ready_(false), failed_(false)
+    : QObject{parent}, currentUser_(new discord::User), updateTimer_(new QTimer(this)), settings_(new QSettings), ready_(false), failed_(false), activityInit_(false)
 {
     connect(updateTimer_, &QTimer::timeout, this, &DiscordManager::update);
     setup();
@@ -42,8 +43,10 @@ void DiscordManager::update()
         return;
     }
     core_->RunCallbacks();
-    if(currentActivityDetails_ != activityDetails_ || currentActivityState_ != activityState_ || currentActivityImageText_ != activityImageText_) {
-        updateActivity();
+    if (settings_->value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool()) {
+        if(!activityInit_ || currentActivityDetails_ != activityDetails_ || currentActivityState_ != activityState_ || currentActivityImageText_ != activityImageText_) {
+            updateActivity();
+        }
     }
 }
 void DiscordManager::clearActivity()
@@ -82,6 +85,7 @@ void DiscordManager::updateActivity()
             qDebug() << "Activity update failed";
         }
     });
+    activityInit_ = true;
 }
 
 void DiscordManager::setup(bool emitErrors)

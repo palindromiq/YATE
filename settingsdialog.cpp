@@ -56,7 +56,10 @@ void SettingsDialog::reloadSettings()
     ui->spnLimbsPrec->setValue(settings_->value(SETTINGS_KEY_LIMBS_PREC, SETTINGS_LIMBS_PREC_DEFAULT).toInt());
     ui->chkLockFeedbackButton->setChecked(settings_->value(SETTINGS_KEY_LOCK_FEEDBACK_BTN, true).toBool());
     ui->chkStreamer->setChecked(settings_->value(SETTINGS_KEY_STREAMER_MODE, false).toBool());
+    ui->chkDiscord->setChecked(settings_->value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool());
     ui->chkDiscordActivity->setChecked(settings_->value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool());
+    ui->chkClientsServer->setChecked(settings_->value(SETTINGS_KEY_DISCORD_NETWORKING, true).toBool());
+
     on_chkShowLimbs_toggled(showLimbsSummary);
 }
 
@@ -133,8 +136,12 @@ void SettingsDialog::on_btnSave_clicked()
   settings_->setValue(SETTINGS_KEY_LOCK_FEEDBACK_BTN, ui->chkLockFeedbackButton->isChecked());
   settings_->setValue(SETTINGS_KEY_STREAMER_MODE, ui->chkStreamer->isChecked());
   settings_->setValue(SETTINGS_KEY_UPDATE_ON_STARTUP, ui->chkAutoUpdate->isChecked());
+  settings_->setValue(SETTINGS_KEY_DISCORD_FEATURES, ui->chkDiscord->isChecked());
   settings_->setValue(SETTINGS_KEY_DISCORD_ACTIVITY, ui->chkDiscordActivity->isChecked());
-  parentW->refreshDiscordSettings();
+  settings_->setValue(SETTINGS_KEY_DISCORD_NETWORKING, ui->chkClientsServer->isChecked());
+  if (parentW) {
+      parentW->refreshDiscordSettings();
+  }
 }
 
 
@@ -186,6 +193,13 @@ void SettingsDialog::on_chkShowLimbs_toggled(bool checked)
 void SettingsDialog::on_btnCheckUpdates_clicked()
 {
   emit checkForUpdate();
+}
+
+
+void SettingsDialog::on_chkDiscord_stateChanged(int)
+{
+  ui->chkDiscordActivity->setEnabled(ui->chkDiscord->isChecked());
+  ui->chkClientsServer->setEnabled(ui->chkDiscord->isChecked());
 }
 
 

@@ -46,6 +46,8 @@ private slots:
     void on_chkShowLimbs_toggled(bool checked);
     void on_btnCheckUpdates_clicked();
 
+    void on_chkDiscord_stateChanged(int arg1);
+
 signals:
     void checkForUpdate();
 private:

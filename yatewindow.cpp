@@ -37,6 +37,7 @@ void Yate::YATEWindow::initDiscord()
     connect(discordThread_, &QThread::finished, discordThread_, &QThread::deleteLater);
     connect(this, &YATEWindow::discordStart, discord_, &DiscordManager::start);
     connect(this, &YATEWindow::discordStop, discord_, &DiscordManager::stop);
+    connect(this, &YATEWindow::discordClearActivity, discord_, &DiscordManager::clearActivity);
     discordThread_->start();
 }
 
@@ -99,7 +100,7 @@ YATEWindow::YATEWindow(QWidget *parent)
         emit checkForUpdate();
     }
 #ifdef DISCORD_ENABLED
-    if (settings.value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool()) {
+    if (settings.value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool()) {
         initDiscord();
     } else {
         discordThread_ = nullptr;
@@ -224,7 +225,7 @@ void Yate::YATEWindow::showLiveFeedback(bool lock)
 
 #ifdef DISCORD_ENABLED
     QSettings settings;
-    if (settings.value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool()) {
+    if (settings.value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool() && settings.value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool()) {
         connect(huntInfoGenerator_, &HuntInfoGenerator::onHuntStateChanged, discord_, &DiscordManager::setActivityDetails);
         connect(huntInfoGenerator_, &HuntInfoGenerator::onLimbsChanged, discord_, &DiscordManager::setActivityState);
         connect(huntInfoGenerator_, &HuntInfoGenerator::onSquadChanged, discord_, &DiscordManager::setSquad);
@@ -352,11 +353,14 @@ void YATEWindow::refreshDiscordSettings()
 {
 #ifdef DISCORD_ENABLED
     QSettings settings;
-    if (settings.value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool()) {
+    if (settings.value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool()) {
         if (!discord_) {
             initDiscord();
         } else {
             emit discordStart();
+        }
+        if (!settings.value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool()) {
+            emit discordClearActivity();
         }
 
     } else {

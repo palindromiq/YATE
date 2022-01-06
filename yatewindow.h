@@ -85,6 +85,7 @@ signals:
     void feedbackWindowClosed();
     void discordStop();
     void discordStart();
+    void discordClearActivity();
 
 private:
     void createTrayIcon();

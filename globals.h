@@ -32,7 +32,9 @@ class QString;
 #define SETTINGS_KEY_STREAMER_MODE "streamer_mode"
 #define SETTINGS_KEY_LAST_SAVE_DIR "img_save_dir"
 #define SETTINGS_KEY_UPDATE_ON_STARTUP "update_on_start"
+#define SETTINGS_KEY_DISCORD_FEATURES "discord_features"
 #define SETTINGS_KEY_DISCORD_ACTIVITY "discord_activity"
+#define SETTINGS_KEY_DISCORD_NETWORKING "discord_networking"
 
 #define DISCORD_UPDATE_TIMER 50
 
