@@ -43,6 +43,7 @@ public:
     bool isLogManuallySet() const;
     void setIsLogManuallySet(bool newIsLogManuallySet);
     void showLiveFeedback(bool lock);
+    void showClientLiveFeedback(bool lock);
 
 protected:
     void changeEvent(QEvent* e);
@@ -73,13 +74,20 @@ private slots:
     void onParserError(QString);
 
     void lockFeedbackWindow();
+    void lockClientFeedbackWindow();
 
     void on_btnLiveFeedbackVS_clicked();
+
+    void on_btnCopyLobbyId_clicked();
 
 public slots:
     void setLogFilePath(QString path);
     void onUpdaterBusy(bool busy);
     void refreshDiscordSettings();
+    void onLobbyIdChange(QString id);
+    void onUserConnected(QString name);
+    void onDiscordVSConnectionSucceeded();
+    void onDiscordVSConnectionFailed();
 
 signals:
     void exitFeebackOverlay();
@@ -88,6 +96,7 @@ signals:
     void discordStop();
     void discordStart();
     void discordClearActivity();
+    void disconnectDiscordLobby();
 
 private:
     void createTrayIcon();
