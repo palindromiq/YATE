@@ -136,6 +136,18 @@ void DiscordManager::setup(bool emitErrors)
     core_->NetworkManager().GetPeerId(&peerId);
     emit onPeerIdChange(QString::number(peerId));
 
+
+    core_->LobbyManager().OnMemberDisconnect .Connect([&](discord::LobbyId lobbyId, discord::UserId userId) {
+       if(lobbyId == peerLobbyId_ && userId == peerUserId_) {
+           emit onLobbyDisconnect();
+       }
+    });
+    core_->LobbyManager().OnLobbyDelete.Connect([&](discord::LobbyId lobbyId, std::uint32_t reason) {
+       if(lobbyId == peerLobbyId_) {
+           emit onLobbyDisconnect();
+       }
+    });
+
     core_->UserManager().OnCurrentUserUpdate.Connect([&]() {
         core_->UserManager().GetCurrentUser(currentUser_);
         QString username(currentUser_->GetUsername());

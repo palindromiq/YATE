@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QDir>
 #include <QString>
+#include <QAtomicInt>
 #include <QSystemTrayIcon>
 
 #include "globals.h"
@@ -114,7 +115,7 @@ private:
     EEParser *parser_;
     HuntInfoGenerator *huntInfoGenerator_;
     bool isLogManuallySet_;
-    bool isLiveFeedbackRunning_;
+    QAtomicInt isLiveFeedbackRunning_;
     bool clientVersion_;
 
 #ifdef DISCORD_ENABLED
