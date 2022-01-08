@@ -2,6 +2,7 @@
 #define HUNTINFOGENERATOR_H
 
 #include <QObject>
+#include <QSet>
 #include "logevent.h"
 
 class QSettings;
@@ -73,6 +74,8 @@ public slots:
 signals:
     void onHuntStateChanged(QString);
     void onLimbsChanged(QString);
+    void onHostChanged(QString);
+    void onSquadChanged(QSet<QString>);
 
 private:
     HuntInfo* huntInfo_;
@@ -89,6 +92,7 @@ private:
     bool showLimbsSummary_;
     bool showLimbsSummaryAfterLast_;
     int limbsSummaryPrec_;
+    QString host_;
 };
 }
 

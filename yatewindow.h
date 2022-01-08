@@ -7,6 +7,8 @@
 #include <QString>
 #include <QSystemTrayIcon>
 
+#include "globals.h"
+
 
 
 
@@ -17,6 +19,10 @@ namespace Ui { class YATEWindow; }
 class QAction;
 
 QT_END_NAMESPACE
+
+
+
+
 namespace Yate {
 
 class SettingsDialog;
@@ -24,18 +30,20 @@ class LiveFeedbackOverlay;
 class AnalysisWindow;
 class EEParser;
 class HuntInfoGenerator;
+class DiscordManager;
 
 class YATEWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    YATEWindow(QWidget *parent = nullptr);
+    YATEWindow(bool clientVersion = false, QWidget *parent = nullptr);
     ~YATEWindow();
 
     bool isLogManuallySet() const;
     void setIsLogManuallySet(bool newIsLogManuallySet);
     void showLiveFeedback(bool lock);
+    void showClientLiveFeedback(bool lock);
 
 protected:
     void changeEvent(QEvent* e);
@@ -66,12 +74,29 @@ private slots:
     void onParserError(QString);
 
     void lockFeedbackWindow();
+    void lockClientFeedbackWindow();
+
+    void on_btnLiveFeedbackVS_clicked();
+
+    void on_btnCopyLobbyId_clicked();
 
 public slots:
     void setLogFilePath(QString path);
+    void onUpdaterBusy(bool busy);
+    void refreshDiscordSettings();
+    void onLobbyIdChange(QString id);
+    void onUserConnected(QString name);
+    void onDiscordVSConnectionSucceeded();
+    void onDiscordVSConnectionFailed();
 
 signals:
     void exitFeebackOverlay();
+    void checkForUpdate();
+    void feedbackWindowClosed();
+    void discordStop();
+    void discordStart();
+    void discordClearActivity();
+    void disconnectDiscordLobby();
 
 private:
     void createTrayIcon();
@@ -90,8 +115,14 @@ private:
     HuntInfoGenerator *huntInfoGenerator_;
     bool isLogManuallySet_;
     bool isLiveFeedbackRunning_;
+    bool clientVersion_;
 
+#ifdef DISCORD_ENABLED
+    DiscordManager *discord_;
+    QThread *discordThread_;
+#endif
 
+    void initDiscord();
 };
 }
 #endif // YATEWINDOW_H

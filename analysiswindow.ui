@@ -28,19 +28,38 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QWidget" name="widget_2" native="true"/>
+         </item>
+        </layout>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btnExport">
+       <widget class="QPushButton" name="btnCopyImg">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
-         <string>Export</string>
+         <string>Copy Image</string>
+        </property>
+        <property name="icon">
+         <iconset resource="assets/breeze.qrc">
+          <normaloff>:/png.svg</normaloff>:/png.svg</iconset>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btnImport">
+       <widget class="QPushButton" name="btnExport">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
-         <string>Import</string>
+         <string>Export Image</string>
+        </property>
+        <property name="icon">
+         <iconset resource="assets/breeze.qrc">
+          <normaloff>:/png.svg</normaloff>:/png.svg</iconset>
         </property>
        </widget>
       </item>
@@ -56,6 +75,8 @@
    </layout>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="assets/breeze.qrc"/>
+ </resources>
  <connections/>
 </ui>

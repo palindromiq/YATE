@@ -6,9 +6,11 @@
 #include <QDragEnterEvent>
 #include <QMimeData>
 #include <QStandardPaths>
+#include <QMessageBox>
 
 #include "globals.h"
 #include "yatewindow.h"
+#include "updater.h"
 
 namespace Yate {
 SettingsDialog::SettingsDialog(QWidget *parent) :
@@ -19,6 +21,11 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
     reloadSettings();
     setAcceptDrops(true);
+    ui->lblVersion->setText("YATE " + Updater::getInstance()->getVersion());
+    ui->lblWebsite->setText("<a style=\"color: rgb(255, 255, 255);\" href=\"" + SETTINGS_WEBSITE_HTTPS + "\">" + SETTINGS_WEBSITE + "</a>");
+    ui->lblWebsite->setTextFormat(Qt::RichText);
+    ui->lblWebsite->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    ui->lblWebsite->setOpenExternalLinks(true);
 }
 
 void SettingsDialog::setEEFilePath(QString &path)
@@ -45,9 +52,14 @@ void SettingsDialog::reloadSettings()
         bool showLimbsSummaryAfterLast = settings_->value(SETTINGS_KEY_SHOW_LIMBS_AFTER_LAST) == "true";
         ui->chkShowLimbsAfterLast->setChecked(showLimbsSummaryAfterLast);
     }
+    ui->chkAutoUpdate->setChecked(settings_->value(SETTINGS_KEY_UPDATE_ON_STARTUP, true).toBool());
     ui->spnLimbsPrec->setValue(settings_->value(SETTINGS_KEY_LIMBS_PREC, SETTINGS_LIMBS_PREC_DEFAULT).toInt());
     ui->chkLockFeedbackButton->setChecked(settings_->value(SETTINGS_KEY_LOCK_FEEDBACK_BTN, true).toBool());
     ui->chkStreamer->setChecked(settings_->value(SETTINGS_KEY_STREAMER_MODE, false).toBool());
+    ui->chkDiscord->setChecked(settings_->value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool());
+    ui->chkDiscordActivity->setChecked(settings_->value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool());
+    ui->chkClientsServer->setChecked(settings_->value(SETTINGS_KEY_DISCORD_NETWORKING, true).toBool());
+
     on_chkShowLimbs_toggled(showLimbsSummary);
 }
 
@@ -72,13 +84,39 @@ SettingsDialog::~SettingsDialog()
     delete ui;
 }
 
+void SettingsDialog::onUpdateStatusUpdate(QString status)
+{
+    ui->lblUpdateStatus->setText(status);
+}
+
+void SettingsDialog::onUpdateAvailable()
+{
+    auto result = QMessageBox::question(this, "Update YATE", "A new version (" + Updater::getInstance(0)->latestVersion() + ") is available, do you want to update to the latest version?",
+                                        QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
+    if (result == QMessageBox::Yes) {
+        Updater::getInstance(0)->startUpdate();
+    } else if (result == QMessageBox::NoToAll) {
+        settings_->setValue(SETTINGS_KEY_UPDATE_ON_STARTUP, false);
+        ui->chkAutoUpdate->setChecked(false);
+    }
+}
+
+void SettingsDialog::onUpdaterError(QString err) {
+    QMessageBox::critical(this, "Update Error", err);
+}
+
+void SettingsDialog::lockUpdateBtn(bool busy)
+{
+    ui->btnCheckUpdates->setEnabled(!busy);
+}
+
 
 void SettingsDialog::on_btnSave_clicked()
 {
   this->accept();
+  YATEWindow *parentW = dynamic_cast<YATEWindow*>(parentWidget());
   if(!ui->lblLogFilePath->text().isEmpty()) {
       settings_->setValue(SETTINGS_KEY_EE_LOG, ui->lblLogFilePath->text().trimmed());
-      YATEWindow *parentW = dynamic_cast<YATEWindow*>(parentWidget());
       if (parentW && !parentW->isLogManuallySet()) {
         parentW->setLogFilePath(ui->lblLogFilePath->text().trimmed());
       }
@@ -97,6 +135,13 @@ void SettingsDialog::on_btnSave_clicked()
   settings_->setValue(SETTINGS_KEY_LIMBS_PREC, ui->spnLimbsPrec->value());
   settings_->setValue(SETTINGS_KEY_LOCK_FEEDBACK_BTN, ui->chkLockFeedbackButton->isChecked());
   settings_->setValue(SETTINGS_KEY_STREAMER_MODE, ui->chkStreamer->isChecked());
+  settings_->setValue(SETTINGS_KEY_UPDATE_ON_STARTUP, ui->chkAutoUpdate->isChecked());
+  settings_->setValue(SETTINGS_KEY_DISCORD_FEATURES, ui->chkDiscord->isChecked());
+  settings_->setValue(SETTINGS_KEY_DISCORD_ACTIVITY, ui->chkDiscordActivity->isChecked());
+  settings_->setValue(SETTINGS_KEY_DISCORD_NETWORKING, ui->chkClientsServer->isChecked());
+  if (parentW) {
+      parentW->refreshDiscordSettings();
+  }
 }
 
 
@@ -142,6 +187,19 @@ void SettingsDialog::on_chkShowLimbs_toggled(bool checked)
 {
     ui->chkShowLimbsAfterLast->setEnabled(checked);
     ui->spnLimbsPrec->setEnabled(checked);
+}
+
+
+void SettingsDialog::on_btnCheckUpdates_clicked()
+{
+  emit checkForUpdate();
+}
+
+
+void SettingsDialog::on_chkDiscord_stateChanged(int)
+{
+  ui->chkDiscordActivity->setEnabled(ui->chkDiscord->isChecked());
+  ui->chkClientsServer->setEnabled(ui->chkDiscord->isChecked());
 }
 
 

@@ -2,6 +2,8 @@
 #define ANALYSISWINDOW_H
 
 #include <QMainWindow>
+#include <QImage>
+#include <QAtomicInt>
 
 namespace Ui {
 class AnalysisWindow;
@@ -25,10 +27,22 @@ public:
 private slots:
     void on_btnClose_clicked();
 
+    void on_treAnalysisView_clicked(const QModelIndex &index);
+    void highlightNight(int night);
+    void unhighlightNight();
+    void on_btnExport_clicked();
+    void exportFinished(bool);
+    void generateFinished(QImage);
+
+    void on_btnCopyImg_clicked();
+
 private:
     Ui::AnalysisWindow *ui;
     AnalysisViewModel *model_;
     HuntInfo *hunt_;
+    int selectedNight_;
+    QAtomicInt isGenerating_;
+    QString savePath_;
 };
 }
 

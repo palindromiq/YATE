@@ -23,7 +23,7 @@ public:
     void setCurrentPosition(int newCurrentPosition);
 
 
-    static LogEventType msgToEventType(QString msg, int &val);
+    static LogEventType msgToEventType(QString msg, int &val, QString& strVal);
 
 private slots:
     void onFileChanged(bool exist);
@@ -40,7 +40,7 @@ signals:
     void parsingFinished();
     void parsingReset();
     void parsingError(QString);
-    void logEvent(LogEvent &e);
+    void logEvent(Yate::LogEvent &e);
 
     void startWatcher();
     void stopWatcher();

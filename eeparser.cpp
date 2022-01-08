@@ -81,15 +81,17 @@ void Yate::EEParser::parseLine(QString &line)
 
     if(matched) {
         int val;
-        auto evtType = EEParser::msgToEventType(msgText, val);
+        QString strVal;
+        auto evtType = EEParser::msgToEventType(msgText, val, strVal);
         if (evtType != LogEventType::Invalid) {
 
             if (hostJustUnloaded_) {
-                if (evtType != LogEventType::TeralystSpawn && evtType != LogEventType::NightBegin) {
+                if (evtType != LogEventType::TeralystSpawn && evtType != LogEventType::NightBegin && evtType != LogEventType::HostJoin) {
                     return;
                 }
             }
-            LogEvent evt(evtId_++, evtType, timestamp, val);
+
+            LogEvent evt(evtId_++, evtType, timestamp, val, strVal);
             if (evtType == LogEventType::HostUnload) {
                 hostJustUnloaded_ = true;
             } else {
@@ -169,7 +171,7 @@ void EEParser::startLive()
 
 }
 
-LogEventType EEParser::msgToEventType(QString msg, int &val)
+LogEventType EEParser::msgToEventType(QString msg, int &val, QString &strVal)
 {
     QMap<QString, LogEventType> msgEvtMap{
         {"TeralystEncounter.lua: It's nighttime!", LogEventType::NightBegin},
@@ -189,6 +191,29 @@ LogEventType EEParser::msgToEventType(QString msg, int &val)
 
     if (msgEvtMap.contains(msg)) {
         return msgEvtMap[msg];
+    } else if (msg.startsWith("Starting load for")) {
+        const QRegularExpression rx("Starting load for (\\w+)");
+        auto match = rx.match(msg);
+        if (!match.isValid()) {
+            return LogEventType::Invalid;
+        }
+        strVal = match.captured(1);
+        if (strVal == "Player") {
+            return LogEventType::Invalid;
+        }
+        return LogEventType::SquadJoin;
+    } else if (msg.startsWith("Logged in ")) {
+        const QRegularExpression rx("Logged in (\\w+)");
+        auto match = rx.match(msg);
+        if (!match.isValid()) {
+            return LogEventType::Invalid;
+        }
+
+        strVal = match.captured(1);
+        if (strVal == "Player") {
+            return LogEventType::Invalid;
+        }
+        return LogEventType::HostJoin;
     } else if (msg.startsWith("TeralystEncounter.lua: A shard has been put in the Eidolon Shrine.")) {
         const QRegularExpression rx("[^0-9]+");
         const auto&& parts = msg.split(rx, Qt::SkipEmptyParts);

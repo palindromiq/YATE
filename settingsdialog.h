@@ -23,6 +23,11 @@ public:
 
     ~SettingsDialog();
 
+public slots:
+    void onUpdateStatusUpdate(QString status);
+    void onUpdateAvailable();
+    void onUpdaterError(QString err);
+    void lockUpdateBtn(bool busy);
 private slots:
     void on_btnSave_clicked();
 
@@ -39,7 +44,12 @@ private slots:
 
 
     void on_chkShowLimbs_toggled(bool checked);
+    void on_btnCheckUpdates_clicked();
 
+    void on_chkDiscord_stateChanged(int arg1);
+
+signals:
+    void checkForUpdate();
 private:
     Ui::SettingsDialog *ui;
     QSettings *settings_;

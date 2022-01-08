@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>309</width>
-    <height>48</height>
+    <height>54</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -47,13 +47,13 @@
          </sizepolicy>
         </property>
         <property name="styleSheet">
-         <string notr="true">background:rgba(0,0,0,0.7); padding: 0;</string>
+         <string notr="true">background:rgba(0,0,0,0.7); padding: 0;border-style: none;</string>
         </property>
         <property name="text">
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="breeze.qrc">
+         <iconset resource="assets/breeze.qrc">
           <normaloff>:/lock.png</normaloff>:/lock.png</iconset>
         </property>
        </widget>
@@ -143,7 +143,7 @@
   </widget>
  </widget>
  <resources>
-  <include location="breeze.qrc"/>
+  <include location="assets/breeze.qrc"/>
  </resources>
  <connections/>
 </ui>

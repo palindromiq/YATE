@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>562</width>
-    <height>123</height>
+    <height>162</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -42,7 +42,6 @@
           </property>
           <property name="font">
            <font>
-            <weight>75</weight>
             <bold>true</bold>
            </font>
           </property>
@@ -68,6 +67,44 @@
        </layout>
       </item>
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <layout class="QFormLayout" name="formLayout_3">
+          <property name="formAlignment">
+           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="lblLobbyIdLabel">
+            <property name="text">
+             <string>Lobby ID:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="lblLobbyId">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnCopyLobbyId">
+          <property name="text">
+           <string>Copy</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
        <widget class="QPushButton" name="btnShrineWater">
         <property name="text">
          <string>Stats Analysis</string>
@@ -75,16 +112,28 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btnLiveFeedback">
-        <property name="text">
-         <string>Live Feedback</string>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QPushButton" name="btnLiveFeedback">
+          <property name="text">
+           <string>Live Feedback (Host)</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnLiveFeedbackVS">
+          <property name="text">
+           <string>LiveFeedback (VS)</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </item>
    </layout>
   </widget>
+  <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <resources/>
  <connections/>
