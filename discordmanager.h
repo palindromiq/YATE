@@ -63,6 +63,7 @@ signals:
     void onMessagrFromChannel2(QString msg);
     void connectionSucceeded();
     void connectionFailed();
+    void onLobbyDisconnect();
 private:
     void setup(bool emitErrors = true);
     void sendMessageToLobby(QString msg);

@@ -287,13 +287,16 @@ void YATEWindow::changeEvent(QEvent* e)
 
 void YATEWindow::stopFeedback()
 {
-    trayStopFeedback_->setVisible(false);
-    feedbackOverlay_->close();
-    trayIcon_->hide();
-    isLiveFeedbackRunning_ = false;
-    showNormal();
-    emit feedbackWindowClosed();
-    emit disconnectDiscordLobby();
+    if (isLiveFeedbackRunning_) {
+        isLiveFeedbackRunning_ = false;
+        trayStopFeedback_->setVisible(false);
+        feedbackOverlay_->close();
+        trayIcon_->hide();
+        showNormal();
+        emit feedbackWindowClosed();
+        emit disconnectDiscordLobby();
+    }
+
 }
 
 void YATEWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
@@ -398,7 +401,12 @@ void YATEWindow::onLobbyIdChange(QString id) {
 
 void YATEWindow::onUserConnected(QString name)
 {
-    statusBar()->showMessage("Logged in to Discord as " + name, 2000);
+    QString title = "YATE " + Updater::getInstance()->getVersion();
+    if(name.size()) {
+        title = title + " (Logged in to Discord as @" + name + ")";
+        statusBar()->showMessage("Logged in to Discord as " + name, 2000);
+    }
+    setWindowTitle(title);
 }
 
 void YATEWindow::onDiscordVSConnectionSucceeded()
@@ -454,6 +462,7 @@ void Yate::YATEWindow::showClientLiveFeedback(bool lock)
     connect(discord_, &DiscordManager::onMessagrFromChannel2, feedbackOverlay_, &LiveFeedbackOverlay::onUpdateLimbs);
     connect(discord_, &DiscordManager::connectionFailed, this, &YATEWindow::onDiscordVSConnectionFailed, Qt::UniqueConnection);
     connect(feedbackOverlay_, &LiveFeedbackOverlay::onDoubleClicked, this, &YATEWindow::stopFeedback);
+    connect(discord_, &DiscordManager::onLobbyDisconnect, this, &YATEWindow::stopFeedback);
     connect(feedbackOverlay_, &LiveFeedbackOverlay::onLockWindow, this, &YATEWindow::lockClientFeedbackWindow);
 
     isLiveFeedbackRunning_ = true;

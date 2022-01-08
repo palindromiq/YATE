@@ -81,6 +81,9 @@ QString HuntInfo::eidolonName(int eido, bool abbreviate)
 
 QString HuntInfo::timestampToProgressString(float timestamp)
 {
+    if (timestamp == 0.0) {
+        return "N/A";
+    }
     int tsMins = int(timestamp / 60.0);
     return QString::number(tsMins) + ":" + FORMAT_NUMBER(timestamp - (tsMins * 60));
 
@@ -111,7 +114,9 @@ void HuntInfo::setHost(const QString &newHost)
 
 void HuntInfo::addSquadMember(const QString &member)
 {
-    squad_.insert(member);
+    if (member != host_) {
+        squad_.insert(member);
+    }
 }
 
 void HuntInfo::removeSquadMember(const QString &member)
@@ -222,6 +227,9 @@ QString NightInfo::getAverage() const
             count++;
             total += r.hydrolystCapInfo().lastLimbProgressTime();
         }
+    }
+    if (count == 0 || total == 0.0) {
+        return "N/A";
     }
     return HuntInfo::timestampToProgressString(total*1.0/count);
 
