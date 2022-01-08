@@ -6,7 +6,12 @@
 #include <QFileDialog>
 #include <QDesktopServices>
 #include <QThread>
+#include <QMessageBox>
+#include <QApplication>
+#include <QClipboard>
 #include <QSettings>
+#include <QImage>
+#include <QMimeData>
 
 namespace Yate {
 AnalysisWindow::AnalysisWindow(QWidget *parent) :
@@ -16,13 +21,6 @@ AnalysisWindow::AnalysisWindow(QWidget *parent) :
     isGenerating_.storeRelaxed(0);
     ui->setupUi(this);
     unhighlightNight();
-//    HuntInfo *huntInfo = new HuntInfo;
-//    model_ = new AnalysisViewModel(huntInfo, this);
-//    ui->treAnalysisView->setModel(model_);
-//    ui->treAnalysisView->setColumnWidth(0,  width() / 3.0);
-//    for(int i = 0; i < model_->rowCount(); i++) {
-//        ui->treAnalysisView->expand(model_->index(i, 0));
-//    }
 
 }
 
@@ -128,9 +126,11 @@ void AnalysisWindow::highlightNight(int night)
     selectedNight_ = night;
     if (isGenerating_.loadRelaxed() != 1) {
         ui->btnExport->setEnabled(true);
+        ui->btnCopyImg->setEnabled(true);
     }
 
     ui->btnExport->setToolTip("");
+    ui->btnCopyImg->setToolTip("");
 }
 
 void AnalysisWindow::unhighlightNight()
@@ -138,6 +138,9 @@ void AnalysisWindow::unhighlightNight()
     selectedNight_ = -1;
     ui->btnExport->setEnabled(false);
     ui->btnExport->setToolTip("Select a night analysis to export.");
+    ui->btnCopyImg->setEnabled(false);
+    ui->btnCopyImg->setToolTip("Select a night analysis to copy.");
+
 }
 
 
@@ -178,25 +181,64 @@ void AnalysisWindow::on_btnExport_clicked()
   settings.setValue(SETTINGS_KEY_LAST_SAVE_DIR, parentSavePath);
   savePath_ = savePath;
   ui->btnExport->setEnabled(false);
+  ui->btnCopyImg->setEnabled(false);
   isGenerating_.storeRelaxed(1);
   HuntImageGenerator *gen = new HuntImageGenerator(savePath, night, hunt_->host(), hunt_->squad());
   QThread *genThread = new QThread;
   gen->moveToThread(genThread);
   connect(genThread, &QThread::finished, genThread, &QThread::deleteLater);
   connect(genThread, &QThread::finished, gen, &QThread::deleteLater);
-  connect(genThread, &QThread::started, gen, &HuntImageGenerator::generateImage);
-  connect(gen, &HuntImageGenerator::generationFinished, this, &AnalysisWindow::generationFinished);
+  connect(genThread, &QThread::started, gen, &HuntImageGenerator::exportImage);
+  connect(gen, &HuntImageGenerator::exportFinished, this, &AnalysisWindow::exportFinished);
   genThread->start();
 
 }
 
-void AnalysisWindow::generationFinished(bool success)
+void AnalysisWindow::exportFinished(bool success)
 {
     isGenerating_.storeRelaxed(0);
     highlightNight(selectedNight_);
     if (success) {
         QDesktopServices::openUrl(QUrl::fromLocalFile(savePath_));
     }
+}
+
+void AnalysisWindow::generateFinished(QImage img)
+{
+    isGenerating_.storeRelaxed(0);
+    highlightNight(selectedNight_);
+
+    QString imgName =  "Hunt_" + QDateTime::currentDateTime().toString("MM_dd_yy_hh") + ".png";
+
+//    if (!success) {
+//        QMessageBox::critical(this, "Copy Failed", "Failed to place generated image in the clipboard.");
+//    }
+    auto clip = QApplication::clipboard();
+    QMimeData *data = new QMimeData;
+    data->setImageData(img);
+    clip->setMimeData(data, QClipboard::Clipboard);
+
+}
+
+
+void AnalysisWindow::on_btnCopyImg_clicked()
+{
+    if (selectedNight_ == -1 || (selectedNight_ >= hunt_->nightCount())) {
+        unhighlightNight();
+        return;
+    }
+    QSettings settings;
+    NightInfo &night = hunt_->night(selectedNight_);
+    ui->btnExport->setEnabled(false);
+    isGenerating_.storeRelaxed(1);
+    HuntImageGenerator *gen = new HuntImageGenerator("", night, hunt_->host(), hunt_->squad());
+    QThread *genThread = new QThread;
+    gen->moveToThread(genThread);
+    connect(genThread, &QThread::finished, genThread, &QThread::deleteLater);
+    connect(genThread, &QThread::finished, gen, &QThread::deleteLater);
+    connect(genThread, &QThread::started, gen, &HuntImageGenerator::generateAndEmit);
+    connect(gen, &HuntImageGenerator::generateFinished, this, &AnalysisWindow::generateFinished);
+    genThread->start();
 }
 
 }

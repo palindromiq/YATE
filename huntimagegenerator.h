@@ -2,6 +2,7 @@
 #define HUNTIMAGEGENERATOR_H
 
 #include <QObject>
+#include <QImage>
 #include "huntinfo.h"
 
 namespace Yate {
@@ -11,11 +12,16 @@ class HuntImageGenerator : public QObject
 public:
     explicit HuntImageGenerator(QString path, NightInfo &night, QString host, QSet<QString> squad, QObject *parent = nullptr);
 
+
 signals:
-    void generationFinished(bool);
+    void exportFinished(bool);
+    void generateFinished(QImage);
+
 
 public slots:
-    void generateImage();
+    QImage *generateImage();
+    void exportImage();
+    void generateAndEmit();
 private:
     QString path_;
     NightInfo night_;

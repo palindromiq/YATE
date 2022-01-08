@@ -2,10 +2,11 @@
 #include "globals.h"
 
 #include <QDebug>
-#include <QImage>
 #include <QPainter>
 #include <QFontMetrics>
 #include <QApplication>
+#include <QClipboard>
+#include <QMimeData>
 
 namespace Yate {
 HuntImageGenerator::HuntImageGenerator(QString path, NightInfo &night, QString host, QSet<QString> squad, QObject *parent)
@@ -14,7 +15,7 @@ HuntImageGenerator::HuntImageGenerator(QString path, NightInfo &night, QString h
 }
 
 
-void HuntImageGenerator::generateImage()
+QImage* HuntImageGenerator::generateImage()
 {
     int numSets = night_.validRunCount();
     int setHeight = 216;
@@ -24,9 +25,9 @@ void HuntImageGenerator::generateImage()
     int imageWidth = 1200;
     int imageHeight = numSets * setHeight + summaryHeight + footerHeight;
 
-    QImage pix(imageWidth, imageHeight, QImage::Format_ARGB32_Premultiplied);
+    QImage *pix = new QImage(imageWidth, imageHeight, QImage::Format_ARGB32_Premultiplied);
 
-    QPainter painter(&pix);
+    QPainter painter(pix);
     painter.setRenderHint(QPainter::Antialiasing, true);
     painter.setRenderHint(QPainter::TextAntialiasing, true);
     painter.setPen(QPen(QColor(SUMMARY_COLOR_LIMBS), 3));
@@ -37,7 +38,7 @@ void HuntImageGenerator::generateImage()
     font.setPointSize(18);
     QFontMetrics fm(font);
     painter.setFont(font);
-    painter.fillRect(0, 0, pix.width(), pix.height(), QColor(SUMMARY_COLOR_BG));
+    painter.fillRect(0, 0, pix->width(), pix->height(), QColor(SUMMARY_COLOR_BG));
 
     int topOffset = 0;
     int fw, fh;
@@ -163,10 +164,24 @@ void HuntImageGenerator::generateImage()
 
     painter.drawText(imageWidth/2 - fw/2, topOffset, text);
 
-
-    pix.save(path_);
-    emit generationFinished(true);
-    return;
+    return pix;
 }
+
+void HuntImageGenerator::exportImage()
+{
+    auto img = generateImage();
+    img->save(path_);
+
+    delete img;
+    emit exportFinished(true);
+}
+
+void HuntImageGenerator::generateAndEmit()
+{
+    auto img = generateImage();
+    emit generateFinished(*img);
+    delete img;
+}
+
 
 }

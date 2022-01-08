@@ -28,6 +28,25 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QWidget" name="widget_2" native="true"/>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnCopyImg">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Copy Image</string>
+        </property>
+        <property name="icon">
+         <iconset resource="assets/breeze.qrc">
+          <normaloff>:/png.svg</normaloff>:/png.svg</iconset>
+        </property>
        </widget>
       </item>
       <item>

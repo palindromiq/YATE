@@ -2,6 +2,7 @@
 #define ANALYSISWINDOW_H
 
 #include <QMainWindow>
+#include <QImage>
 #include <QAtomicInt>
 
 namespace Ui {
@@ -30,7 +31,10 @@ private slots:
     void highlightNight(int night);
     void unhighlightNight();
     void on_btnExport_clicked();
-    void generationFinished(bool);
+    void exportFinished(bool);
+    void generateFinished(QImage);
+
+    void on_btnCopyImg_clicked();
 
 private:
     Ui::AnalysisWindow *ui;
