@@ -144,6 +144,10 @@ QString Updater::getVersion() const
         verDiv.pop_back();
         ver = verDiv.join(".");
     }
+#ifdef QT_DEBUG
+    ver = ver + ".d";
+#endif
+
     return ver;
 }
 
