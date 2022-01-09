@@ -34,6 +34,7 @@ void FileWatcher::setFilePath(const QString &newFilePath)
 
 void FileWatcher::start()
 {
+    qDebug() << "File watcher started.";
     running_.storeRelaxed(1);
     QString parentPath = QFileInfo(filePath_).dir().path();
     QString fileBaseName = QFileInfo(filePath_).fileName();
@@ -86,10 +87,12 @@ void FileWatcher::start()
     }
 
     CloseHandle(dirHandler);
+    qDebug() << "File watcher terminated.";
 }
 
 void FileWatcher::stop()
 {
+    qDebug() << "Stopping file watcher.";
     running_.storeRelaxed(0);
 }
 

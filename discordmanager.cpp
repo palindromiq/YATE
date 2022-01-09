@@ -19,27 +19,34 @@ DiscordManager::DiscordManager(QObject *parent)
       settings_(new QSettings), ready_(false), failed_(false), running_(false), activityInit_(false),
       lobbyId_(-1), peerLobbyId_(-1), peerUserId_(-1)
 {
+    qDebug() << "Discord Manager: Initalizing Discord Manager.";
+    qDebug() << "Discord Manager: DISCORD_INSTANCE_ID " << qgetenv("DISCORD_INSTANCE_ID");
     connect(updateTimer_, &QTimer::timeout, this, &DiscordManager::update);
     connect(messageBufferTimer_, &QTimer::timeout, this, &DiscordManager::checkMessageBuffers);
     setup();
+    qDebug() << "Discord Manager: Initalized Discord Manager.";
 }
 
 DiscordManager::~DiscordManager()
 {
-    if(lobbyId_ != -1) {
-        if (core_) {
+    qDebug() << "Discord Manager: Destroying Discord Manager.";
+    if (core_) {
+        if(lobbyId_ != -1) {
             core_->LobbyManager().DeleteLobby(lobbyId_, [&](discord::Result) {});
         }
+        qDebug() << "Discord Manager: Deleting core";
+        delete core_;
     }
-    delete core_;
-    delete currentUser_;
 }
 
 void DiscordManager::start()
 {
+    qDebug() << "Discord Manager: Starting.";
     if (running()) {
+        qDebug () << "Discord Manager already running.";
         return;
     }
+    qDebug() << "Discord Manager: Starting timers.";
     updateTimer_->start(DISCORD_UPDATE_TIMER);
     messageBufferTimer_->start(DISCORD_MESSAGE_BUFFER_TIMER);
     running_ = true;
@@ -47,6 +54,7 @@ void DiscordManager::start()
 
 void DiscordManager::stop()
 {
+    qDebug() << "Discord Manager: Stopping.";
     updateTimer_->stop();
     messageBufferTimer_->stop();
     running_ = false;
@@ -73,10 +81,12 @@ void DiscordManager::clearActivity()
     if(failed_) {
         return;
     }
+    qDebug() << "Discord Manager: Clearing Discord activity.";
+
     currentActivityDetails_ = activityDetails_ = currentActivityState_ = activityState_ = currentActivityImageText_ = activityImageText_ = "";
     core_->ActivityManager().ClearActivity([](discord::Result result) {
         if (result != discord::Result::Ok) {
-            qDebug() << "Activity clear failed";
+            qCritical() << "Discord Manager: Activity clear failed";
         }
     });
 }
@@ -101,7 +111,7 @@ void DiscordManager::updateActivity()
     activity.SetState(stateArr);
     core_->ActivityManager().UpdateActivity(activity, [](discord::Result result) {
         if (result != discord::Result::Ok) {
-            qDebug() << "Activity update failed";
+            qWarning() << "Discord Manager: Activity update failed";
         }
     });
     activityInit_ = true;
@@ -115,20 +125,21 @@ void DiscordManager::setup(bool emitErrors)
 
     if (!core_) {
         if (emitErrors) {
-            qDebug() << "Failed to instantiate discord core! (err " << static_cast<int>(result)
+            qCritical() << "Discord Manager: Failed to instantiate discord core! (err " << static_cast<int>(result)
                      << ")\n";
             emit failed("Failed to connect to Discord");
         }
         failed_ = true;
         return;
     }
+    qDebug() << "Discord Manager: Core initialized.";
     failed_ = false;
 
 
 
     core_->SetLogHook(
                 discord::LogLevel::Debug, [](discord::LogLevel level, const char* message) {
-        qDebug() << "Log(" << static_cast<uint32_t>(level) << "): " << message << "\n";
+        qDebug() << "Discord Manager: LogHook(" << static_cast<uint32_t>(level) << "): " << message;
     });
 
 
@@ -137,26 +148,54 @@ void DiscordManager::setup(bool emitErrors)
     emit onPeerIdChange(QString::number(peerId));
 
 
-    core_->LobbyManager().OnMemberDisconnect .Connect([&](discord::LobbyId lobbyId, discord::UserId userId) {
+    core_->LobbyManager().OnMemberDisconnect.Connect([&](discord::LobbyId lobbyId, discord::UserId userId) {
+        qDebug() << "Discord Manager: Lobbdy Disconnect " << lobbyId << userId;
        if(lobbyId == peerLobbyId_ && userId == peerUserId_) {
-           emit onLobbyDisconnect();
-       }
-    });
-    core_->LobbyManager().OnLobbyDelete.Connect([&](discord::LobbyId lobbyId, std::uint32_t reason) {
-       if(lobbyId == peerLobbyId_) {
+           qDebug() << "Discord Manager: Emitting lobbyDisconnect";
            emit onLobbyDisconnect();
        }
     });
 
-    core_->UserManager().OnCurrentUserUpdate.Connect([&]() {
+    core_->LobbyManager().OnMemberConnect.Connect([&](discord::LobbyId lobbyId, discord::UserId userId) {
+        qDebug() << "Discord Manager: Lobbdy Connect " << lobbyId << userId;
+    });
+
+    core_->LobbyManager().OnLobbyDelete.Connect([&](discord::LobbyId lobbyId, std::uint32_t reason) {
+       qDebug() << "Discord Manager: Lobbdy Delete " << lobbyId << reason;
+       if(lobbyId == peerLobbyId_) {
+           qDebug() << "Discord Manager: Emitting lobbyDisconnect";
+           emit onLobbyDisconnect();
+       }
+    });
+
+    auto userResult = core_->UserManager().GetCurrentUser(currentUser_);
+    if (userResult == discord::Result::Ok) {
+        qDebug() << "Discord Manager: Got Current User";
         core_->UserManager().GetCurrentUser(currentUser_);
         QString username(currentUser_->GetUsername());
+        qDebug() << "Discord Manager: Emitting username" << username;
         emit onUserConnected(username);
         ready_ = true;
+    }
+
+    core_->UserManager().OnCurrentUserUpdate.Connect([&]() {
+        qDebug() << "Discord Manager: Current User Update";
+        auto userResult =core_->UserManager().GetCurrentUser(currentUser_);
+        if (userResult == discord::Result::Ok) {
+            QString username(currentUser_->GetUsername());
+            qDebug() << "Discord Manager: Emitting username" << username;
+            emit onUserConnected(username);
+            ready_ = true;
+        } else {
+             qWarning() << "Discord Manager: Current User Update failed " << int(userResult);
+        }
+
 
     });
     core_->LobbyManager().OnLobbyMessage.Connect([&](discord::LobbyId lobbyId, discord::UserId userId,  std::uint8_t* data, std::uint32_t dataLen){
+        qDebug() << "Discord Manager: Received Lobby Message" << lobbyId << userId << QString::fromUtf8((char*)data, dataLen);
         if (lobbyId == peerLobbyId_ && userId == peerUserId_) {
+            qDebug() << "Discord Manager: Message accepted";
             QJsonDocument jsonMsg = QJsonDocument::fromJson(QString::fromUtf8((char*)data, dataLen).toUtf8());
             QJsonObject obj = jsonMsg.object();
             if (obj.contains("message")) {
@@ -164,30 +203,37 @@ void DiscordManager::setup(bool emitErrors)
                 if (obj.contains("channel")) {
                     QString ch = obj.value("channel").toString();
                     if (ch == "1") {
-                        emit onMessagrFromChannel1(message);
+                        qDebug() << "Discord Manager: Message received on channel 1";
+                        emit onMessageFromChannel1(message);
                     } else if (ch == "2") {
-                        emit onMessagrFromChannel2(message);
+                        qDebug() << "Discord Manager: Message received on channel 2";
+                        emit onMessageFromChannel2(message);
                     }
                 }
             }
         }
     });
     if (settings_->value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool() && settings_->value(SETTINGS_KEY_DISCORD_NETWORKING, true).toBool()) {
-
+        qDebug() << "Discord Manager: Creating Lobby";
         discord::LobbyTransaction txn;
         core_->LobbyManager().GetLobbyCreateTransaction(&txn);
         txn.SetType(discord::LobbyType::Public);
+        qDebug() << "Discord Manager: Created Lobby Transaction";
 
         core_->LobbyManager().CreateLobby(txn, [&](discord::Result result, const discord::Lobby &lobby) {
             if (result == discord::Result::Ok) {
+                qDebug() << "Discord Manager: Lobby created " << lobby.GetId();
                 char secret[512];
                 core_->LobbyManager().GetLobbyActivitySecret(lobby.GetId(), secret);
+                qDebug() << "Discord Manager: Lobby secret " << QString::fromUtf8(secret);
                 lobbyId_ = lobby.GetId();
                 emit onLobbyIdChange(QString::fromUtf8(secret));
+
             } else {
-                qDebug() << "Failed";
+                qCritical() << "Discord Manager: Failed to create lobby" << int(result);
             }
         });
+
 
 
     }
@@ -197,13 +243,17 @@ void DiscordManager::setup(bool emitErrors)
 
 void DiscordManager::sendMessageToLobby(QString msg)
 {
+    qDebug() << "Discord Manager: Sending message to lobby.";
     if(lobbyId_ != -1) {
         std::uint8_t *msgPayload = (std::uint8_t*) msg.toUtf8().data();
+        qDebug() << "Discord Manager: message payload ready.";
         core_->LobbyManager().SendLobbyMessage(lobbyId_, msgPayload, msg.size(), [&](discord::Result result) {
             if (result != discord::Result::Ok) {
-                qDebug() << "Failed to send message" << int(result);
+                qCritical() << "Discord Manager: failed to sent message to lobby: " << int (result);
             }
         });
+    } else {
+        qWarning() << "Discord Manager: Lobby ID not set.";
     }
 }
 
@@ -221,24 +271,30 @@ const QSet<QString> &DiscordManager::squad() const
 
 bool DiscordManager::connectTo(QString lobbySecret)
 {
-
+      qDebug() << "Discord Manager: Connecting to " << lobbySecret;
     if (settings_->value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool() && settings_->value(SETTINGS_KEY_DISCORD_NETWORKING, true).toBool()) {
+        qDebug() << "Discord Manager: Parsing lobby secret";
         QByteArray lobbySecretBA = lobbySecret.toUtf8();
         const char *lobbySecretArry = lobbySecretBA.data();
         auto split = lobbySecret.split(":");
         if (split.size() != 2) {
+            qWarning() << "Discord Manager: Invalid secret format";
             return false;
         }
         if (split[0] == QString::number(lobbyId_)) {
+            qWarning() << "Discord Manager: Attempting to connect to self?";
             return false;
         }
+        qDebug() << "Discord Manager: Establishing lobby connection";
         core_->LobbyManager().ConnectLobbyWithActivitySecret(lobbySecretArry, [&](discord::Result result, const discord::Lobby &lobby) {
             if (result == discord::Result::Ok) {
+                qDebug() << "Discord Manager: Connected to lobby " << lobby.GetId() << lobby.GetOwnerId();
                 peerUserId_ = lobby.GetOwnerId();
                 peerLobbyId_ = lobby.GetId();
+                qDebug() << "Discord Manager: Emitting connection succeeded";
                 emit connectionSucceeded();
             } else {
-                qDebug() << "Failed";
+                qCritical() << "Discord Manager: Failed to connect to lobby " << int(result);
                 emit connectionFailed();
             }
 
@@ -299,10 +355,13 @@ void DiscordManager::sendMessageOnChannel2(QString msg) {
 }
 
 void DiscordManager::disconnectFromLobby() {
+    qDebug() << "Discord Manager: disconnecting from lobby" << peerLobbyId_;
     if (peerLobbyId_ != -1) {
         core_->LobbyManager().DisconnectLobby(peerLobbyId_, [&](discord::Result result) {
             if (result != discord::Result::Ok) {
-                qDebug() << "Disconnect failed " << int(result);
+                qWarning() << "Discord Manager: Disconnect failed " << int(result);
+            } else {
+                qDebug() << "Discord Manager: Disconnected from lobby " << peerLobbyId_;
             }
         });
         lobbyId_ = -1;

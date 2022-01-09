@@ -15,6 +15,7 @@ ZipManager::ZipManager(QObject *parent)
 
 bool ZipManager::unzip(QString sourceArchive, QString destDir)
 {
+    qDebug() << "Unzipping archive " << sourceArchive << " to " << destDir;
     mz_zip_archive zipArchive;
     memset(&zipArchive, 0, sizeof(zipArchive));
     mz_bool status;
@@ -23,8 +24,8 @@ bool ZipManager::unzip(QString sourceArchive, QString destDir)
     status = mz_zip_reader_init_file(&zipArchive, sourceArchiveFileName, 0);
     if (!status)
     {
-        qDebug() << "mz_zip_reader_init_file() failed!";
-        qDebug() << mz_zip_get_error_string(zipArchive.m_last_error);
+        qCritical() << "mz_zip_reader_init_file() failed!";
+        qCritical() << mz_zip_get_error_string(zipArchive.m_last_error);
         return false;
     }
     for (int i = 0; i < (int)mz_zip_reader_get_num_files(&zipArchive); i++)
@@ -32,7 +33,7 @@ bool ZipManager::unzip(QString sourceArchive, QString destDir)
        mz_zip_archive_file_stat file_stat;
        if (!mz_zip_reader_file_stat(&zipArchive, i, &file_stat))
        {
-           qDebug() << "mz_zip_reader_file_stat() failed!";
+           qCritical() << "mz_zip_reader_file_stat() failed!";
            mz_zip_reader_end(&zipArchive);
            return false;
        }
@@ -47,14 +48,15 @@ bool ZipManager::unzip(QString sourceArchive, QString destDir)
        status = mz_zip_reader_extract_file_to_file(&zipArchive, file_stat.m_filename, extractionFileName, 0);
        if (!status)
        {
-           qDebug() << "mz_zip_reader_extract_file_to_file() failed!";
-           qDebug() << mz_zip_get_error_string(zipArchive.m_last_error);
+           qCritical() << "mz_zip_reader_extract_file_to_file() failed!";
+           qCritical() << mz_zip_get_error_string(zipArchive.m_last_error);
            mz_zip_reader_end(&zipArchive);
            return false;
        }
     }
 
      mz_zip_reader_end(&zipArchive);
+     qDebug() << "Finished unzipping archive " << sourceArchive << " to " << destDir;
      return true;
 
 }

@@ -31,7 +31,9 @@
 namespace Yate {
 
 
-YATEWindow::YATEWindow(bool clientVersion, QWidget *parent)
+
+
+YATEWindow::YATEWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::YATEWindow),
       settingsDialog_(new SettingsDialog(this)),
@@ -40,10 +42,14 @@ YATEWindow::YATEWindow(bool clientVersion, QWidget *parent)
       parser_(nullptr),
       huntInfoGenerator_(nullptr),
       isLogManuallySet_(false),
-      isLiveFeedbackRunning_(false),
-      clientVersion_(clientVersion)
+#ifdef DISCORD_ENABLED
+      discord_(nullptr),
+#endif
+      isLiveFeedbackRunning_(false)
+
 
 {
+    qDebug() << "Initializing main window.";
     ui->setupUi(this);
     setFixedSize(size());
     QSettings settings;
@@ -102,12 +108,15 @@ YATEWindow::YATEWindow(bool clientVersion, QWidget *parent)
     ui->btnLiveFeedback->setText(tr("Live Feedback"));
 #endif
 
+    qDebug() << "Main window initialized.";
+
 
 }
 
 void Yate::YATEWindow::initDiscord()
 {
 #ifdef DISCORD_ENABLED
+    qDebug() << "Initializing Discord.";
     discordThread_ = new QThread;
     discord_ = new DiscordManager;
     discord_->moveToThread(discordThread_);
@@ -119,10 +128,8 @@ void Yate::YATEWindow::initDiscord()
     connect(this, &YATEWindow::discordClearActivity, discord_, &DiscordManager::clearActivity, Qt::UniqueConnection);
     connect(discord_, &DiscordManager::onUserConnected, this, &YATEWindow::onUserConnected, Qt::UniqueConnection);
     connect(this, &YATEWindow::disconnectDiscordLobby, discord_, &DiscordManager::disconnectFromLobby, Qt::UniqueConnection);
-
-
-
     discordThread_->start();
+    qDebug() << "Discord thread started.";
 #endif
 }
 
@@ -130,6 +137,7 @@ void Yate::YATEWindow::initDiscord()
 void YATEWindow::dragEnterEvent(QDragEnterEvent *e)
 {
     if (e->mimeData()->hasUrls()) {
+        qDebug() << "Accepted log file via drop.";
         e->acceptProposedAction();
     }
 }
@@ -137,6 +145,7 @@ void YATEWindow::dragEnterEvent(QDragEnterEvent *e)
 void YATEWindow::dropEvent(QDropEvent *e)
 {
     foreach (const QUrl &url, e->mimeData()->urls()) {
+        qDebug() << "Setting log file via drop.";
         QString fileName = url.toLocalFile();
         ui->lblLogFilePath->setText(fileName);
         eeLogFile_.setFileName(fileName);
@@ -147,12 +156,27 @@ void YATEWindow::dropEvent(QDropEvent *e)
 
 YATEWindow::~YATEWindow()
 {
+    qDebug() << "Closing YATE";
+#ifdef DISCORD_ENABLED
+    if(discord_) {
+        qDebug() << "Deleting Discord Manager.";
+        emit discordStop();
+        qDebug() << "Waiting for Discord Managers timers.";
+        while(discord_->running()) {
+
+        }
+        qDebug() << "Finished waiting for Discord Managers timers.";
+        delete discord_;
+        qDebug() << "Deleted Discord Manager.";
+    }
+#endif
     delete ui;
 }
 
 
 void YATEWindow::on_btnSettings_clicked()
 {
+    qDebug() << "Starting settings dialog.";
     settingsDialog_->reloadSettings();
     settingsDialog_->exec();
 }
@@ -162,6 +186,7 @@ void YATEWindow::on_btnEditLogPath_clicked()
 {
     QString newPath = QFileDialog::getOpenFileName(this, tr("EE.log file"), QFileInfo(eeLogFile_.fileName()).dir().absolutePath(), tr("Log File (*.log)"));
     if(newPath.length()) {
+        qDebug() << "Log file path edited.";
         ui->lblLogFilePath->setText(newPath);
         eeLogFile_.setFileName(newPath);
         isLogManuallySet_ = true;
@@ -172,6 +197,7 @@ void YATEWindow::on_btnEditLogPath_clicked()
 void YATEWindow::on_btnShrineWater_clicked()
 {
     disableUI();
+    qDebug() << "Starting offline analysis.";
 #ifdef THREADED_PARSING
     parser_ = new EEParser(eeLogFile_.fileName(), false);
     huntInfoGenerator_ = new HuntInfoGenerator;
@@ -190,6 +216,7 @@ void YATEWindow::on_btnShrineWater_clicked()
     connect( parserThread, &QThread::finished, parserThread, &QThread::deleteLater);
 
     parserThread->start();
+    qDebug() << "Offline parsing thread started.";
 #else
     if (parser_ == nullptr) {
         parser_ = new EEParser(eeLogFile_.fileName(), false, this);
@@ -211,6 +238,7 @@ void YATEWindow::on_btnShrineWater_clicked()
 
 void Yate::YATEWindow::showLiveFeedback(bool lock)
 {
+    qDebug() << "Starting host live feedback." << (lock? " (Locked)": " (Unlocked)");
     feedbackOverlay_ = new LiveFeedbackOverlay(nullptr, lock);
     trayStopFeedback_->setVisible(true);
     parser_ = new EEParser(eeLogFile_.fileName(), false);
@@ -258,12 +286,12 @@ void Yate::YATEWindow::showLiveFeedback(bool lock)
     feedbackOverlay_->showNormal();
     trayIcon_->show();
     showMinimized();
+    qDebug() << "Host live feedback started" << (lock? " (Locked)": " (Unlocked)");;
 }
 
 void YATEWindow::on_btnLiveFeedback_clicked()
 {
     showLiveFeedback(false);
-
 }
 
 void YATEWindow::showWindow()
@@ -278,6 +306,7 @@ void YATEWindow::changeEvent(QEvent* e)
 
         if( event->oldState() & Qt::WindowMinimized )
         {
+            qDebug() << "Window restore, closing feedback window if open";
             if(isLiveFeedbackRunning_) {
                 stopFeedback();
             }
@@ -287,14 +316,18 @@ void YATEWindow::changeEvent(QEvent* e)
 
 void YATEWindow::stopFeedback()
 {
-    if (isLiveFeedbackRunning_) {
-        isLiveFeedbackRunning_ = false;
+    qDebug() << "Stopping live feedback.";
+    if (isLiveFeedbackRunning_.fetchAndStoreAcquire(false)) {
         trayStopFeedback_->setVisible(false);
         feedbackOverlay_->close();
         trayIcon_->hide();
         showNormal();
+        qDebug() << "Stopped live feedback.";
         emit feedbackWindowClosed();
         emit disconnectDiscordLobby();
+        qDebug() << "Emitted closing signals.";
+    } else {
+        qDebug () << "Live feedback already stopped.";
     }
 
 }
@@ -303,6 +336,7 @@ void YATEWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
 {
     switch (reason) {
     case QSystemTrayIcon::DoubleClick:
+        qDebug() << "Activated window through tray icon.";
         show();
         emit exitFeebackOverlay();
         break;
@@ -341,6 +375,7 @@ void YATEWindow::onParserStarted()
 
 void YATEWindow::onParserFinished()
 {
+    qDebug() << "Parser finished.";
     enableUI();
     // Set analysisWindow_ model
     analysisWindow_->setHunt(huntInfoGenerator_->huntInfo());
@@ -349,23 +384,28 @@ void YATEWindow::onParserFinished()
 
 void YATEWindow::onParserError(QString err)
 {
-    qCritical() << err;
+    qCritical() << "Parser error: " << err;
     enableUI();
 }
 
 void YATEWindow::lockFeedbackWindow()
 {
+    qDebug() << "Locking host live feedback window";
     feedbackOverlay_->close();
     showLiveFeedback(true);
+    qDebug() << "Locked host live feedback window";
 }
 void YATEWindow::lockClientFeedbackWindow()
 {
+    qDebug() << "Locking VS live feedback window";
     feedbackOverlay_->close();
     showClientLiveFeedback(true);
+    qDebug() << "Locked VS live feedback window";
 }
 
 void YATEWindow::setLogFilePath(QString path)
 {
+    qDebug() << "Changing log file path";
     ui->lblLogFilePath->setText(path);
     eeLogFile_.setFileName(path);
     isLogManuallySet_ = true;
@@ -378,6 +418,7 @@ void YATEWindow::onUpdaterBusy(bool busy) {
 void YATEWindow::refreshDiscordSettings()
 {
 #ifdef DISCORD_ENABLED
+    qDebug() << "Refreshing Discord settings";
     QSettings settings;
     if (settings.value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool()) {
         if (!discord_) {
@@ -396,11 +437,13 @@ void YATEWindow::refreshDiscordSettings()
 }
 
 void YATEWindow::onLobbyIdChange(QString id) {
+    qDebug() << "Lobby ID received: " << id;
     ui->lblLobbyId->setText(id);
 }
 
 void YATEWindow::onUserConnected(QString name)
 {
+    qDebug() << "Received Discord user" << name;
     QString title = "YATE " + Updater::getInstance()->getVersion();
     if(name.size()) {
         title = title + " (Logged in to Discord as @" + name + ")";
@@ -416,12 +459,14 @@ void YATEWindow::onDiscordVSConnectionSucceeded()
 
 void YATEWindow::onDiscordVSConnectionFailed()
 {
+    qDebug() << "Failed to connect to the given lobby.";
     stopFeedback();
     QMessageBox::critical(this, "Error", "Failed to establish connection to the given lobby");
 }
 
 void YATEWindow::createTrayIcon()
 {
+    qDebug() << "Creating tray icon.";
     trayIcon_ = new QSystemTrayIcon(QIcon(":/yate.ico"), this);
 
     trayStopFeedback_ = new QAction(tr("&Stop Feedback"), this);
@@ -452,14 +497,15 @@ void YATEWindow::setIsLogManuallySet(bool newIsLogManuallySet)
 
 void Yate::YATEWindow::showClientLiveFeedback(bool lock)
 {
+    qDebug() << "Starting client live feedback." << (lock? " (Locked)": " (Unlocked)");
     feedbackOverlay_ = new LiveFeedbackOverlay(nullptr, lock);
     trayStopFeedback_->setVisible(true);
 
 
 
 
-    connect(discord_, &DiscordManager::onMessagrFromChannel1, feedbackOverlay_, &LiveFeedbackOverlay::onUpdateMessage);
-    connect(discord_, &DiscordManager::onMessagrFromChannel2, feedbackOverlay_, &LiveFeedbackOverlay::onUpdateLimbs);
+    connect(discord_, &DiscordManager::onMessageFromChannel1, feedbackOverlay_, &LiveFeedbackOverlay::onUpdateMessage);
+    connect(discord_, &DiscordManager::onMessageFromChannel2, feedbackOverlay_, &LiveFeedbackOverlay::onUpdateLimbs);
     connect(discord_, &DiscordManager::connectionFailed, this, &YATEWindow::onDiscordVSConnectionFailed, Qt::UniqueConnection);
     connect(feedbackOverlay_, &LiveFeedbackOverlay::onDoubleClicked, this, &YATEWindow::stopFeedback);
     connect(discord_, &DiscordManager::onLobbyDisconnect, this, &YATEWindow::stopFeedback);
@@ -472,23 +518,30 @@ void Yate::YATEWindow::showClientLiveFeedback(bool lock)
     feedbackOverlay_->showNormal();
     trayIcon_->show();
     showMinimized();
+    qDebug() << "Client live feedback started." << (lock? " (Locked)": " (Unlocked)");
 }
 
 void YATEWindow::on_btnLiveFeedbackVS_clicked()
 {
 #ifdef DISCORD_ENABLED
+    qDebug() << "Client live feedback clicked.";
     QSettings settings;
     if (!settings.value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool() || !settings.value(SETTINGS_KEY_DISCORD_NETWORKING, true).toBool()) {
+        qCritical() << "Discord features not enabled for client live feedback";
         QMessageBox::critical(this, "Discord Features Required", "You must enable Discord features from the settings to use this feature.");
         return;
     }
     QString lobbyId = QInputDialog::getText(this, "Host Lobby ID", "Enter the host's Lobby ID").trimmed();
     if (!lobbyId.size()) {
+        qDebug() << "Returned empty Lobby Id";
         return;
     }
+    qDebug() << "Connecting to Lobby ID" << lobbyId;
     if(discord_->connectTo(lobbyId)) {
+        qDebug() << "Passed initial connection to Lobby";
         showClientLiveFeedback(false);
     } else {
+        qCritical() << "Failed at initial connection to Lobby";
         QMessageBox::critical(this, "Error", "Failed to establish connection to lobby, double check the input value.");
     }
 #else
@@ -500,12 +553,16 @@ void YATEWindow::on_btnLiveFeedbackVS_clicked()
 
 void YATEWindow::on_btnCopyLobbyId_clicked()
 {
+    qDebug() << "Copy Lobby ID.";
     QString lobbyIdText = ui->lblLobbyId->text().trimmed();
     if (lobbyIdText.size()) {
         QClipboard *clipboard = QApplication::clipboard();
         clipboard->setText(lobbyIdText);
+    } else {
+        qDebug() << "Lobby ID is empty.";
     }
 }
+
 
 
 

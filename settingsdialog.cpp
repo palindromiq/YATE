@@ -17,6 +17,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SettingsDialog), settings_(new QSettings(this))
 {
+    qDebug() << "Initalized Settings window.";
     ui->setupUi(this);
 
     reloadSettings();
@@ -26,6 +27,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->lblWebsite->setTextFormat(Qt::RichText);
     ui->lblWebsite->setTextInteractionFlags(Qt::TextBrowserInteraction);
     ui->lblWebsite->setOpenExternalLinks(true);
+    qDebug() << "Settings window initialized.";
 }
 
 void SettingsDialog::setEEFilePath(QString &path)
@@ -35,6 +37,7 @@ void SettingsDialog::setEEFilePath(QString &path)
 
 void SettingsDialog::reloadSettings()
 {
+    qDebug() << "Reloading Settings window.";
     if (!settings_->value(SETTINGS_KEY_EE_LOG).isNull()) {
         QString pth = settings_->value(SETTINGS_KEY_EE_LOG).toString();
         setEEFilePath(pth);
@@ -113,6 +116,7 @@ void SettingsDialog::lockUpdateBtn(bool busy)
 
 void SettingsDialog::on_btnSave_clicked()
 {
+  qDebug() << "Saving new settings.";
   this->accept();
   YATEWindow *parentW = dynamic_cast<YATEWindow*>(parentWidget());
   if(!ui->lblLogFilePath->text().isEmpty()) {
@@ -179,6 +183,7 @@ void SettingsDialog::on_btnDefaultPath_clicked()
         appDataPath = QFileInfo(appDataPath).dir().absolutePath(); // Up one directory
     }
     QString path = QDir(appDataPath).filePath(PATH_EE_LOG_RELATIVE);
+    qDebug() << "Updating log file path to " << path;
     setEEFilePath(path);
 }
 
@@ -192,12 +197,14 @@ void SettingsDialog::on_chkShowLimbs_toggled(bool checked)
 
 void SettingsDialog::on_btnCheckUpdates_clicked()
 {
+  qDebug() << "Checking for updates (from Settings).";
   emit checkForUpdate();
 }
 
 
 void SettingsDialog::on_chkDiscord_stateChanged(int)
 {
+  qDebug() << "Discord features set to " << ui->chkDiscord->isChecked();
   ui->chkDiscordActivity->setEnabled(ui->chkDiscord->isChecked());
   ui->chkClientsServer->setEnabled(ui->chkDiscord->isChecked());
 }

@@ -18,22 +18,29 @@ Downloader::Downloader(QObject *parent)
 
 void Downloader::onManagerFinished(QNetworkReply *reply)
 {
+    qDebug() << "Download finished.";
     isDownloading_.storeRelaxed(0);
     if (reply->error()) {
+        qCritical() << "Download failed with network error " << reply->errorString();
         emit onDownloadFailed("Update download failed: " + reply->errorString());
     } else {
         bool ok;
         QString filename = saveToDisk(reply, ok);
+
         if (ok) {
+            qDebug() << "Saved download file to desk.";
             QString hash = getFileHash(filename);
             if (expectedHash_.size() && expectedHash_ != hash) {
+                qCritical() << "Hash mismatch for downloaded file";
                 emit onDownloadFailed("Update download failed: hash validation failed");
             } else {
+                qDebug() << "Hash is ok for downloaded file";
                 emit onDownloadFinished(filename, hash);
             }
 
 
         } else {
+            qCritical() << "Failed to save download file: " << saveError_;
             emit onDownloadFailed(saveError_);
         }
     }
@@ -43,6 +50,7 @@ void Downloader::onManagerFinished(QNetworkReply *reply)
 
 QString Downloader::saveToDisk(QIODevice *reply, bool &result)
 {
+    qDebug() << "Saving download file to disk.";
     QTemporaryFile file(QDir::tempPath() + QDir::separator() + "XXXXXX_YATE.zip");
     if (!file.open()) {
         saveError_ = file.errorString();
@@ -63,7 +71,7 @@ QString Downloader::saveToDisk(QIODevice *reply, bool &result)
 void Downloader::onSslErrors(QList<QSslError> errs)
 {
     for(auto &e: errs) {
-        qDebug() << e.errorString();
+        qCritical() << e.errorString();
     }
 }
 #endif
@@ -71,16 +79,17 @@ void Downloader::onSslErrors(QList<QSslError> errs)
 void Downloader::download(QString urlString, QString expectedHash)
 {
     if (isDownloading_.loadRelaxed() != 1) {
-         QUrl url = QUrl::fromEncoded(urlString.toLocal8Bit());
-         isDownloading_.storeRelaxed(1);
-         expectedHash_ = expectedHash;
-         QNetworkRequest request(url);
-         QNetworkReply *reply = manager_->get(request);
-         #ifndef QT_NO_SSL
-             connect(reply, &QNetworkReply::sslErrors, this, &Downloader::onSslErrors);
-         #endif
+        qDebug() << "Downloading " << urlString;
+        QUrl url = QUrl::fromEncoded(urlString.toLocal8Bit());
+        isDownloading_.storeRelaxed(1);
+        expectedHash_ = expectedHash;
+        QNetworkRequest request(url);
+        QNetworkReply *reply = manager_->get(request);
+#ifndef QT_NO_SSL
+        connect(reply, &QNetworkReply::sslErrors, this, &Downloader::onSslErrors);
+#endif
     } else {
-        qDebug() << "Already downloading..";
+        qWarning() << "Already downloading..";
     }
 
 }
