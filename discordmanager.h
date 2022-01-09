@@ -59,8 +59,8 @@ signals:
     void onLobbyIdChange(QString id);
     void onPeerIdChange(QString id);
     void onUserConnected(QString name);
-    void onMessagrFromChannel1(QString msg);
-    void onMessagrFromChannel2(QString msg);
+    void onMessageFromChannel1(QString msg);
+    void onMessageFromChannel2(QString msg);
     void connectionSucceeded();
     void connectionFailed();
     void onLobbyDisconnect();
@@ -83,10 +83,10 @@ private:
     QString ch1Buffer;
     QString ch2Buffer;
     QMutex bufferMutex_;
-    bool ready_;
-    bool failed_;
-    bool running_;
-    bool activityInit_;
+    QAtomicInt ready_;
+    QAtomicInt failed_;
+    QAtomicInt running_;
+    QAtomicInt activityInit_;
     long long lobbyId_;
     long long peerLobbyId_;
     long long peerUserId_;

@@ -18,10 +18,11 @@ AnalysisWindow::AnalysisWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::AnalysisWindow),
     model_(nullptr), hunt_(nullptr), selectedNight_(-1)
 {
+    qDebug() << "Initializing analysis window.";
     isGenerating_.storeRelaxed(0);
     ui->setupUi(this);
     unhighlightNight();
-
+    qDebug() << "Initialized analysis window.";
 }
 
 
@@ -150,6 +151,7 @@ void AnalysisWindow::on_btnExport_clicked()
       unhighlightNight();
       return;
   }
+  qDebug() << "Exporting hunt image.";
   QSettings settings;
   NightInfo &night = hunt_->night(selectedNight_);
   QString defaultSavePath = "";
@@ -196,6 +198,7 @@ void AnalysisWindow::on_btnExport_clicked()
 
 void AnalysisWindow::exportFinished(bool success)
 {
+    qDebug() << "Finshed exporting hunt image.";
     isGenerating_.storeRelaxed(0);
     highlightNight(selectedNight_);
     if (success) {
@@ -205,14 +208,13 @@ void AnalysisWindow::exportFinished(bool success)
 
 void AnalysisWindow::generateFinished(QImage img)
 {
+    qDebug() << "Finished generating hunt image.";
+
     isGenerating_.storeRelaxed(0);
     highlightNight(selectedNight_);
 
     QString imgName =  "Hunt_" + QDateTime::currentDateTime().toString("MM_dd_yy_hh") + ".png";
 
-//    if (!success) {
-//        QMessageBox::critical(this, "Copy Failed", "Failed to place generated image in the clipboard.");
-//    }
     auto clip = QApplication::clipboard();
     QMimeData *data = new QMimeData;
     data->setImageData(img);
@@ -227,6 +229,8 @@ void AnalysisWindow::on_btnCopyImg_clicked()
         unhighlightNight();
         return;
     }
+    qDebug() << "Generating hunt image.";
+
     QSettings settings;
     NightInfo &night = hunt_->night(selectedNight_);
     ui->btnExport->setEnabled(false);

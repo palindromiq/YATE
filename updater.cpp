@@ -102,6 +102,7 @@ void Updater::setStatus(UpdaterStatus newStatus)
 
 void Updater::downloadUpdate()
 {
+    qDebug() << "Downloading update.";
     setStatus(UpdaterStatus::Downloading);
     downloader_->download(downloadUrl_, downloadHash_);
 }
@@ -148,6 +149,7 @@ QString Updater::getVersion() const
 
 void Updater::checkForUpdate()
 {
+    qDebug() << "Checking for update.";
     setStatus(UpdaterStatus::Checking);
     QNetworkRequest request(QUrl(SETTINGS_URL_API_CHECK_VERSION));
     manager_->get(request);
@@ -164,6 +166,7 @@ void Updater::startUpdate()
 
 
 void Updater::onDownloadFinished(QString filePath, QString) {
+    qDebug() << "Downloaded update.";
     setStatus(UpdaterStatus::Downloaded);
 
     QString selfPath = QCoreApplication::applicationFilePath();
@@ -173,6 +176,7 @@ void Updater::onDownloadFinished(QString filePath, QString) {
 
     if (!extractionDir.isValid()) {
         setStatus(UpdaterStatus::UpdateFailed);
+        qDebug() << "Update failed, failed to create extraction directory.";
         emit errorOccurred("Update failed.");
         return;
     }
@@ -180,6 +184,7 @@ void Updater::onDownloadFinished(QString filePath, QString) {
     ZipManager zip;
     if (!zip.unzip(filePath, extractionDir.path())) {
         setStatus(UpdaterStatus::UpdateFailed);
+        qDebug() << "Update failed, failed to unzip content.";
         emit errorOccurred("Update failed.");
         return;
     }
@@ -194,6 +199,7 @@ void Updater::onDownloadFinished(QString filePath, QString) {
         if (QFileInfo::exists(tempPath)) {
             if(!QFile::remove(tempPath)) {
                 setStatus(UpdaterStatus::UpdateFailed);
+                qDebug() << "Update failed, failed to remove existing temp path.";
                 emit errorOccurred("Update failed.");
                 return;
             }
@@ -202,7 +208,8 @@ void Updater::onDownloadFinished(QString filePath, QString) {
             QFile existingFile(existingFilePath);
             if (!existingFile.rename(tempPath)) {
                 setStatus(UpdaterStatus::UpdateFailed);
-                qDebug() << existingFilePath << "To: " << tempPath << existingFile.errorString();
+
+                qDebug() << "Update failed, failed to replace existing file.";
                 emit errorOccurred("[1] Update failed, you may need to redownload the tool from " + SETTINGS_WEBSITE_HTTPS);
                 return;
             }
@@ -210,7 +217,7 @@ void Updater::onDownloadFinished(QString filePath, QString) {
         }
         if (!extractedFile.rename(existingFilePath)) {
             setStatus(UpdaterStatus::UpdateFailed);
-            qDebug() << extractedFile.fileName() << "To: " << existingFilePath  << extractedFile.errorString();
+            qDebug() << "Update failed, failed to move extracted file.";
             emit errorOccurred("[2] Update failed, you may need to redownload the tool from " + SETTINGS_WEBSITE_HTTPS);
             return;
         }
@@ -220,11 +227,13 @@ void Updater::onDownloadFinished(QString filePath, QString) {
         argList.push_back(rm);
     }
     setStatus(UpdaterStatus::PendingRestart);
+    qDebug() << "Update installed, pending restart.";
     QProcess::startDetached(selfPath, argList);
     QCoreApplication::exit(0);
 }
 
 void Updater::onDownloadFailed(QString err) {
+    qDebug() << "Update download failed.";
     setStatus(UpdaterStatus::UpdateFailed);
     emit errorOccurred(err);
 }
@@ -233,6 +242,7 @@ void Updater::onManagerFinished(QNetworkReply *reply)
 {
     if (reply->error()) {
         setStatus(UpdaterStatus::CheckFailed);
+        qDebug() << "Update check failed, network error.";
         emit errorOccurred("Update check failed: " + reply->errorString());
     } else {
         QString data = QString(reply->readAll());
@@ -253,8 +263,10 @@ void Updater::onManagerFinished(QNetworkReply *reply)
             }
         }
         if (isUpToDate) {
+            qDebug() << "Current version is up-to-date.";
             setStatus(UpdaterStatus::UpToDate);
         } else {
+            qDebug() << "Update available.";
             setStatus(UpdaterStatus::UpdateAvailable);
         }
 

@@ -12,6 +12,7 @@ LiveFeedbackOverlay::LiveFeedbackOverlay(QWidget *parent, bool locked) :
     QMainWindow(parent),
     ui(new Ui::LiveFeedbackOverlay), isMoving_(false),settings_(new QSettings(this)), isLocked_(false)
 {
+    qDebug() << "Initializing feedback overlay screen.";
     ui->setupUi(this);
     setStyleSheet("background:transparent");
     ui->lblFeedback->setStyleSheet("background:rgba(0,0,0,0.7); font-weight: 500;");
@@ -31,6 +32,7 @@ LiveFeedbackOverlay::LiveFeedbackOverlay(QWidget *parent, bool locked) :
     if (settings_->value(SETTINGS_KEY_STREAMER_MODE, false).toBool()) {
         setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     } else {
+        qDebug() << "Using Streamer Mode window flags";
         setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::SubWindow);
     }
 
@@ -45,6 +47,7 @@ LiveFeedbackOverlay::LiveFeedbackOverlay(QWidget *parent, bool locked) :
     ui->lblFeedback->setAttribute(Qt::WA_TransparentForMouseEvents);
     ui->lblLimbs->setMouseTracking(true);
     ui->lblLimbs->setAttribute(Qt::WA_TransparentForMouseEvents);
+    qDebug() << "Initialized feedback overlay screen.";
 }
 
 void Yate::LiveFeedbackOverlay::refreshSize()
@@ -88,6 +91,7 @@ void LiveFeedbackOverlay::mousePressEvent(QMouseEvent *evt)
 }
 
 void LiveFeedbackOverlay::mouseDoubleClickEvent(QMouseEvent *evt) {
+    qDebug() << "Live feedback double clicked.";
     emit onDoubleClicked();
     QMainWindow::mouseDoubleClickEvent(evt);
 }
@@ -137,6 +141,7 @@ LiveFeedbackOverlay::~LiveFeedbackOverlay()
 void LiveFeedbackOverlay::on_btnLockFeedback_clicked()
 {
   if(!isLocked_) {
+    qDebug() << "Lock button pressed.";
     emit onLockWindow();
   }
 }

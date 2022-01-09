@@ -104,12 +104,14 @@ void Yate::EEParser::parseLine(QString &line)
 
 void EEParser::stopParsing()
 {
+    qDebug() << "Stopping live feedback parser.";
     emit stopWatcher();
     emit parsingFinished();
 }
 
 void EEParser::startOffline()
 {
+    qDebug() << "Offline parsing started.";
     emit parsingStarted();
     QFile logFile(filename());
     QString fileContent;
@@ -122,9 +124,11 @@ void EEParser::startOffline()
         }
         logFile.close();
     } else {
+         qDebug() << "Offline parsing file error: " << logFile.errorString();
         emit parsingError(logFile.errorString());
     }
 
+    qDebug() << "Offline parsing finshed.";
     emit parsingFinished();
 
 }
@@ -132,6 +136,7 @@ void EEParser::startOffline()
 
 void EEParser::startLive()
 {
+    qDebug() << "Live parsing started.";
     emit parsingStarted();
     QFile logFile(filename());
     watcher_ = new FileWatcher(nullptr, filename());
@@ -165,6 +170,7 @@ void EEParser::startLive()
         setCurrentPosition(fileContent.length());
         logFile.close();
     } else {
+        qDebug() << "Live parsing file error: " << logFile.errorString();
         emit parsingError(logFile.errorString());
     }
     watcherThread->start();

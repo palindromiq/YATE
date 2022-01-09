@@ -18,6 +18,7 @@ HuntImageGenerator::HuntImageGenerator(QString path, NightInfo &night, QString h
 
 QImage* HuntImageGenerator::generateImage()
 {
+    qDebug() << "Generating summary image.";
     int numSets = night_.validRunCount();
     int setHeight = 216;
     int capHeight = setHeight / 3;
@@ -163,12 +164,15 @@ QImage* HuntImageGenerator::generateImage()
 
     painter.drawText(imageWidth/2 - fw/2, topOffset, text);
 
+    qDebug() << "Summary image generated.";
+
     return pix;
 }
 
 void HuntImageGenerator::exportImage()
 {
     auto img = generateImage();
+    qDebug() << "Saving image to " << path_;
     img->save(path_);
 
     delete img;
@@ -178,6 +182,7 @@ void HuntImageGenerator::exportImage()
 void HuntImageGenerator::generateAndEmit()
 {
     auto img = generateImage();
+    qDebug() << "Emitting generated image.";
     emit generateFinished(*img);
     delete img;
 }

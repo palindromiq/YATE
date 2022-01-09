@@ -38,7 +38,7 @@ class YATEWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    YATEWindow(bool clientVersion = false, QWidget *parent = nullptr);
+    YATEWindow(QWidget *parent = nullptr);
     ~YATEWindow();
 
     bool isLogManuallySet() const;
@@ -115,14 +115,12 @@ private:
     EEParser *parser_;
     HuntInfoGenerator *huntInfoGenerator_;
     bool isLogManuallySet_;
-    QAtomicInt isLiveFeedbackRunning_;
     bool clientVersion_;
-
 #ifdef DISCORD_ENABLED
     DiscordManager *discord_;
     QThread *discordThread_;
 #endif
-
+    QAtomicInt isLiveFeedbackRunning_;
     void initDiscord();
 };
 }
