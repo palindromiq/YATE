@@ -49,6 +49,7 @@ public slots:
     void setHost(const QString &newHost);
     void sendMessageOnChannel1(QString msg);
     void sendMessageOnChannel2(QString msg);
+    void sendMessageOnChannel3(QString msg);
     void disconnectFromLobby();
     void checkMessageBuffers();
 
@@ -61,6 +62,7 @@ signals:
     void onUserConnected(QString name);
     void onMessageFromChannel1(QString msg);
     void onMessageFromChannel2(QString msg);
+    void onMessageFromChannel3(QString msg);
     void connectionSucceeded();
     void connectionFailed();
     void onLobbyDisconnect();
@@ -82,6 +84,7 @@ private:
     QSettings *settings_;
     QString ch1Buffer;
     QString ch2Buffer;
+    QString ch3Buffer;
     QMutex bufferMutex_;
     QAtomicInt ready_;
     QAtomicInt failed_;

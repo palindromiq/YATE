@@ -43,7 +43,7 @@ void DiscordManager::start()
 {
     qDebug() << "Discord Manager: Starting.";
     if (running()) {
-        qDebug () << "Discord Manager already running.";
+        qDebug () << "Discord Manager: Already running!";
         return;
     }
     qDebug() << "Discord Manager: Starting timers.";
@@ -271,7 +271,7 @@ const QSet<QString> &DiscordManager::squad() const
 
 bool DiscordManager::connectTo(QString lobbySecret)
 {
-      qDebug() << "Discord Manager: Connecting to " << lobbySecret;
+    qDebug() << "Discord Manager: Connecting to " << lobbySecret;
     if (settings_->value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool() && settings_->value(SETTINGS_KEY_DISCORD_NETWORKING, true).toBool()) {
         qDebug() << "Discord Manager: Parsing lobby secret";
         QByteArray lobbySecretBA = lobbySecret.toUtf8();
@@ -328,6 +328,7 @@ void DiscordManager::setHost(const QString &newHost)
 }
 
 void DiscordManager::sendMessageOnChannel1(QString msg) {
+    qDebug() << "Discord Manager: sendMessageOnChannel1";
     if(lobbyId_ != -1) {
         QJsonObject  json;
         json.insert("message", msg);
@@ -337,11 +338,14 @@ void DiscordManager::sendMessageOnChannel1(QString msg) {
         QString msgJson(QJsonDocument(json).toJson(QJsonDocument::Compact));
         QMutexLocker lock(&bufferMutex_);
         ch1Buffer = msgJson;
+    } else {
+        qWarning() << "Discord Manager: Lobby ID not set.";
     }
 
 }
 
 void DiscordManager::sendMessageOnChannel2(QString msg) {
+    qDebug() << "Discord Manager: sendMessageOnChannel2";
     if(lobbyId_ != -1) {
         QJsonObject  json;
         json.insert("message", msg);
@@ -351,6 +355,24 @@ void DiscordManager::sendMessageOnChannel2(QString msg) {
         QString msgJson(QJsonDocument(json).toJson(QJsonDocument::Compact));
         QMutexLocker lock(&bufferMutex_);
         ch2Buffer = msgJson;
+    } else {
+        qWarning() << "Discord Manager: Lobby ID not set.";
+    }
+}
+
+void DiscordManager::sendMessageOnChannel3(QString msg) {
+    qDebug() << "Discord Manager: sendMessageOnChannel3";
+    if(lobbyId_ != -1) {
+        QJsonObject  json;
+        json.insert("message", msg);
+        json.insert("version", "1.0");
+        json.insert("yate_ver", Updater::getInstance(0)->getVersion());
+        json.insert("channel", "3");
+        QString msgJson(QJsonDocument(json).toJson(QJsonDocument::Compact));
+        QMutexLocker lock(&bufferMutex_);
+        ch3Buffer = msgJson;
+    } else {
+        qWarning() << "Discord Manager: Lobby ID not set.";
     }
 }
 
@@ -364,7 +386,7 @@ void DiscordManager::disconnectFromLobby() {
                 qDebug() << "Discord Manager: Disconnected from lobby " << peerLobbyId_;
             }
         });
-        lobbyId_ = -1;
+        peerLobbyId_ = -1;
         peerUserId_ = -1;
     }
 
@@ -380,6 +402,11 @@ void DiscordManager::checkMessageBuffers() {
     if (ch2Buffer.size()) {
         QString payload = ch2Buffer;
         ch2Buffer = "";
+        sendMessageToLobby(payload);
+    }
+    if (ch3Buffer.size()) {
+        QString payload = ch3Buffer;
+        ch3Buffer = "";
         sendMessageToLobby(payload);
     }
 

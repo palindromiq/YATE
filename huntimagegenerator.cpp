@@ -84,7 +84,7 @@ QImage* HuntImageGenerator::generateImage()
     painter.setPen(QPen(QColor(SUMMARY_COLOR_LIMBS), 3));
     painter.drawLine(0, topOffset, imageWidth, topOffset);
 
-    for(int i = 0; i < numSets; i++) {
+    for(int i = 0; i < night_.runs().size(); i++) {
         auto &set = night_.run(i);
         if (set.getNumberOfCaps() || set.getNumberOfKills()) {
             for (int j = 0; j < 3; j++) {
