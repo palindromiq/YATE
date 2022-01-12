@@ -19,11 +19,15 @@ void logMessageHandler(QtMsgType type, const QMessageLogContext &context, const 
 QTextStream& qStdErr()
 {
     static QTextStream ts(stderr);
+    ts.setAutoDetectUnicode(true);
+    ts.setEncoding(QStringConverter::Utf16);
     return ts;
 }
 QTextStream& qStdOut()
 {
     static QTextStream ts(stdout);
+    ts.setAutoDetectUnicode(true);
+    ts.setEncoding(QStringConverter::Utf16);
     return ts;
 }
 #endif
@@ -34,6 +38,8 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
+
+
 #ifdef QT_DEBUG
     qInstallMessageHandler(logMessageHandler);
     qDebug() << "YATE Launched";
@@ -43,6 +49,7 @@ int main(int argc, char *argv[])
     }
     qDebug() << "Version: " << QApplication::applicationVersion();
     qDebug() << "Arguments: " << args.join(", ");
+
 #endif
 
     if (argc >= 5) {
@@ -84,7 +91,6 @@ int main(int argc, char *argv[])
 #ifdef QT_DEBUG
 void logMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
-    QByteArray localMsg = msg.toLocal8Bit();
     const char *file = context.file ? context.file : "";
     const char *function = context.function ? context.function : "";
     QString logType = "System";
@@ -108,11 +114,11 @@ void logMessageHandler(QtMsgType type, const QMessageLogContext &context, const 
         logType = "Fatal";
         break;
     }
-    QString txt = QString("[%1] %2: %3 (%4:%5, %6)").arg(QDateTime::currentDateTime().toString()).arg(logType).arg(localMsg.constData()).arg(file).arg(context.line).arg(function);
+    QString txt = QString("[%1] %2: %3 (%4:%5, %6)").arg(QDateTime::currentDateTime().toString()).arg(logType).arg(msg).arg(file).arg(context.line).arg(function);
     if (isStdOut) {
-        qStdOut() << txt.toLocal8Bit().data() << Qt::endl;
+        qStdOut() << txt << Qt::endl;
     } else {
-        qStdErr() << txt.toLocal8Bit().data() << Qt::endl;
+        qStdErr() << txt << Qt::endl;
     }
     QFile outFile("yate.log");
     outFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text);

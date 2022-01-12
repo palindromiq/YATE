@@ -16,6 +16,8 @@
 #include <QClipboard>
 #include <QInputDialog>
 
+
+
 #include "globals.h"
 #include "settingsdialog.h"
 #include "analysiswindow.h"
@@ -109,7 +111,6 @@ YATEWindow::YATEWindow(QWidget *parent)
 #endif
 
     qDebug() << "Main window initialized.";
-
 
 }
 
