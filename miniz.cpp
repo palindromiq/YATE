@@ -24,7 +24,8 @@
  * THE SOFTWARE.
  *
  **************************************************************************/
-
+#include <QDebug>
+#include <QFile>
 
 
 typedef unsigned char mz_validate_uint16[sizeof(mz_uint16) == 2 ? 1 : -1];
@@ -2999,9 +3000,17 @@ extern "C" {
 #if defined(_MSC_VER) || defined(__MINGW64__)
 static FILE *mz_fopen(const char *pFilename, const char *pMode)
 {
-    FILE *pFile = NULL;
-    fopen_s(&pFile, pFilename, pMode);
-    return pFile;
+    QFile qf(pFilename);
+    qf.open(QIODevice::ReadWrite);
+    int fd = qf.handle();
+    FILE* f = fdopen(dup(fd), pMode);
+
+    if (!f) {
+        qCritical() << errno << strerror(errno);
+    }
+
+    return f;
+
 }
 static FILE *mz_freopen(const char *pPath, const char *pMode, FILE *pStream)
 {

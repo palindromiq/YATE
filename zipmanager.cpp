@@ -19,9 +19,9 @@ bool ZipManager::unzip(QString sourceArchive, QString destDir)
     mz_zip_archive zipArchive;
     memset(&zipArchive, 0, sizeof(zipArchive));
     mz_bool status;
-    auto sourceArchiveBA = sourceArchive.toUtf8 ();
-    const char *sourceArchiveFileName =  sourceArchiveBA.data();
-    status = mz_zip_reader_init_file(&zipArchive, sourceArchiveFileName, 0);
+    auto sourceArchiveStd = sourceArchive.toStdString();
+
+    status = mz_zip_reader_init_file(&zipArchive, sourceArchiveStd.c_str(), 0);
     if (!status)
     {
         qCritical() << "mz_zip_reader_init_file() failed!";
@@ -38,14 +38,12 @@ bool ZipManager::unzip(QString sourceArchive, QString destDir)
            return false;
        }
 
-//       qDebug() << file_stat.m_filename << file_stat.m_comment << file_stat.m_uncomp_size << file_stat.m_comp_size << mz_zip_reader_is_file_a_directory(&zipArchive, i);
        if (mz_zip_reader_is_file_a_directory(&zipArchive, i)) {
            continue;
        }
        QString strippedFileName = QFileInfo(file_stat.m_filename).fileName();
-       auto extractionFileNameBA = QString(destDir + QDir::separator() + strippedFileName).toUtf8();
-       const char * extractionFileName = extractionFileNameBA.data();
-       status = mz_zip_reader_extract_file_to_file(&zipArchive, file_stat.m_filename, extractionFileName, 0);
+       auto extractionFileNameStd = QString(destDir + QDir::separator() + strippedFileName).toStdString();
+       status = mz_zip_reader_extract_file_to_file(&zipArchive, file_stat.m_filename, extractionFileNameStd.c_str(), 0);
        if (!status)
        {
            qCritical() << "mz_zip_reader_extract_file_to_file() failed!";
