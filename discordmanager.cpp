@@ -208,6 +208,9 @@ void DiscordManager::setup(bool emitErrors)
                     } else if (ch == "2") {
                         qDebug() << "Discord Manager: Message received on channel 2";
                         emit onMessageFromChannel2(message);
+                    } else if (ch == "3") {
+                        qDebug() << "Discord Manager: Message received on channel 3";
+                        emit onMessageFromChannel3(message);
                     }
                 }
             }
@@ -233,8 +236,6 @@ void DiscordManager::setup(bool emitErrors)
                 qCritical() << "Discord Manager: Failed to create lobby" << int(result);
             }
         });
-
-
 
     }
 
@@ -264,10 +265,6 @@ bool DiscordManager::running() const
     return running_;
 }
 
-const QSet<QString> &DiscordManager::squad() const
-{
-    return squad_;
-}
 
 bool DiscordManager::connectTo(QString lobbySecret)
 {
@@ -306,26 +303,8 @@ bool DiscordManager::connectTo(QString lobbySecret)
 
 }
 
-void DiscordManager::setSquad(const QSet<QString> &newSquad)
-{
-    squad_ = newSquad;
-    if (squad_.size()) {
-        activityImageText_ = tr("Hunting with ") + QStringList(squad_.begin(), squad_.end()).join(", ");
-    } else {
-        activityImageText_ = tr("Hunting Solo");
-    }
 
-}
 
-const QString &DiscordManager::host() const
-{
-    return host_;
-}
-
-void DiscordManager::setHost(const QString &newHost)
-{
-    host_ = newHost;
-}
 
 void DiscordManager::sendMessageOnChannel1(QString msg) {
     qDebug() << "Discord Manager: sendMessageOnChannel1";
@@ -410,6 +389,14 @@ void DiscordManager::checkMessageBuffers() {
         sendMessageToLobby(payload);
     }
 
+}
+
+void DiscordManager::setSquadString(QString msg) {
+    if (msg.size()) {
+        activityImageText_ = msg;
+    } else {
+        activityImageText_ = "";
+    }
 }
 
 const QString &DiscordManager::activityState() const

@@ -198,6 +198,8 @@ public:
     const QSet<QString> &squad() const;
     void setSquad(const QSet<QString> &newSquad);
 
+    QString squadString() const;
+
 private:
     QVector<NightInfo> nights_;
     QString host_;

@@ -274,7 +274,8 @@ void Yate::YATEWindow::showLiveFeedback(bool lock)
         connect(huntInfoGenerator_, &HuntInfoGenerator::onLimbsChanged, discord_, &DiscordManager::sendMessageOnChannel2);
         connect(huntInfoGenerator_, &HuntInfoGenerator::onHuntStateChanged, discord_, &DiscordManager::setActivityDetails);
         connect(huntInfoGenerator_, &HuntInfoGenerator::onLimbsChanged, discord_, &DiscordManager::setActivityState);
-        connect(huntInfoGenerator_, &HuntInfoGenerator::onSquadChanged, discord_, &DiscordManager::setSquad);
+        connect(huntInfoGenerator_, &HuntInfoGenerator::onHostOrSquadChanged, discord_, &DiscordManager::setSquadString);
+        connect(huntInfoGenerator_, &HuntInfoGenerator::onHostOrSquadChanged, discord_, &DiscordManager::sendMessageOnChannel3);
         connect(this, &YATEWindow::feedbackWindowClosed, discord_, &DiscordManager::clearActivity);
     }
 #endif
@@ -357,6 +358,8 @@ void YATEWindow::disableUI()
 {
     ui->btnEditLogPath->setEnabled(false);
     ui->btnLiveFeedback->setEnabled(false);
+    ui->btnLiveFeedbackVS->setEnabled(false);
+    ui->btnCopyLobbyId->setEnabled(false);
     ui->btnShrineWater->setEnabled(false);
     ui->btnSettings->setEnabled(false);
 }
@@ -365,6 +368,8 @@ void YATEWindow::enableUI()
 {
     ui->btnEditLogPath->setEnabled(true);
     ui->btnLiveFeedback->setEnabled(true);
+    ui->btnLiveFeedbackVS->setEnabled(true);
+    ui->btnCopyLobbyId->setEnabled(true);
     ui->btnShrineWater->setEnabled(true);
     ui->btnSettings->setEnabled(true);
 }
@@ -511,6 +516,16 @@ void Yate::YATEWindow::showClientLiveFeedback(bool lock)
     connect(feedbackOverlay_, &LiveFeedbackOverlay::onDoubleClicked, this, &YATEWindow::stopFeedback);
     connect(discord_, &DiscordManager::onLobbyDisconnect, this, &YATEWindow::stopFeedback);
     connect(feedbackOverlay_, &LiveFeedbackOverlay::onLockWindow, this, &YATEWindow::lockClientFeedbackWindow);
+
+#ifdef DISCORD_ENABLED
+    QSettings settings;
+    if (settings.value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool() && settings.value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool()) {
+        connect(discord_, &DiscordManager::onMessageFromChannel1, discord_,&DiscordManager::setActivityDetails);
+        connect(discord_, &DiscordManager::onMessageFromChannel2, discord_, &DiscordManager::setActivityState);
+        connect(discord_, &DiscordManager::onMessageFromChannel3, discord_, &DiscordManager::setSquadString);
+        connect(this, &YATEWindow::feedbackWindowClosed, discord_, &DiscordManager::clearActivity);
+    }
+#endif
 
     isLiveFeedbackRunning_ = true;
 

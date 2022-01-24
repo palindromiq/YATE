@@ -134,6 +134,18 @@ void HuntInfo::setSquad(const QSet<QString> &newSquad)
     squad_ = newSquad;
 }
 
+QString HuntInfo::squadString() const
+{
+    QStringList sq;
+    if(host_.size()) {
+        sq.push_back(host_);
+    }
+    for(auto &s: squad_) {
+        sq.push_back(s);
+    }
+    return sq.join(", ");
+}
+
 NightInfo::NightInfo()
 {
 
