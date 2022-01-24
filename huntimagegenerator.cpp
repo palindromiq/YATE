@@ -62,9 +62,17 @@ QImage* HuntImageGenerator::generateImage()
     QStringList squadList;
     squadList.append(host_);
     for(auto &m: squad_) {
-        squadList.append(m);
+        if (m.trimmed() != "") {
+            squadList.append(m);
+        }
     }
     text = squadList.join(", ");
+
+    QString nightRes = night_.getNightResult();
+    if (nightRes.size()) {
+        text = text + " (" + nightRes + ")";
+    }
+
     painter.setPen(QPen(QColor(SUMMARY_COLOR_LIMBS), 2));
     painter.drawText(xpos, ypos, text);
 

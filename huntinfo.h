@@ -88,6 +88,9 @@ public:
     float capshotProgressTimestamp() const;
     void setCapshotProgressTime(float newCapshotTimestamp);
 
+    bool lateShardInsertLog() const;
+    void setLateShardInsertLog(bool newLateShardInsertLog);
+
 private:
     bool valid_;
     float shrineTime_;
@@ -104,6 +107,7 @@ private:
     float spawnTimestamp_;
     float capshotProgressTimestamp_;
     int numberOfLimbs_;
+    bool lateShardInsertLog_;
     CapState result_;
     Eidolon eidolon_;
 };

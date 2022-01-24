@@ -187,7 +187,10 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                     QString statStr = ANALYSIS_STAT_WATERSHIELD + ": "+  FORMAT_NUMBER(ws);
                     if (state_.eidolonNumber() != 0) {
                         float spDelay =   huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).spawnDelay();
-                        statStr = statStr + " (+";
+                        statStr = statStr + " (";
+                        if (spDelay >= 0) {
+                            statStr += "+";
+                        }
                         statStr = statStr + FORMAT_NUMBER(spDelay);
                         statStr = statStr + " = ";
                         statStr = statStr + FORMAT_NUMBER(spDelay + ws);
@@ -195,6 +198,14 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                     }
                     emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + statStr);
                     emitLimbsUpdate();
+                } else if (typ == LogEventType::ShardInsert) {
+                    float delay = timestamp - lastEventTime_;
+                    qDebug() << "Recevied shard insertion at spawn stage.";
+                    if (!huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).lateShardInsertLog()) {
+                        huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setLateShardInsertLog(true);
+                        huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setSpawnDelay(-delay);
+                    }
+
                 } else {
                     invalid = true;
                 }
