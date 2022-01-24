@@ -20,7 +20,7 @@ QImage* HuntImageGenerator::generateImage()
 {
     qDebug() << "Generating summary image.";
     int numSets = night_.validRunCount();
-    int setHeight = 216;
+    int setHeight = 233;
     int capHeight = setHeight / 3;
     int summaryHeight = capHeight / 1.5;
     int footerHeight = capHeight / 2;
@@ -37,7 +37,7 @@ QImage* HuntImageGenerator::generateImage()
     QFont font = painter.font();
 //    font.setFamily("Courier New");
     font.setFamily("Roboto Mono");
-    font.setPointSize(18);
+    font.setPointSize(20);
     QFontMetrics fm(font);
     painter.setFont(font);
     painter.fillRect(0, 0, pix->width(), pix->height(), QColor(SUMMARY_COLOR_BG));

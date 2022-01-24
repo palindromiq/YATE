@@ -134,6 +134,21 @@ void EEParser::startOffline()
 }
 
 
+void EEParser::processFileContent(QFile &logFile)
+{
+    QString fileContent =  QString(logFile.readAll());
+    auto lines = fileContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
+
+    for(int i = 0; i < lines.size() - 1; i++) {
+        parseLine(lines[i]);
+    }
+    int currPos = currentPosition() + fileContent.length();
+    if (lines.size()) {
+        currPos -= (lines[lines.size() - 1].size() + 2);
+    }
+    setCurrentPosition(currPos);
+}
+
 void EEParser::startLive()
 {
     qDebug() << "Live parsing started.";
@@ -161,17 +176,8 @@ void EEParser::startLive()
 
 
     if(logFile.open(QIODevice::ReadOnly)) {
-        fileContent =  QString(logFile.readAll());
-        auto lines = fileContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
-
-        for(int i = 0; i < lines.size() - 1; i++) {
-            parseLine(lines[i]);
-        }
-        int currPos = fileContent.length();
-        if (lines.size()) {
-            currPos -= lines[lines.size() - 1].size();
-        }
-        setCurrentPosition(currPos);
+        setCurrentPosition(0);
+        processFileContent(logFile);
         logFile.close();
     } else {
         qDebug() << "Live parsing file error: " << logFile.errorString();
@@ -252,14 +258,7 @@ void EEParser::onFileChanged(bool exists)
         QString fileContent;
         if(logFile.open(QIODevice::ReadOnly)) {
             logFile.seek(currentPosition());
-            fileContent =  QString(logFile.readAll());
-            auto lines = fileContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
-            for(int i = 0; i < lines.size() - 1; i++) {
-                parseLine(lines[i]);
-            }
-            if (lines.size()) {
-                setCurrentPosition(currentPosition() + fileContent.length() - lines[lines.size() - 1].size());
-            }
+            processFileContent(logFile);
             logFile.close();
         } else {
             emit parsingError(logFile.errorString());

@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QTextStream>
 #include <QRegularExpression>
+#include <QFile>
 #include "logevent.h"
 
 class QFileSystemWatcher;
@@ -53,6 +54,7 @@ private:
     FileWatcher *watcher_;
     bool logDoesNotExist_;
     bool hostJustUnloaded_;
+    void processFileContent(QFile &logFile);
 };
 }
 

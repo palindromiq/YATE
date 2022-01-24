@@ -90,11 +90,18 @@ class QString;
 #define FORMAT_NUMBER_PREC(x, y) QString::number(x, 'f', y)
 
 
-#define SUMMARY_COLOR_BG "#031a1e"
-#define SUMMARY_COLOR_TITLE "#941c2f"
-#define SUMMARY_COLOR_LIMBS "#c1cfda"
-#define SUMMARY_COLOR_LAST_LIMB "#20a4f3"
-#define SUMMARY_COLOR_AVERAGE "#59f8e8"
+//#define SUMMARY_COLOR_BG "#031a1e"
+//#define SUMMARY_COLOR_TITLE "#941c2f"
+//#define SUMMARY_COLOR_LIMBS "#c1cfda"
+//#define SUMMARY_COLOR_LAST_LIMB "#20a4f3"
+//#define SUMMARY_COLOR_AVERAGE "#59f8e8"
+
+#define SUMMARY_COLOR_BG "#FFFFFF"
+#define SUMMARY_COLOR_TITLE "#C44536"
+#define SUMMARY_COLOR_LIMBS "#283D3B"
+#define SUMMARY_COLOR_LAST_LIMB "#283D3B"
+#define SUMMARY_COLOR_AVERAGE "#283D3B"
+
 
 
 

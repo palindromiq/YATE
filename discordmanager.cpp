@@ -237,8 +237,6 @@ void DiscordManager::setup(bool emitErrors)
             }
         });
 
-
-
     }
 
 
@@ -267,10 +265,6 @@ bool DiscordManager::running() const
     return running_;
 }
 
-const QSet<QString> &DiscordManager::squad() const
-{
-    return squad_;
-}
 
 bool DiscordManager::connectTo(QString lobbySecret)
 {
@@ -309,26 +303,8 @@ bool DiscordManager::connectTo(QString lobbySecret)
 
 }
 
-void DiscordManager::setSquad(const QSet<QString> &newSquad)
-{
-    squad_ = newSquad;
-    if (squad_.size()) {
-        activityImageText_ = tr("Hunting with ") + QStringList(squad_.begin(), squad_.end()).join(", ");
-    } else {
-        activityImageText_ = tr("Hunting Solo");
-    }
 
-}
 
-const QString &DiscordManager::host() const
-{
-    return host_;
-}
-
-void DiscordManager::setHost(const QString &newHost)
-{
-    host_ = newHost;
-}
 
 void DiscordManager::sendMessageOnChannel1(QString msg) {
     qDebug() << "Discord Manager: sendMessageOnChannel1";
@@ -417,7 +393,7 @@ void DiscordManager::checkMessageBuffers() {
 
 void DiscordManager::setSquadString(QString msg) {
     if (msg.size()) {
-        activityImageText_ = tr("Hunting with ") + msg;
+        activityImageText_ = msg;
     } else {
         activityImageText_ = "";
     }

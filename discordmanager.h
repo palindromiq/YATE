@@ -4,7 +4,6 @@
 
 #ifdef DISCORD_ENABLED
 #include <QObject>
-#include <QSet>
 #include <QMutex>
 
 
@@ -28,10 +27,6 @@ public:
 
     const QString &activityState() const;
 
-    const QString &host() const;
-
-    const QSet<QString> &squad() const;
-
     bool connectTo(QString lobbySecret);
 
 
@@ -45,8 +40,6 @@ public slots:
     void clearActivity();
     void setActivityState(const QString &newActivityState);
     void setActivityDetails(const QString &newActivityDetails);
-    void setSquad(const QSet<QString> &newSquad);
-    void setHost(const QString &newHost);
     void sendMessageOnChannel1(QString msg);
     void sendMessageOnChannel2(QString msg);
     void sendMessageOnChannel3(QString msg);
@@ -81,8 +74,6 @@ private:
     QString activityDetails_;
     QString activityState_;
     QString activityImageText_;
-    QString host_;
-    QSet<QString> squad_;
     QSettings *settings_;
     QString ch1Buffer;
     QString ch2Buffer;

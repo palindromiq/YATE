@@ -274,7 +274,7 @@ void Yate::YATEWindow::showLiveFeedback(bool lock)
         connect(huntInfoGenerator_, &HuntInfoGenerator::onLimbsChanged, discord_, &DiscordManager::sendMessageOnChannel2);
         connect(huntInfoGenerator_, &HuntInfoGenerator::onHuntStateChanged, discord_, &DiscordManager::setActivityDetails);
         connect(huntInfoGenerator_, &HuntInfoGenerator::onLimbsChanged, discord_, &DiscordManager::setActivityState);
-        connect(huntInfoGenerator_, &HuntInfoGenerator::onSquadChanged, discord_, &DiscordManager::setSquad);
+        connect(huntInfoGenerator_, &HuntInfoGenerator::onHostOrSquadChanged, discord_, &DiscordManager::setSquadString);
         connect(huntInfoGenerator_, &HuntInfoGenerator::onHostOrSquadChanged, discord_, &DiscordManager::sendMessageOnChannel3);
         connect(this, &YATEWindow::feedbackWindowClosed, discord_, &DiscordManager::clearActivity);
     }
@@ -358,6 +358,8 @@ void YATEWindow::disableUI()
 {
     ui->btnEditLogPath->setEnabled(false);
     ui->btnLiveFeedback->setEnabled(false);
+    ui->btnLiveFeedbackVS->setEnabled(false);
+    ui->btnCopyLobbyId->setEnabled(false);
     ui->btnShrineWater->setEnabled(false);
     ui->btnSettings->setEnabled(false);
 }
@@ -366,6 +368,8 @@ void YATEWindow::enableUI()
 {
     ui->btnEditLogPath->setEnabled(true);
     ui->btnLiveFeedback->setEnabled(true);
+    ui->btnLiveFeedbackVS->setEnabled(true);
+    ui->btnCopyLobbyId->setEnabled(true);
     ui->btnShrineWater->setEnabled(true);
     ui->btnSettings->setEnabled(true);
 }

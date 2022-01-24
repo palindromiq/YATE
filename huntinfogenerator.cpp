@@ -200,13 +200,15 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                     }
                     emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + statStr);
                     emitLimbsUpdate();
-                } else if (typ == LogEventType::ShardInsert) {
-                    float delay = timestamp - lastEventTime_;
+                } else if (typ == LogEventType::ShardInsert && !huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).lateShardInsertLog()) {
                     qDebug() << "Recevied shard insertion at spawn stage.";
-                    if (!huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).lateShardInsertLog()) {
-                        huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setLateShardInsertLog(true);
-                        huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setSpawnDelay(-delay);
-                    }
+                    float existingDelay = huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).spawnDelay();
+                    float delay = timestamp - lastEventTime_;
+                    float shardDelay = existingDelay + delay;
+
+                    huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setLateShardInsertLog(true);
+                    huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).addTimeBetweenShards(shardDelay);
+                    huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setSpawnDelay(-delay);
 
                 } else {
                     invalid = true;
