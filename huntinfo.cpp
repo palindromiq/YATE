@@ -394,9 +394,18 @@ void RunInfo::setStartTimestamp(float newStartTime)
     startTimestamp_ = newStartTime;
 }
 
-CapInfo::CapInfo():valid_(false), shrineTime_(0)
+CapInfo::CapInfo():valid_(false), shrineTime_(0), lateShardInsertLog_(false)
 {
-
+    spawnDelay_ = 0;
+    waterShield_ = 0;
+    shrineActivationTime_ = 0;
+    capshotTime_ = 0;
+    lastLimbProgessTime_ = 0;
+    loadTime_ = 0;
+    lootDropTime_ = 0;
+    lootDropTimestamp_ = 0;
+    spawnTimestamp_ = 0;
+    capshotProgressTimestamp_ = 0;
 }
 
 bool CapInfo::valid() const
@@ -586,7 +595,10 @@ AnalysisViewItem *CapInfo::toAnalysisViewItem() const
             }
             capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_SPAWN_DELAY, FORMAT_NUMBER(spawnDelay())}));
             if(eidolon() != Eidolon::Teralyst) {
-                ws = ws + " (+";
+                ws = ws + " (";
+                if (spawnDelay() >= 0) {
+                    ws += "+";
+                }
                 ws = ws + FORMAT_NUMBER(spawnDelay());
                 ws = ws + " = ";
                 ws = ws + FORMAT_NUMBER(spawnDelay() + waterShield());
@@ -680,6 +692,16 @@ float CapInfo::capshotProgressTimestamp() const
 void CapInfo::setCapshotProgressTime(float newCapshotTimestamp)
 {
     capshotProgressTimestamp_ = newCapshotTimestamp;
+}
+
+bool CapInfo::lateShardInsertLog() const
+{
+    return lateShardInsertLog_;
+}
+
+void CapInfo::setLateShardInsertLog(bool newLateShardInsertLog)
+{
+    lateShardInsertLog_ = newLateShardInsertLog;
 }
 
 

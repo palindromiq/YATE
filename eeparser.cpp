@@ -164,10 +164,14 @@ void EEParser::startLive()
         fileContent =  QString(logFile.readAll());
         auto lines = fileContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
 
-        for(int i = 0; i < lines.size(); i++) {
+        for(int i = 0; i < lines.size() - 1; i++) {
             parseLine(lines[i]);
         }
-        setCurrentPosition(fileContent.length());
+        int currPos = fileContent.length();
+        if (lines.size()) {
+            currPos -= lines[lines.size() - 1].size();
+        }
+        setCurrentPosition(currPos);
         logFile.close();
     } else {
         qDebug() << "Live parsing file error: " << logFile.errorString();

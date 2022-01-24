@@ -44,6 +44,7 @@ void AnalysisWindow::setHunt(HuntInfo *newHunt)
     ui->treAnalysisView->setModel(model_);
     for(int i = 0; i < model_->rowCount(); i++) {
         ui->treAnalysisView->expand(model_->index(i, 0));
+        ui->treAnalysisView->header()->setSectionResizeMode(QHeaderView::Stretch);
     }
     if (hunt_->nightCount() == 1) {
         highlightNight(0);
