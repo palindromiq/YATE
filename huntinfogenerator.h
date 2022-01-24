@@ -76,6 +76,7 @@ signals:
     void onLimbsChanged(QString);
     void onHostChanged(QString);
     void onSquadChanged(QSet<QString>);
+    void onHostOrSquadChanged(QString);
 
 private:
     HuntInfo* huntInfo_;

@@ -208,6 +208,9 @@ void DiscordManager::setup(bool emitErrors)
                     } else if (ch == "2") {
                         qDebug() << "Discord Manager: Message received on channel 2";
                         emit onMessageFromChannel2(message);
+                    } else if (ch == "3") {
+                        qDebug() << "Discord Manager: Message received on channel 3";
+                        emit onMessageFromChannel3(message);
                     }
                 }
             }
@@ -410,6 +413,14 @@ void DiscordManager::checkMessageBuffers() {
         sendMessageToLobby(payload);
     }
 
+}
+
+void DiscordManager::setSquadString(QString msg) {
+    if (msg.size()) {
+        activityImageText_ = tr("Hunting with ") + msg;
+    } else {
+        activityImageText_ = "";
+    }
 }
 
 const QString &DiscordManager::activityState() const

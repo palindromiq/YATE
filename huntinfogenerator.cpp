@@ -88,10 +88,12 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
         host_ = e.strValue();
         huntInfo()->setHost(host_);
         emit onHostChanged(host_);
+        emit onHostOrSquadChanged(huntInfo()->squadString());
     } else if (typ == LogEventType::SquadJoin) {
         QString member = e.strValue();
         huntInfo()->addSquadMember(member);
         emit onSquadChanged(huntInfo()->squad());
+        emit onHostOrSquadChanged(huntInfo()->squadString());
     } else if (typ == LogEventType::NightBegin) {
         if (currentNightIndex_ == -1) {
             currentNightIndex_++;

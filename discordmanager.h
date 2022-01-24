@@ -52,6 +52,7 @@ public slots:
     void sendMessageOnChannel3(QString msg);
     void disconnectFromLobby();
     void checkMessageBuffers();
+    void setSquadString(QString msg);
 
 
 signals:
@@ -66,6 +67,7 @@ signals:
     void connectionSucceeded();
     void connectionFailed();
     void onLobbyDisconnect();
+
 private:
     void setup(bool emitErrors = true);
     void sendMessageToLobby(QString msg);
