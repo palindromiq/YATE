@@ -167,9 +167,23 @@ public:
     float startTimestamp() const;
     void setStartTimestamp(float newStartTime);
 
+    void addSquadMember(const QString &member);
+    void removeSquadMember(const QString &member);
+
+    QString squadString() const;
+
+
+    const QString &host() const;
+    void setHost(const QString &newHost);
+
+    const QSet<QString> &squad() const;
+    void setSquad(const QSet<QString> &newSquad);
+
 private:
     QVector<RunInfo> runs_;
     float startTimestamp_;
+    QString host_;
+    QSet<QString> squad_;
 };
 
 class HuntInfo
@@ -189,21 +203,9 @@ public:
     static QString timestampToProgressString(float timestamp);
 
     QVector<AnalysisViewItem *> toAnalysisViewItem() const;
-    const QString &host() const;
-    void setHost(const QString &newHost);
-
-    void addSquadMember(const QString &member);
-    void removeSquadMember(const QString &member);
-
-    const QSet<QString> &squad() const;
-    void setSquad(const QSet<QString> &newSquad);
-
-    QString squadString() const;
 
 private:
     QVector<NightInfo> nights_;
-    QString host_;
-    QSet<QString> squad_;
 };
 
 #pragma GCC diagnostic pop

@@ -208,7 +208,7 @@ LogEventType EEParser::msgToEventType(QString msg, int &val, QString &strVal)
     if (msgEvtMap.contains(msg)) {
         return msgEvtMap[msg];
     } else if (msg.startsWith("Starting load for")) {
-        const QRegularExpression rx("Starting load for (\\w+)");
+        const QRegularExpression rx("Starting load for\\s+(.+)");
         auto match = rx.match(msg);
         if (!match.isValid()) {
             return LogEventType::Invalid;
@@ -219,7 +219,7 @@ LogEventType EEParser::msgToEventType(QString msg, int &val, QString &strVal)
         }
         return LogEventType::SquadJoin;
     } else if (msg.startsWith("Logged in ")) {
-        const QRegularExpression rx("Logged in (\\w+)");
+        const QRegularExpression rx("Logged in\\s+(.+)\\s+\\(");
         auto match = rx.match(msg);
         if (!match.isValid()) {
             return LogEventType::Invalid;
@@ -237,10 +237,6 @@ LogEventType EEParser::msgToEventType(QString msg, int &val, QString &strVal)
         val = parts[0].toInt();
         return LogEventType::ShardInsert;
     } else if (msg.startsWith("TeralystEncounter.lua: A shard has been removed from the Eidolon Shrine.")) {
-//        const QRegularExpression rx("[^0-9]+");
-//        const auto&& parts = msg.split(rx, Qt::SkipEmptyParts);
-//        val = parts[0].toInt();
-//        return LogEventType::ShardRemove;
         return LogEventType::Invalid;
     } else {
         return LogEventType::Invalid;

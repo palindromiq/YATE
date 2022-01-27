@@ -86,19 +86,19 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
 
     if (typ == LogEventType::HostJoin) {
         host_ = e.strValue();
-        huntInfo()->setHost(host_);
-        emit onHostChanged(host_);
-        emit onHostOrSquadChanged(huntInfo()->squadString());
     } else if (typ == LogEventType::SquadJoin) {
         QString member = e.strValue();
-        huntInfo()->addSquadMember(member);
-        emit onSquadChanged(huntInfo()->squad());
-        emit onHostOrSquadChanged(huntInfo()->squadString());
+        huntInfo()->night(currentNightIndex_).addSquadMember(member);
+        emit onSquadChanged(huntInfo()->night(currentNightIndex_).squad());
+        emit onHostOrSquadChanged(huntInfo()->night(currentNightIndex_).squadString());
     } else if (typ == LogEventType::NightBegin) {
         if (currentNightIndex_ == -1) {
             currentNightIndex_++;
             huntInfo()->addNight(NightInfo());
             huntInfo()->night(currentNightIndex_).setStartTimestamp(timestamp);
+            huntInfo()->night(currentNightIndex_).setHost(host_);
+            emit onHostChanged(host_);
+            emit onHostOrSquadChanged(huntInfo()->night(currentNightIndex_).squadString());
             nightEnded_ = false;
 
             currentRunIndex_++;
@@ -155,6 +155,9 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                         currentNightIndex_++;
                         huntInfo()->addNight(NightInfo());
                         huntInfo()->night(currentNightIndex_).setStartTimestamp(timestamp);
+                        huntInfo()->night(currentNightIndex_).setHost(host_);
+                        emit onHostChanged(host_);
+                        emit onHostOrSquadChanged(huntInfo()->night(currentNightIndex_).squadString());
                         nightEnded_ = false;
                         currentRunIndex_ = -1;
                     }

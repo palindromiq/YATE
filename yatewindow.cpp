@@ -269,14 +269,19 @@ void Yate::YATEWindow::showLiveFeedback(bool lock)
 
 #ifdef DISCORD_ENABLED
     QSettings settings;
-    if (settings.value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool() && settings.value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool()) {
-        connect(huntInfoGenerator_, &HuntInfoGenerator::onHuntStateChanged, discord_, &DiscordManager::sendMessageOnChannel1);
-        connect(huntInfoGenerator_, &HuntInfoGenerator::onLimbsChanged, discord_, &DiscordManager::sendMessageOnChannel2);
-        connect(huntInfoGenerator_, &HuntInfoGenerator::onHuntStateChanged, discord_, &DiscordManager::setActivityDetails);
-        connect(huntInfoGenerator_, &HuntInfoGenerator::onLimbsChanged, discord_, &DiscordManager::setActivityState);
-        connect(huntInfoGenerator_, &HuntInfoGenerator::onHostOrSquadChanged, discord_, &DiscordManager::setSquadString);
-        connect(huntInfoGenerator_, &HuntInfoGenerator::onHostOrSquadChanged, discord_, &DiscordManager::sendMessageOnChannel3);
-        connect(this, &YATEWindow::feedbackWindowClosed, discord_, &DiscordManager::clearActivity);
+    if (settings.value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool()) {
+        if (settings.value(SETTINGS_KEY_DISCORD_NETWORKING, true).toBool()) {
+            connect(huntInfoGenerator_, &HuntInfoGenerator::onHuntStateChanged, discord_, &DiscordManager::sendMessageOnChannel1);
+            connect(huntInfoGenerator_, &HuntInfoGenerator::onLimbsChanged, discord_, &DiscordManager::sendMessageOnChannel2);
+            connect(huntInfoGenerator_, &HuntInfoGenerator::onHostOrSquadChanged, discord_, &DiscordManager::sendMessageOnChannel3);
+        }
+        if (settings.value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool()) {
+            connect(huntInfoGenerator_, &HuntInfoGenerator::onHuntStateChanged, discord_, &DiscordManager::setActivityDetails);
+            connect(huntInfoGenerator_, &HuntInfoGenerator::onLimbsChanged, discord_, &DiscordManager::setActivityState);
+            connect(huntInfoGenerator_, &HuntInfoGenerator::onHostOrSquadChanged, discord_, &DiscordManager::setSquadString);
+            connect(this, &YATEWindow::feedbackWindowClosed, discord_, &DiscordManager::clearActivity);
+        }
+
     }
 #endif
 
