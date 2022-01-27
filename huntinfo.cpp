@@ -110,6 +110,14 @@ void NightInfo::addSquadMember(const QString &member)
     }
 }
 
+void NightInfo::addSquadMembers(const QSet<QString> &members) {
+    for(auto &mem: members) {
+        if (mem != host_) {
+            squad_.insert(mem);
+        }
+    }
+}
+
 void NightInfo::removeSquadMember(const QString &member)
 {
     squad_.remove(member);

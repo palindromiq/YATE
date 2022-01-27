@@ -28,6 +28,7 @@ void HuntInfoGenerator::resetHuntInfo()
 
     huntInfo_ = new HuntInfo;
     state_.reset();
+    squadBuffer_.clear();
     lastEventTime_ = 0;
     currentCapIndex_ = -1;
     currentRunIndex_ = -1;
@@ -88,9 +89,15 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
         host_ = e.strValue();
     } else if (typ == LogEventType::SquadJoin) {
         QString member = e.strValue();
-        huntInfo()->night(currentNightIndex_).addSquadMember(member);
-        emit onSquadChanged(huntInfo()->night(currentNightIndex_).squad());
-        emit onHostOrSquadChanged(huntInfo()->night(currentNightIndex_).squadString());
+        if (currentNightIndex_ != -1) {
+            huntInfo()->night(currentNightIndex_).addSquadMember(member);
+            emit onSquadChanged(huntInfo()->night(currentNightIndex_).squad());
+            emit onHostOrSquadChanged(huntInfo()->night(currentNightIndex_).squadString());
+        } else {
+            if (member != host_) {
+                squadBuffer_.insert(member);
+            }
+        }
     } else if (typ == LogEventType::NightBegin) {
         if (currentNightIndex_ == -1) {
             currentNightIndex_++;
@@ -98,6 +105,10 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
             huntInfo()->night(currentNightIndex_).setStartTimestamp(timestamp);
             huntInfo()->night(currentNightIndex_).setHost(host_);
             emit onHostChanged(host_);
+            if(squadBuffer_.size()) {
+                huntInfo()->night(currentNightIndex_).addSquadMembers(squadBuffer_);
+                emit onSquadChanged(huntInfo()->night(currentNightIndex_).squad());
+            }
             emit onHostOrSquadChanged(huntInfo()->night(currentNightIndex_).squadString());
             nightEnded_ = false;
 
@@ -157,6 +168,10 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                         huntInfo()->night(currentNightIndex_).setStartTimestamp(timestamp);
                         huntInfo()->night(currentNightIndex_).setHost(host_);
                         emit onHostChanged(host_);
+                        if(squadBuffer_.size()) {
+                            huntInfo()->night(currentNightIndex_).addSquadMembers(squadBuffer_);
+                            emit onSquadChanged(huntInfo()->night(currentNightIndex_).squad());
+                        }
                         emit onHostOrSquadChanged(huntInfo()->night(currentNightIndex_).squadString());
                         nightEnded_ = false;
                         currentRunIndex_ = -1;
