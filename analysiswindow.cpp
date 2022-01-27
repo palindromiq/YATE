@@ -186,7 +186,7 @@ void AnalysisWindow::on_btnExport_clicked()
   ui->btnExport->setEnabled(false);
   ui->btnCopyImg->setEnabled(false);
   isGenerating_.storeRelaxed(1);
-  HuntImageGenerator *gen = new HuntImageGenerator(savePath, night, hunt_->host(), hunt_->squad());
+  HuntImageGenerator *gen = new HuntImageGenerator(savePath, night, night.host(), night.squad());
   QThread *genThread = new QThread;
   gen->moveToThread(genThread);
   connect(genThread, &QThread::finished, genThread, &QThread::deleteLater);
@@ -236,7 +236,7 @@ void AnalysisWindow::on_btnCopyImg_clicked()
     NightInfo &night = hunt_->night(selectedNight_);
     ui->btnExport->setEnabled(false);
     isGenerating_.storeRelaxed(1);
-    HuntImageGenerator *gen = new HuntImageGenerator("", night, hunt_->host(), hunt_->squad());
+    HuntImageGenerator *gen = new HuntImageGenerator("", night, night.host(), night.squad());
     QThread *genThread = new QThread;
     gen->moveToThread(genThread);
     connect(genThread, &QThread::finished, genThread, &QThread::deleteLater);

@@ -102,39 +102,21 @@ QVector<AnalysisViewItem *> HuntInfo::toAnalysisViewItem() const
     return items;
 }
 
-const QString &HuntInfo::host() const
-{
-    return host_;
-}
 
-void HuntInfo::setHost(const QString &newHost)
-{
-    host_ = newHost;
-}
-
-void HuntInfo::addSquadMember(const QString &member)
+void NightInfo::addSquadMember(const QString &member)
 {
     if (member != host_) {
         squad_.insert(member);
     }
 }
 
-void HuntInfo::removeSquadMember(const QString &member)
+void NightInfo::removeSquadMember(const QString &member)
 {
     squad_.remove(member);
 }
 
-const QSet<QString> &HuntInfo::squad() const
-{
-    return squad_;
-}
 
-void HuntInfo::setSquad(const QSet<QString> &newSquad)
-{
-    squad_ = newSquad;
-}
-
-QString HuntInfo::squadString() const
+QString NightInfo::squadString() const
 {
     QStringList sq;
     if(host_.size()) {
@@ -280,6 +262,26 @@ float NightInfo::startTimestamp() const
 void NightInfo::setStartTimestamp(float newStartTime)
 {
     startTimestamp_ = newStartTime;
+}
+
+const QString &NightInfo::host() const
+{
+    return host_;
+}
+
+void NightInfo::setHost(const QString &newHost)
+{
+    host_ = newHost;
+}
+
+const QSet<QString> &NightInfo::squad() const
+{
+    return squad_;
+}
+
+void NightInfo::setSquad(const QSet<QString> &newSquad)
+{
+    squad_ = newSquad;
 }
 
 RunInfo::RunInfo()
