@@ -94,6 +94,7 @@ private:
     bool showLimbsSummaryAfterLast_;
     int limbsSummaryPrec_;
     QString host_;
+    QSet<QString> squadBuffer_;
 };
 }
 

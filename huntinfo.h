@@ -168,6 +168,7 @@ public:
     void setStartTimestamp(float newStartTime);
 
     void addSquadMember(const QString &member);
+    void addSquadMembers(const QSet<QString> &members);
     void removeSquadMember(const QString &member);
 
     QString squadString() const;
