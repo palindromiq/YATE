@@ -168,7 +168,7 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                         huntInfo()->night(currentNightIndex_).setStartTimestamp(timestamp);
                         huntInfo()->night(currentNightIndex_).setHost(host_);
                         emit onHostChanged(host_);
-                        if(squadBuffer_.size()) {
+                        if(squadBuffer_.size() && currentNightIndex_ == 0) {
                             huntInfo()->night(currentNightIndex_).addSquadMembers(squadBuffer_);
                             emit onSquadChanged(huntInfo()->night(currentNightIndex_).squad());
                         }
