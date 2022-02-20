@@ -17,9 +17,10 @@ class QString;
 #define SETTINGS_API_VERSION "v1.0"
 #define SETTINGS_URL_API_CHECK_VERSION SETTINGS_URL_API_BASE + "/" + SETTINGS_API_VERSION + "/update"
 #define SETTINGS_KEY_EE_LOG "eelogpath"
-#define SETTINGS_KEY_WATERSHIELD "watershield"
-#define SETTINGS_OPT_EXACT "exact"
-#define SETTINGS_OPT_SHARD "shard"
+#define SETTINGS_KEY_WATERSHIELD_FORMAT "watershield_format"
+#define SETTINGS_WS_OPT_BREAKDOWN "breakdown"
+#define SETTINGS_WS_OPT_TOTAL "total"
+#define SETTINGS_WS_OPT_SHIELD "shield"
 #define SETTINGS_KEY_FEEDBACK_POS_X "feedback_xpos"
 #define SETTINGS_KEY_FEEDBACK_POS_Y "feedback_ypos"
 #define SETTINGS_KEY_FEEDBACK_FONT "feedback_font"
@@ -35,6 +36,7 @@ class QString;
 #define SETTINGS_KEY_DISCORD_FEATURES "discord_features"
 #define SETTINGS_KEY_DISCORD_ACTIVITY "discord_activity"
 #define SETTINGS_KEY_DISCORD_NETWORKING "discord_networking"
+#define SETTINGS_KEY_DISCORD_ACTIVITY_JOIN "discord_activity_join"
 
 #define DISCORD_UPDATE_TIMER 50
 #define DISCORD_MESSAGE_BUFFER_TIMER 1000

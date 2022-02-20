@@ -61,9 +61,67 @@ QPushButton:disabled{
         color: rgb(150, 150, 150);
         background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(57, 57, 57, 255), stop:1 rgba(77, 77, 77, 255));
 }
-QCheckBox:disabled{
+QCheckBox:disabled, QRadioButton:disabled{
         color: rgb(150, 150, 150);
  }
+
+
+QRadioButton
+{
+    spacing: 0.5ex;
+    outline: none;
+    color: #eff0f1;
+    margin-bottom: 0.2ex;
+}
+
+QRadioButton:disabled
+{
+    color: #76797c;
+}
+
+QRadioButton::indicator:unchecked,
+QRadioButton::indicator:unchecked:focus
+{
+    border-image: url(:/dark/radio_unchecked_disabled.svg);
+}
+
+
+QRadioButton::indicator:unchecked:hover,
+QRadioButton::indicator:unchecked:pressed
+{
+    border: none;
+    outline: none;
+    border-image: url(:/dark/radio_unchecked.svg);
+}
+
+
+QRadioButton::indicator:checked
+{
+    border: none;
+    outline: none;
+    border-image: url(:/dark/radio_checked.svg);
+}
+
+QRadioButton::indicator:checked:hover,
+QRadioButton::indicator:checked:focus,
+QRadioButton::indicator:checked:pressed
+{
+    border: none;
+    outline: none;
+    border-image: url(:/dark/radio_checked.svg);
+}
+
+QRadioButton::indicator:checked:disabled
+{
+    outline: none;
+    border-image: url(:/dark/radio_checked_disabled.svg);
+}
+
+QRadioButton::indicator:unchecked:disabled
+{
+    border-image: url(:/dark/radio_unchecked_disabled.svg);
+}
+
 QLineEdit {
         border-width: 1px; border-radius: 4px;
         border-color: rgb(58, 58, 58);
@@ -198,6 +256,7 @@ QCheckBox {
         color:rgb(223,219,210);
         padding: 2px;
 }
+
 
 QStatusBar {
         color:rgb(240,240,240);
