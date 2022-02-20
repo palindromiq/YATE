@@ -81,7 +81,7 @@ QString HuntInfo::eidolonName(int eido, bool abbreviate)
 
 QString HuntInfo::timestampToProgressString(float timestamp)
 {
-    if (timestamp == 0.0) {
+    if (timestamp < 0.0) {
         return "N/A";
     }
     int tsMins = int(timestamp / 60.0);
@@ -414,6 +414,15 @@ float RunInfo::startTimestamp() const
 void RunInfo::setStartTimestamp(float newStartTime)
 {
     startTimestamp_ = newStartTime;
+}
+
+const QVector<LogEvent> &RunInfo::eventLog() const
+{
+    return eventLog_;
+}
+
+void RunInfo::addEvent(const LogEvent &evt) {
+    eventLog_.push_back(evt);
 }
 
 CapInfo::CapInfo():valid_(false), shrineTime_(0), lateShardInsertLog_(false)

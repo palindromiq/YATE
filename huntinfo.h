@@ -4,6 +4,7 @@
 #include <QVector>
 #include <QSet>
 #include "globals.h"
+#include "logevent.h"
 
 namespace Yate {
 class AnalysisViewItem;
@@ -140,11 +141,15 @@ public:
     float startTimestamp() const;
     void setStartTimestamp(float newStartTime);
 
+    const QVector<LogEvent> &eventLog() const;
+    void addEvent(const LogEvent &evt);
+
 private:
     CapInfo teralystCapInfo_;
     CapInfo gantulystCapInfo_;
     CapInfo hydrolystCapInfo_;
     float startTimestamp_;
+    QVector<LogEvent> eventLog_;
 };
 
 class NightInfo {

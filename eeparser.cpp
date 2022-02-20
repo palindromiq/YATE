@@ -154,9 +154,9 @@ void EEParser::startLive()
     qDebug() << "Live parsing started.";
     emit parsingStarted();
     QFile logFile(filename());
-    watcher_ = new FileWatcher(nullptr, filename());
     QThread *watcherThread = new QThread;
 
+    watcher_ = new FileWatcher(nullptr, filename());
     watcher_->moveToThread(watcherThread);
 
     connect( watcherThread, &QThread::started, watcher_, &FileWatcher::start);
@@ -197,7 +197,7 @@ LogEventType EEParser::msgToEventType(QString msg, int &val, QString &strVal)
         {"TeralystAvatarScript.lua: Teralyst Killed", LogEventType::EidolonKill},
         {"SnapPickupToGround.lua: Snapping pickup to ground (DefaultArcanePickup)", LogEventType::LootDrop},
         {"TeralystEncounter.lua: Shrine enabled", LogEventType::ShrineEnable},
-//        {"TeralystEncounter.lua: Shrine disabled", LogEventType::ShrineDisable},
+        {"TeralystEncounter.lua: Shrine disabled", LogEventType::ShrineDisable},
         {"EidolonMP.lua: EIDOLONMP: Finalize Eidolon transition", LogEventType::TeralystSpawn},
         {"TeralystEncounter.lua:      Eidolon spawning SUCCESS", LogEventType::EidolonSpawn},
         {"EidolonMP.lua: EIDOLONMP: Level fully destroyed", LogEventType::HostUnload},
@@ -237,7 +237,7 @@ LogEventType EEParser::msgToEventType(QString msg, int &val, QString &strVal)
         val = parts[0].toInt();
         return LogEventType::ShardInsert;
     } else if (msg.startsWith("TeralystEncounter.lua: A shard has been removed from the Eidolon Shrine.")) {
-        return LogEventType::Invalid;
+        return LogEventType::ShardRemove;
     } else {
         return LogEventType::Invalid;
     }

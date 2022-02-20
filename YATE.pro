@@ -7,7 +7,7 @@ CONFIG += c++11 DISCORD_ENABLED
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
-VERSION = 1.0.10.0
+VERSION = 1.1.0.0
 SOURCES += \
     analysisviewitem.cpp \
     analysisviewmodel.cpp \
@@ -24,6 +24,7 @@ SOURCES += \
     main.cpp \
     miniz.cpp \
     settingsdialog.cpp \
+    timelineimagegenerator.cpp \
     updater.cpp \
     yatewindow.cpp \
     zipmanager.cpp
@@ -60,6 +61,7 @@ HEADERS += \
     logevent.h \
     miniz.h \
     settingsdialog.h \
+    timelineimagegenerator.h \
     updater.h \
     yatewindow.h \
     zipmanager.h

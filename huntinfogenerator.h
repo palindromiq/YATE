@@ -67,6 +67,7 @@ public:
     void setLastEventTime(float newLastEventTime);
     void emitLimbsUpdate();
 
+
 public slots:
     void onLogEvent(LogEvent &e);
     void resetHuntInfo();

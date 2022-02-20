@@ -40,6 +40,8 @@ void HuntInfoGenerator::resetHuntInfo()
 
 }
 
+
+
 HuntInfoGenerator::~HuntInfoGenerator()
 {
 // TODO: Fix GC
@@ -50,24 +52,7 @@ HuntInfoGenerator::~HuntInfoGenerator()
 
 void HuntInfoGenerator::onLogEvent(LogEvent &e)
 {
-    QMap<LogEventType, QString> logEvtTypName{
-            {LogEventType::NightBegin, "NightBegin"},
-            {LogEventType::DayBegin, "DayBegin"},
-            {LogEventType::TeralystSpawn, "TeralystSpawn"},
-            {LogEventType::LimbBreak, "LimbBreak"},
-            {LogEventType::EidolonCapture, "EidolonCapture"},
-            {LogEventType::EidolonKill, "EidolonKill"},
-            {LogEventType::LootDrop, "LootDrop"},
-            {LogEventType::ShrineEnable, "ShrineEnable"},
-            {LogEventType::ShardInsert, "ShardInsert"},
-            {LogEventType::ShardRemove, "ShardRemove"},
-            {LogEventType::ShrineDisable, "ShrineDisable"},
-            {LogEventType::EidolonSpawn, "EidolonSpawn"},
-            {LogEventType::HostJoin, "HostJoin"},
-            {LogEventType::SquadJoin, "SquadJoin"},
-            {LogEventType::HostUnload, "HostUnload"},
-            {LogEventType::Invalid, "Invalid"}
-        };
+
     QMap<HuntStateStage, QString> stateStageName{
         {HuntStateStage::Initial, "Initial"},
         {HuntStateStage::Spawned, "Spawned"},
@@ -82,6 +67,14 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
     auto typ = e.type();
     float timestamp = e.timestamp();
     bool invalid = false;
+    QVector<LogEventType> ignoredEvents({LogEventType::ShrineDisable, LogEventType::ShardRemove});
+
+    if (ignoredEvents.indexOf(typ) != -1) {
+        if (currentNightIndex_ != -1 && currentRunIndex_ != -1) {
+            huntInfo()->night(currentNightIndex_).run(currentRunIndex_).addEvent(e);
+        }
+        return;
+    }
 
 
 
@@ -130,11 +123,15 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
             huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setSpawnTimestamp(timestamp);
             huntInfo()->night(currentNightIndex_).run(currentRunIndex_).setStartTimestamp(timestamp);
         }
+
         state_.setStage(HuntStateStage::Spawned);
         emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + HuntInfo::eidolonName(state_.eidolonNumber()) + tr(" spawned"));
         emit onLimbsChanged("");
     } else if (typ == LogEventType::DayBegin) {
          nightEnded_ = true;
+         if (currentNightIndex_ != -1 && currentRunIndex_ != -1) {
+                huntInfo()->night(currentNightIndex_).run(currentRunIndex_).addEvent(e);
+         }
          return;
     } else if (typ == LogEventType::HostUnload) {
         if (currentNightIndex_ != -1 && (timestamp -  huntInfo()->night(currentNightIndex_).startTimestamp()) > MAX_NIGHT_DURATION) {
@@ -155,8 +152,6 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
         } else if (capState == CapState::Kill) {
             state_.setStage(HuntStateStage::Killed);
         }
-
-
 
     } else {
         switch (state_.stage()) {
@@ -359,11 +354,13 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
        }
     }
     if (invalid) {
-        qDebug () << stateStageName[state_.stage()] << "" << int(typ) << logEvtTypName[typ] << "  " << timestamp;
+        qDebug () << stateStageName[state_.stage()] << "" << int(typ) << e.typeName() << "  " << timestamp;
         emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] Error: at phase " +
-                                stateStageName[state_.stage()] + " received " + logEvtTypName[typ]);
-
+                                stateStageName[state_.stage()] + " received " + e.typeName());
+    } else if (currentNightIndex_ != -1 && currentRunIndex_ != -1) {
+        huntInfo()->night(currentNightIndex_).run(currentRunIndex_).addEvent(e);
     }
+//    huntInfo()->night(currentNightIndex_).run(currentRunIndex_).addEvent(LogEvent(-1, LogEventType::HostJoin, 0));
     lastEventTime_ = timestamp;
     lastEvent_ = e;
 }

@@ -102,6 +102,9 @@ class QString;
 #define SUMMARY_COLOR_LAST_LIMB "#283D3B"
 #define SUMMARY_COLOR_AVERAGE "#283D3B"
 
+#define TIMELINE_COLOR_ELEMENT "#05aeef"
+
+
 
 
 

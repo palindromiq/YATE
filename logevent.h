@@ -47,6 +47,8 @@ public:
     const QString &strValue() const;
     void setStrValue(const QString &newStrValue);
 
+    QString typeName() const;
+
 private:
     int id_;
     LogEventType type_;
