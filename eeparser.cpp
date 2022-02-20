@@ -143,8 +143,11 @@ void EEParser::processFileContent(QFile &logFile)
         parseLine(lines[i]);
     }
     int currPos = currentPosition() + fileContent.length();
-    if (lines.size()) {
+    if (lines.size() > 0) {
         currPos -= (lines[lines.size() - 1].size() + 2);
+        if (lines.size() > 1) {
+            currPos -= (lines[lines.size() - 2].size() + 2);
+        }
     }
     setCurrentPosition(currPos);
 }
