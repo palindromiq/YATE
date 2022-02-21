@@ -585,6 +585,19 @@ void YATEWindow::on_btnCopyLobbyId_clicked()
 }
 
 
+void YATEWindow::on_btnCopyLobbyLink_clicked()
+{
+    qDebug() << "Copy Lobby Link.";
+    QString lobbyIdText = ui->lblLobbyId->text().trimmed();
+    if (lobbyIdText.size()) {
+        QClipboard *clipboard = QApplication::clipboard();
+        clipboard->setText("yate://" + lobbyIdText);
+    } else {
+        qDebug() << "Lobby ID is empty.";
+    }
+}
+
+
 
 
 }

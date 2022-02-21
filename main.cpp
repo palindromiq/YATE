@@ -71,6 +71,10 @@ int main(int argc, char *argv[])
 
             QMessageBox::information(0, "Updated Successfully", "Successfully updated YATE to version " + version + ". To learn about the latest features visit " + "<a href='" + SETTINGS_WEBSITE_HTTPS  + "'>" + SETTINGS_WEBSITE_HTTPS  + "</a>");
         }
+    } else if  (argc == 2 && QString(argv[1]).startsWith("yate://")) {
+        QString codeURI = QString(argv[1]);
+        qDebug() << "Starting with URI: " << codeURI;
+        QMessageBox::information(0, "URI", "URI: " + codeURI);
     }
 
 

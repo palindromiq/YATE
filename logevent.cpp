@@ -75,6 +75,7 @@ QString LogEvent::typeName() const
             {LogEventType::ShardRemove, "ShardRemove"},
             {LogEventType::ShrineDisable, "ShrineDisable"},
             {LogEventType::EidolonSpawn, "EidolonSpawn"},
+            {LogEventType::EidolonTeleport, "EidolonTeleported"},
             {LogEventType::HostJoin, "HostJoin"},
             {LogEventType::SquadJoin, "SquadJoin"},
             {LogEventType::HostUnload, "HostUnload"},

@@ -44,7 +44,7 @@ QImage* TimelineImageGenerator::generateImage()
     static QMap<LogEventType, QVector<QString>> logEvtText{
             {LogEventType::NightBegin, {"Night Started", ":/timeline/NightBegin.png"}},
             {LogEventType::DayBegin, {"Day Started", ":/timeline/DayBegin.png"}},
-            {LogEventType::TeralystSpawn, {"Teralyst Spawned", ":/timeline/EidolonSpawn.png"}},
+            {LogEventType::TeralystSpawn, {"Teralyst Emerging", ":/timeline/EidolonSpawn.png"}},
             {LogEventType::LimbBreak, {"Limb Break", ":/timeline/LimbBreak.png"}},
             {LogEventType::EidolonCapture, {"Eidolon Captured", ":/timeline/EidolonCapture.png"}},
             {LogEventType::EidolonKill, {"Eidolon Killed", ":/timeline/EidolonKill.png"}},
@@ -54,10 +54,11 @@ QImage* TimelineImageGenerator::generateImage()
             {LogEventType::ShardRemove, {"Shard Removed", ":/timeline/ShardRemove.png"}},
             {LogEventType::ShrineDisable, {"Shrine Disabled", ":/timeline/ShrineDisable.png"}},
             {LogEventType::EidolonSpawn, {"Eidolon Spawned", ":/timeline/EidolonSpawn.png"}},
+            {LogEventType::EidolonTeleport, {"Eidolon Teleported", ":/timeline/EidolonTeleport.png"}},
             {LogEventType::HostJoin, {"Host Joinned", ":/timeline/HostJoin.png"}},
             {LogEventType::SquadJoin, {"Member Joined", ":/timeline/SquadJoin.png"}},
             {LogEventType::HostUnload, {"Host Exit", ":/timeline/HostUnload.png"}},
-            {LogEventType::EidolonDespawn, {"Eidolon Despawned", ":/timeline/EidolonDespawn.png"}},
+            {LogEventType::EidolonDespawn, {"Eidolons Despawning", ":/timeline/EidolonDespawn.png"}},
             {LogEventType::Invalid, {"Invalid", ":/timeline/Invalid.png"}}
     };
 

@@ -19,6 +19,7 @@ enum class LogEventType {
     ShardRemove,
     ShrineDisable,
     EidolonSpawn,
+    EidolonTeleport,
     HostUnload,
     Invalid,
     HostJoin,

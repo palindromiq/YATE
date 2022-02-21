@@ -203,6 +203,7 @@ LogEventType EEParser::msgToEventType(QString msg, int &val, QString &strVal)
         {"TeralystEncounter.lua: Shrine disabled", LogEventType::ShrineDisable},
         {"EidolonMP.lua: EIDOLONMP: Finalize Eidolon transition", LogEventType::TeralystSpawn},
         {"TeralystEncounter.lua:      Eidolon spawning SUCCESS", LogEventType::EidolonSpawn},
+        {"TeralystAvatarScript.lua: Wailing Song Complete - Teleporting", LogEventType::EidolonTeleport},
         {"EidolonMP.lua: EIDOLONMP: Level fully destroyed", LogEventType::HostUnload},
         {"TeralystEncounter.lua: Teralyst Escape complete. All Teralysts should be gone now", LogEventType::EidolonDespawn}
     };

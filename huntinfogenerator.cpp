@@ -67,7 +67,8 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
     auto typ = e.type();
     float timestamp = e.timestamp();
     bool invalid = false;
-    QVector<LogEventType> ignoredEvents({LogEventType::ShrineDisable, LogEventType::ShardRemove});
+    QVector<LogEventType> ignoredEvents({LogEventType::ShrineDisable, LogEventType::ShardRemove, LogEventType::EidolonTeleport});
+
 
     if (ignoredEvents.indexOf(typ) != -1) {
         if (currentNightIndex_ != -1 && currentRunIndex_ != -1) {

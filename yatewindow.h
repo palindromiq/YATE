@@ -81,6 +81,8 @@ private slots:
 
     void on_btnCopyLobbyId_clicked();
 
+    void on_btnCopyLobbyLink_clicked();
+
 public slots:
     void setLogFilePath(QString path);
     void onUpdaterBusy(bool busy);

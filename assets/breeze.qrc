@@ -107,5 +107,6 @@
         <file>timeline/ShrineDisable.png</file>
         <file>timeline/ShrineEnable.png</file>
         <file>timeline/SquadJoin.png</file>
+        <file>timeline/EidolonTeleport.png</file>
     </qresource>
 </RCC>
