@@ -139,7 +139,7 @@ void EEParser::processFileContent(QFile &logFile)
     QString fileContent =  QString(logFile.readAll());
     auto lines = fileContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
 
-    for(int i = 0; i < lines.size() - 1; i++) {
+    for(int i = 0; i < lines.size() - 2; i++) {
         parseLine(lines[i]);
     }
     int currPos = currentPosition() + fileContent.length();
