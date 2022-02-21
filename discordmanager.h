@@ -32,6 +32,8 @@ public:
 
     bool running() const;
 
+    long long getLobbyId() const;
+
 public slots:
     void start();
     void stop();

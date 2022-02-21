@@ -280,6 +280,11 @@ void DiscordManager::sendMessageToLobby(QString msg)
     }
 }
 
+long long DiscordManager::getLobbyId() const
+{
+    return lobbyId_;
+}
+
 
 
 bool DiscordManager::running() const

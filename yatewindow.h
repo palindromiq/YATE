@@ -125,6 +125,7 @@ private:
     QAtomicInt isLiveFeedbackRunning_;
     QString codeURI_;
     void initDiscord();
+    void establishLobbyConnection(QString lobbyId);
 };
 }
 #endif // YATEWINDOW_H

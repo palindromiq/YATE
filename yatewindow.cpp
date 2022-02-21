@@ -132,6 +132,31 @@ void Yate::YATEWindow::initDiscord()
 #endif
 }
 
+void YATEWindow::establishLobbyConnection(QString lobbyId)
+{
+    if (!lobbyId.size()) {
+        qDebug() << "Returned empty Lobby Id";
+        return;
+    }
+    qDebug() << "Connecting to Lobby ID" << lobbyId;
+    auto split = lobbyId.split(":");
+    if (split.size() != 2) {
+        QMessageBox::critical(this, "Error", "Invalid code format.");
+        return;
+    }
+    if (split[0] == QString::number(discord_->getLobbyId())) {
+        QMessageBox::critical(this, "Error", "Cannot to connect to self-lobby.");
+        return;
+    }
+    if(discord_->connectTo(lobbyId)) {
+        qDebug() << "Passed initial connection to Lobby";
+        showClientLiveFeedback(false);
+    } else {
+        qCritical() << "Failed at initial connection to Lobby";
+        QMessageBox::critical(this, "Error", "Failed to establish connection to lobby, double check the input value.");
+    }
+}
+
 
 void YATEWindow::dragEnterEvent(QDragEnterEvent *e)
 {
@@ -472,14 +497,7 @@ void YATEWindow::onUserConnected(QString name)
         return;
     }
 
-    qDebug() << "Connecting to Lobby ID" << lobbyId;
-    if(discord_->connectTo(lobbyId)) {
-        qDebug() << "Passed initial connection to Lobby";
-        showClientLiveFeedback(false);
-    } else {
-        qCritical() << "Failed at initial connection to Lobby";
-        QMessageBox::critical(this, "Error", "Failed to establish connection to lobby, double check the input value.");
-    }
+    establishLobbyConnection(lobbyId);
 #else
     QMessageBox::critical(this, "Discord Features Required", "Discord features are needed but not supported by this version.");
     return;
@@ -578,18 +596,7 @@ void YATEWindow::on_btnLiveFeedbackVS_clicked()
         return;
     }
     QString lobbyId = QInputDialog::getText(this, "Host Lobby ID", "Enter the host's Lobby ID").trimmed();
-    if (!lobbyId.size()) {
-        qDebug() << "Returned empty Lobby Id";
-        return;
-    }
-    qDebug() << "Connecting to Lobby ID" << lobbyId;
-    if(discord_->connectTo(lobbyId)) {
-        qDebug() << "Passed initial connection to Lobby";
-        showClientLiveFeedback(false);
-    } else {
-        qCritical() << "Failed at initial connection to Lobby";
-        QMessageBox::critical(this, "Error", "Failed to establish connection to lobby, double check the input value.");
-    }
+    establishLobbyConnection(lobbyId);
 #else
     QMessageBox::critical(this, "Discord Features Required", "Discord features are needed but not supported by this version.");
     return;
