@@ -38,7 +38,7 @@ class YATEWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    YATEWindow(QWidget *parent = nullptr);
+    YATEWindow(QString codeURI = "", QWidget *parent = nullptr);
     ~YATEWindow();
 
     bool isLogManuallySet() const;
@@ -123,6 +123,7 @@ private:
     QThread *discordThread_;
 #endif
     QAtomicInt isLiveFeedbackRunning_;
+    QString codeURI_;
     void initDiscord();
 };
 }

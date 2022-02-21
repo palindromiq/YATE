@@ -86,6 +86,7 @@ private:
     long long lobbyId_;
     long long peerLobbyId_;
     long long peerUserId_;
+    char lobbySecret_[512];
 };
 
 }

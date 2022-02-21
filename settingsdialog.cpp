@@ -27,6 +27,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->lblWebsite->setTextFormat(Qt::RichText);
     ui->lblWebsite->setTextInteractionFlags(Qt::TextBrowserInteraction);
     ui->lblWebsite->setOpenExternalLinks(true);
+    ui->chkDiscordActivityJoin->hide();
     qDebug() << "Settings window initialized.";
 }
 
@@ -62,7 +63,7 @@ void SettingsDialog::reloadSettings()
     ui->chkDiscord->setChecked(settings_->value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool());
     ui->chkDiscordActivity->setChecked(settings_->value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool());
     ui->chkClientsServer->setChecked(settings_->value(SETTINGS_KEY_DISCORD_NETWORKING, true).toBool());
-    ui->chkClientsServer->setChecked(settings_->value(SETTINGS_KEY_DISCORD_ACTIVITY_JOIN, false).toBool());
+    ui->chkDiscordActivityJoin->setChecked(settings_->value(SETTINGS_KEY_DISCORD_ACTIVITY_JOIN, false).toBool());
 
     QString waterShieldFormat = settings_->value(SETTINGS_KEY_WATERSHIELD_FORMAT, SETTINGS_WS_OPT_BREAKDOWN).toString();
     ui->radWSFormatBreakdown->setChecked(waterShieldFormat == SETTINGS_WS_OPT_BREAKDOWN);
@@ -149,7 +150,7 @@ void SettingsDialog::on_btnSave_clicked()
   settings_->setValue(SETTINGS_KEY_DISCORD_FEATURES, ui->chkDiscord->isChecked());
   settings_->setValue(SETTINGS_KEY_DISCORD_ACTIVITY, ui->chkDiscordActivity->isChecked());
   settings_->setValue(SETTINGS_KEY_DISCORD_NETWORKING, ui->chkClientsServer->isChecked());
-  settings_->setValue(SETTINGS_KEY_DISCORD_ACTIVITY_JOIN, ui->chkClientsServer->isChecked());
+  settings_->setValue(SETTINGS_KEY_DISCORD_ACTIVITY_JOIN, ui->chkDiscordActivityJoin->isChecked());
   if (ui->radWSFormatShield->isChecked()) {
       settings_->setValue(SETTINGS_KEY_WATERSHIELD_FORMAT, SETTINGS_WS_OPT_SHIELD);
   } else if (ui->radWSFormatTotal->isChecked()) {

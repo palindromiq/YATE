@@ -222,6 +222,8 @@ LogEventType EEParser::msgToEventType(QString msg, int &val, QString &strVal)
             return LogEventType::Invalid;
         }
         return LogEventType::SquadJoin;
+
+
     } else if (msg.startsWith("Logged in ")) {
         const QRegularExpression rx("Logged in\\s+(.+)\\s+\\(");
         auto match = rx.match(msg);

@@ -109,9 +109,21 @@ void DiscordManager::updateActivity()
     activity.GetAssets().SetLargeImage("logo");
     activity.GetAssets().SetLargeText(imageTextArr);
     activity.SetState(stateArr);
-    core_->ActivityManager().UpdateActivity(activity, [](discord::Result result) {
+
+    if(settings_->value(SETTINGS_KEY_DISCORD_ACTIVITY_JOIN, false).toBool()) {
+        if (lobbyId_ != -1) {
+            activity.SetInstance(true);
+            activity.GetParty().SetId(lobbySecret_);
+            activity.GetParty().GetSize().SetCurrentSize(1);
+            activity.GetParty().GetSize().SetMaxSize(DISCORD_LOBBY_SIZE);
+            activity.GetSecrets().SetJoin(lobbySecret_);
+        }
+    }
+
+    core_->ActivityManager().UpdateActivity(activity, [&](discord::Result result) {
         if (result != discord::Result::Ok) {
             qWarning() << "Discord Manager: Activity update failed";
+
         }
     });
     activityInit_ = true;
@@ -176,7 +188,10 @@ void DiscordManager::setup(bool emitErrors)
         qDebug() << "Discord Manager: Emitting username" << username;
         emit onUserConnected(username);
         ready_ = true;
-        core_->ActivityManager().RegisterCommand("yate://run");
+        auto registerResult = core_->ActivityManager().RegisterCommand("yate://run");
+        if (registerResult != discord::Result::Ok) {
+            qWarning() << "Discord Manager: Failed to register result " << int(registerResult);
+        }
     }
 
     core_->UserManager().OnCurrentUserUpdate.Connect([&]() {
@@ -187,7 +202,10 @@ void DiscordManager::setup(bool emitErrors)
             qDebug() << "Discord Manager: Emitting username" << username;
             emit onUserConnected(username);
             ready_ = true;
-            core_->ActivityManager().RegisterCommand("yate://run");
+            auto registerResult = core_->ActivityManager().RegisterCommand("yate://run");
+            if (registerResult != discord::Result::Ok) {
+                qWarning() << "Discord Manager: Failed to register result " << int(registerResult);
+            }
         } else {
              qWarning() << "Discord Manager: Current User Update failed " << int(userResult);
         }
@@ -223,21 +241,23 @@ void DiscordManager::setup(bool emitErrors)
         discord::LobbyTransaction txn;
         core_->LobbyManager().GetLobbyCreateTransaction(&txn);
         txn.SetType(discord::LobbyType::Public);
+        txn.SetCapacity(DISCORD_LOBBY_SIZE);
         qDebug() << "Discord Manager: Created Lobby Transaction";
 
         core_->LobbyManager().CreateLobby(txn, [&](discord::Result result, const discord::Lobby &lobby) {
             if (result == discord::Result::Ok) {
                 qDebug() << "Discord Manager: Lobby created " << lobby.GetId();
-                char secret[512];
-                core_->LobbyManager().GetLobbyActivitySecret(lobby.GetId(), secret);
-                qDebug() << "Discord Manager: Lobby secret " << QString::fromUtf8(secret);
+                core_->LobbyManager().GetLobbyActivitySecret(lobby.GetId(), lobbySecret_);
+                qDebug() << "Discord Manager: Lobby secret " << QString::fromUtf8(lobbySecret_);
                 lobbyId_ = lobby.GetId();
-                emit onLobbyIdChange(QString::fromUtf8(secret));
+                emit onLobbyIdChange(QString::fromUtf8(lobbySecret_));
 
             } else {
                 qCritical() << "Discord Manager: Failed to create lobby" << int(result);
             }
         });
+
+
 
     }
 

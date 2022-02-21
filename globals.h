@@ -14,6 +14,7 @@ class QString;
 #define SETTINGS_WEBSITE QString("yate.app")
 #define SETTINGS_WEBSITE_HTTPS QString("https://") + SETTINGS_WEBSITE
 #define SETTINGS_URL_API_BASE QString("https://api.") + SETTINGS_WEBSITE
+#define SETTINGS_URL_CODE_REDIRECT SETTINGS_WEBSITE_HTTPS + "/code.html"
 #define SETTINGS_API_VERSION "v1.0"
 #define SETTINGS_URL_API_CHECK_VERSION SETTINGS_URL_API_BASE + "/" + SETTINGS_API_VERSION + "/update"
 #define SETTINGS_KEY_EE_LOG "eelogpath"
@@ -39,6 +40,7 @@ class QString;
 #define SETTINGS_KEY_DISCORD_ACTIVITY_JOIN "discord_activity_join"
 
 #define DISCORD_UPDATE_TIMER 50
+#define DISCORD_LOBBY_SIZE 50
 #define DISCORD_MESSAGE_BUFFER_TIMER 1000
 
 #define EMOJI_LOCKED "🔒"

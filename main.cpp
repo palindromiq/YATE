@@ -10,6 +10,7 @@
 #include <QFile>
 #include <QTimer>
 #include <QSettings>
+#include <QRegularExpression>
 
 
 #include "globals.h"
@@ -56,7 +57,7 @@ int main(int argc, char *argv[])
 #endif
 
     QString path = QDir::toNativeSeparators(qApp->applicationFilePath());
-    qDebug() << "Register Custom URI Handler";
+    qDebug() << "Registering Custom URI Handler";
     QSettings set("HKEY_CURRENT_USER\\Software\\Classes", QSettings::NativeFormat);
     set.beginGroup("yate");
     set.setValue("Default", "URL:YATE Protocol");
@@ -65,6 +66,7 @@ int main(int argc, char *argv[])
     set.setValue("shell/open/command/Default", QString("\"%1\"").arg(path) + " \"%1\"");
     set.endGroup();
 
+    QString codeURI;
     if (argc >= 5) {
         QString action = argv[1];
 
@@ -85,9 +87,19 @@ int main(int argc, char *argv[])
             QMessageBox::information(0, "Updated Successfully", "Successfully updated YATE to version " + version + ". To learn about the latest features visit " + "<a href='" + SETTINGS_WEBSITE_HTTPS  + "'>" + SETTINGS_WEBSITE_HTTPS  + "</a>");
         }
     } else if  (argc == 2 && QString(argv[1]).startsWith("yate://")) {
-        QString codeURI = QString(argv[1]);
+        codeURI = QString(argv[1]);
+        if (codeURI == "yate://run" || codeURI == "yate://run/") {
+            codeURI = "";
+        } else {
+            const QRegularExpression rx("yate\\:\\/\\/(\\d+)\\:([a-z0-9]+)");
+            auto match = rx.match(codeURI);
+            if (!match.isValid() || !match.hasMatch()) {
+                QMessageBox::critical(0, "Invalid URI", "Provided URI format is invalid");
+            } else {
+                codeURI = match.captured(1) + ":" + match.captured(2);
+            }
+        }
         qDebug() << "Starting with URI: " << codeURI;
-        QMessageBox::information(0, "URI", "URI: " + codeURI);
     }
 
 
@@ -99,7 +111,7 @@ int main(int argc, char *argv[])
     QTextStream stream(&file);
     a.setStyleSheet(stream.readAll());
 
-    Yate::YATEWindow w;
+    Yate::YATEWindow w(codeURI);
     w.show();
     return a.exec();
 }
