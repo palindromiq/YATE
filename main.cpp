@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include <QFile>
 #include <QTimer>
+#include <QSettings>
 
 
 #include "globals.h"
@@ -40,6 +41,8 @@ int main(int argc, char *argv[])
 
 
 
+
+
 #ifdef QT_DEBUG
     qInstallMessageHandler(logMessageHandler);
     qDebug() << "YATE Launched";
@@ -51,6 +54,16 @@ int main(int argc, char *argv[])
     qDebug() << "Arguments: " << args.join(", ");
 
 #endif
+
+    QString path = QDir::toNativeSeparators(qApp->applicationFilePath());
+    qDebug() << "Register Custom URI Handler";
+    QSettings set("HKEY_CURRENT_USER\\Software\\Classes", QSettings::NativeFormat);
+    set.beginGroup("yate");
+    set.setValue("Default", "URL:YATE Protocol");
+    set.setValue("DefaultIcon/Default", path);
+    set.setValue("URL Protocol", "");
+    set.setValue("shell/open/command/Default", QString("\"%1\"").arg(path) + " \"%1\"");
+    set.endGroup();
 
     if (argc >= 5) {
         QString action = argv[1];

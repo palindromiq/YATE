@@ -176,6 +176,7 @@ void DiscordManager::setup(bool emitErrors)
         qDebug() << "Discord Manager: Emitting username" << username;
         emit onUserConnected(username);
         ready_ = true;
+        core_->ActivityManager().RegisterCommand("yate://run");
     }
 
     core_->UserManager().OnCurrentUserUpdate.Connect([&]() {
@@ -186,6 +187,7 @@ void DiscordManager::setup(bool emitErrors)
             qDebug() << "Discord Manager: Emitting username" << username;
             emit onUserConnected(username);
             ready_ = true;
+            core_->ActivityManager().RegisterCommand("yate://run");
         } else {
              qWarning() << "Discord Manager: Current User Update failed " << int(userResult);
         }
