@@ -86,7 +86,8 @@ void Yate::EEParser::parseLine(QString &line)
         if (evtType != LogEventType::Invalid) {
 
             if (hostJustUnloaded_) {
-                if (evtType != LogEventType::TeralystSpawn && evtType != LogEventType::NightBegin && evtType != LogEventType::HostJoin) {
+                if (evtType != LogEventType::TeralystSpawn && evtType != LogEventType::NightBegin && evtType != LogEventType::HostJoin
+                        && evtType != LogEventType::DoorOpening && evtType != LogEventType::DoorOpened) {
                     return;
                 }
             }
@@ -205,9 +206,13 @@ LogEventType EEParser::msgToEventType(QString msg, int &val, QString &strVal)
         {"TeralystEncounter.lua:      Eidolon spawning SUCCESS", LogEventType::EidolonSpawn},
         {"TeralystAvatarScript.lua: Wailing Song Complete - Teleporting", LogEventType::EidolonTeleport},
         {"EidolonMP.lua: EIDOLONMP: Level fully destroyed", LogEventType::HostUnload},
-        {"TeralystEncounter.lua: Teralyst Escape complete. All Teralysts should be gone now", LogEventType::EidolonDespawn}
+        {"TeralystEncounter.lua: Teralyst Escape complete. All Teralysts should be gone now", LogEventType::EidolonDespawn},
+        {"EidolonMP.lua: EIDOLONMP: TownTriggerFirstTouched", LogEventType::DoorOpening},
+        {"EidolonMP.lua: EIDOLONMP: EnableDoor(WORLD,true)", LogEventType::DoorOpened}
+
     };
     val = -1;
+
 
     if (msgEvtMap.contains(msg)) {
         return msgEvtMap[msg];

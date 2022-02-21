@@ -91,6 +91,7 @@ private:
     int currentNightIndex_;
     bool nightEnded_;
     float shrineDelay_;
+    float doorOpeningTimestamp_;
     bool showLimbsSummary_;
     bool showLimbsSummaryAfterLast_;
     int limbsSummaryPrec_;

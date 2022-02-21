@@ -87,6 +87,7 @@ class QString;
 #define ANALYSIS_STAT_HEADER1 QObject::tr("Attribute")
 #define ANALYSIS_STAT_HEADER2 QObject::tr("Value")
 #define ANALYSIS_STAT_LIMBS QObject::tr("Limbs")
+#define ANALYSIS_STAT_LOADTIME QObject::tr("Load Time")
 
 #define THREADED_PARSING
 

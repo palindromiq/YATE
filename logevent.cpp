@@ -80,6 +80,8 @@ QString LogEvent::typeName() const
             {LogEventType::SquadJoin, "SquadJoin"},
             {LogEventType::HostUnload, "HostUnload"},
             {LogEventType::EidolonDespawn, "EidolonDespawn"},
+            {LogEventType::DoorOpening, "DoorOpening"},
+            {LogEventType::DoorOpened, "DoorOpened"},
             {LogEventType::Invalid, "Invalid"}
     };
     return logEvtTypName.value(type_, "Invalid");

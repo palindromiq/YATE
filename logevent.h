@@ -24,7 +24,9 @@ enum class LogEventType {
     Invalid,
     HostJoin,
     SquadJoin,
-    EidolonDespawn
+    EidolonDespawn,
+    DoorOpening,
+    DoorOpened
 };
 
 

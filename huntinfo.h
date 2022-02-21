@@ -69,7 +69,7 @@ public:
     Eidolon eidolon() const;
     void setEidolon(Eidolon newEidolon);
 
-    AnalysisViewItem *toAnalysisViewItem() const;
+    AnalysisViewItem *toAnalysisViewItem(QString firstLoadTime = "") const;
 
     float lastLimbProgressTime() const;
     void setLastLimbProgressTime(float newLastLimbTime);
@@ -144,11 +144,18 @@ public:
     const QVector<LogEvent> &eventLog() const;
     void addEvent(const LogEvent &evt);
 
+    float loadTime() const;
+    void setLoadTime(float newLoadTime);
+
+    bool hasLoadTime() const;
+
 private:
     CapInfo teralystCapInfo_;
     CapInfo gantulystCapInfo_;
     CapInfo hydrolystCapInfo_;
     float startTimestamp_;
+    float loadTime_;
+    bool hasLoadTime_;
     QVector<LogEvent> eventLog_;
 };
 
