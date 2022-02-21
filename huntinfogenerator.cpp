@@ -203,14 +203,22 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                     QString statStr = ANALYSIS_STAT_WATERSHIELD + ": "+  FORMAT_NUMBER(ws);
                     if (state_.eidolonNumber() != 0) {
                         float spDelay =   huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).spawnDelay();
-                        statStr = statStr + " (";
-                        if (spDelay >= 0) {
-                            statStr += "+";
+                        QString wsFormat = settings_->value(SETTINGS_KEY_WATERSHIELD_FORMAT, SETTINGS_WS_OPT_BREAKDOWN).toString();
+                        if (wsFormat == SETTINGS_WS_OPT_SHIELD) {
+                            statStr = ANALYSIS_STAT_WATERSHIELD + ": "+  FORMAT_NUMBER(ws);
+                        } else if (wsFormat == SETTINGS_WS_OPT_TOTAL) {
+                            statStr = ANALYSIS_STAT_WATERSHIELD + ": "+  FORMAT_NUMBER(ws + spDelay);
+                        } else {
+                            statStr = statStr + " (";
+                            if (spDelay >= 0) {
+                                statStr += "+";
+                            }
+                            statStr = statStr + FORMAT_NUMBER(spDelay);
+                            statStr = statStr + " = ";
+                            statStr = statStr + FORMAT_NUMBER(spDelay + ws);
+                            statStr = statStr + ")";
                         }
-                        statStr = statStr + FORMAT_NUMBER(spDelay);
-                        statStr = statStr + " = ";
-                        statStr = statStr + FORMAT_NUMBER(spDelay + ws);
-                        statStr = statStr + ")";
+
                     }
                     emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + statStr);
                     emitLimbsUpdate();
