@@ -86,7 +86,8 @@ void Yate::EEParser::parseLine(QString &line)
         if (evtType != LogEventType::Invalid) {
 
             if (hostJustUnloaded_) {
-                if (evtType != LogEventType::TeralystSpawn && evtType != LogEventType::NightBegin && evtType != LogEventType::HostJoin) {
+                if (evtType != LogEventType::TeralystSpawn && evtType != LogEventType::NightBegin && evtType != LogEventType::HostJoin
+                        && evtType != LogEventType::DoorOpening && evtType != LogEventType::DoorOpened) {
                     return;
                 }
             }
@@ -139,12 +140,15 @@ void EEParser::processFileContent(QFile &logFile)
     QString fileContent =  QString(logFile.readAll());
     auto lines = fileContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
 
-    for(int i = 0; i < lines.size() - 1; i++) {
+    for(int i = 0; i < lines.size() - 2; i++) {
         parseLine(lines[i]);
     }
     int currPos = currentPosition() + fileContent.length();
-    if (lines.size()) {
+    if (lines.size() > 0) {
         currPos -= (lines[lines.size() - 1].size() + 2);
+        if (lines.size() > 1) {
+            currPos -= (lines[lines.size() - 2].size() + 2);
+        }
     }
     setCurrentPosition(currPos);
 }
@@ -154,9 +158,9 @@ void EEParser::startLive()
     qDebug() << "Live parsing started.";
     emit parsingStarted();
     QFile logFile(filename());
-    watcher_ = new FileWatcher(nullptr, filename());
     QThread *watcherThread = new QThread;
 
+    watcher_ = new FileWatcher(nullptr, filename());
     watcher_->moveToThread(watcherThread);
 
     connect( watcherThread, &QThread::started, watcher_, &FileWatcher::start);
@@ -197,13 +201,18 @@ LogEventType EEParser::msgToEventType(QString msg, int &val, QString &strVal)
         {"TeralystAvatarScript.lua: Teralyst Killed", LogEventType::EidolonKill},
         {"SnapPickupToGround.lua: Snapping pickup to ground (DefaultArcanePickup)", LogEventType::LootDrop},
         {"TeralystEncounter.lua: Shrine enabled", LogEventType::ShrineEnable},
-//        {"TeralystEncounter.lua: Shrine disabled", LogEventType::ShrineDisable},
+        {"TeralystEncounter.lua: Shrine disabled", LogEventType::ShrineDisable},
         {"EidolonMP.lua: EIDOLONMP: Finalize Eidolon transition", LogEventType::TeralystSpawn},
         {"TeralystEncounter.lua:      Eidolon spawning SUCCESS", LogEventType::EidolonSpawn},
+        {"TeralystAvatarScript.lua: Wailing Song Complete - Teleporting", LogEventType::EidolonTeleport},
         {"EidolonMP.lua: EIDOLONMP: Level fully destroyed", LogEventType::HostUnload},
-        {"TeralystEncounter.lua: Teralyst Escape complete. All Teralysts should be gone now", LogEventType::EidolonDespawn}
+        {"TeralystEncounter.lua: Teralyst Escape complete. All Teralysts should be gone now", LogEventType::EidolonDespawn},
+        {"EidolonMP.lua: EIDOLONMP: TownTriggerFirstTouched", LogEventType::DoorOpening},
+        {"EidolonMP.lua: EIDOLONMP: EnableDoor(WORLD,true)", LogEventType::DoorOpened}
+
     };
     val = -1;
+
 
     if (msgEvtMap.contains(msg)) {
         return msgEvtMap[msg];
@@ -218,6 +227,8 @@ LogEventType EEParser::msgToEventType(QString msg, int &val, QString &strVal)
             return LogEventType::Invalid;
         }
         return LogEventType::SquadJoin;
+
+
     } else if (msg.startsWith("Logged in ")) {
         const QRegularExpression rx("Logged in\\s+(.+)\\s+\\(");
         auto match = rx.match(msg);
@@ -237,7 +248,7 @@ LogEventType EEParser::msgToEventType(QString msg, int &val, QString &strVal)
         val = parts[0].toInt();
         return LogEventType::ShardInsert;
     } else if (msg.startsWith("TeralystEncounter.lua: A shard has been removed from the Eidolon Shrine.")) {
-        return LogEventType::Invalid;
+        return LogEventType::ShardRemove;
     } else {
         return LogEventType::Invalid;
     }

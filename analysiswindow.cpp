@@ -2,6 +2,7 @@
 #include "ui_analysiswindow.h"
 #include "analysisviewmodel.h"
 #include "huntimagegenerator.h"
+#include "timelineimagegenerator.h"
 #include "huntinfo.h"
 #include <QFileDialog>
 #include <QDesktopServices>
@@ -13,14 +14,15 @@
 #include <QImage>
 #include <QMimeData>
 
+
 namespace Yate {
 AnalysisWindow::AnalysisWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::AnalysisWindow),
     model_(nullptr), hunt_(nullptr), selectedNight_(-1)
 {
     qDebug() << "Initializing analysis window.";
-    isGenerating_.storeRelaxed(0);
     ui->setupUi(this);
+    isGenerating_.storeRelaxed(0);
     unhighlightNight();
     qDebug() << "Initialized analysis window.";
 }
@@ -129,10 +131,14 @@ void AnalysisWindow::highlightNight(int night)
     if (isGenerating_.loadRelaxed() != 1) {
         ui->btnExport->setEnabled(true);
         ui->btnCopyImg->setEnabled(true);
+        ui->btnExportTimeline->setEnabled(true);
+        ui->btnCopyTimeline->setEnabled(true);
     }
 
     ui->btnExport->setToolTip("");
     ui->btnCopyImg->setToolTip("");
+    ui->btnExportTimeline->setToolTip("");
+    ui->btnCopyTimeline->setToolTip("");
 }
 
 void AnalysisWindow::unhighlightNight()
@@ -142,6 +148,10 @@ void AnalysisWindow::unhighlightNight()
     ui->btnExport->setToolTip("Select a night analysis to export.");
     ui->btnCopyImg->setEnabled(false);
     ui->btnCopyImg->setToolTip("Select a night analysis to copy.");
+    ui->btnExportTimeline->setEnabled(false);
+    ui->btnExportTimeline->setToolTip("Select a night analysis to generate timeline.");
+    ui->btnCopyTimeline->setEnabled(false);
+    ui->btnCopyTimeline->setToolTip("Select a night analysis to generate timeline.");
 
 }
 
@@ -185,6 +195,8 @@ void AnalysisWindow::on_btnExport_clicked()
   savePath_ = savePath;
   ui->btnExport->setEnabled(false);
   ui->btnCopyImg->setEnabled(false);
+  ui->btnExportTimeline->setEnabled(false);
+  ui->btnCopyTimeline->setEnabled(false);
   isGenerating_.storeRelaxed(1);
   HuntImageGenerator *gen = new HuntImageGenerator(savePath, night, night.host(), night.squad());
   QThread *genThread = new QThread;
@@ -235,6 +247,9 @@ void AnalysisWindow::on_btnCopyImg_clicked()
     QSettings settings;
     NightInfo &night = hunt_->night(selectedNight_);
     ui->btnExport->setEnabled(false);
+    ui->btnCopyImg->setEnabled(false);
+    ui->btnExportTimeline->setEnabled(false);
+    ui->btnCopyTimeline->setEnabled(false);
     isGenerating_.storeRelaxed(1);
     HuntImageGenerator *gen = new HuntImageGenerator("", night, night.host(), night.squad());
     QThread *genThread = new QThread;
@@ -245,5 +260,91 @@ void AnalysisWindow::on_btnCopyImg_clicked()
     connect(gen, &HuntImageGenerator::generateFinished, this, &AnalysisWindow::generateFinished);
     genThread->start();
 }
+
+
+
+
+
+void AnalysisWindow::on_btnExportTimeline_clicked()
+{
+    if (selectedNight_ == -1 || (selectedNight_ >= hunt_->nightCount())) {
+        unhighlightNight();
+        return;
+    }
+    qDebug() << "Exporting timeline image.";
+    QSettings settings;
+    NightInfo &night = hunt_->night(selectedNight_);
+    QString defaultSavePath = "";
+    if (!settings.value(SETTINGS_KEY_LAST_SAVE_DIR).isNull()) {
+        defaultSavePath = settings.value(SETTINGS_KEY_LAST_SAVE_DIR).toString();
+        if (!QFileInfo(defaultSavePath).exists() || !QFileInfo(defaultSavePath).isDir()) {
+            defaultSavePath = "";
+            settings.remove(SETTINGS_KEY_LAST_SAVE_DIR);
+        }
+    }
+    QString saveFileDir;
+    if(defaultSavePath.size()) {
+        saveFileDir = defaultSavePath + QDir::separator() + "Timeline_" + QDateTime::currentDateTime().toString("MM_dd_yy_hh") + ".png";
+    } else {
+        saveFileDir = "Hunt_" + QDateTime::currentDateTime().toString("MM_dd_yy_hh") + ".png";
+    }
+    QString savePath = QFileDialog::getSaveFileName(this, "Export Hunt Summary", saveFileDir, ".png (PNG)");
+    if (!savePath.size()) {
+        return;
+    }
+
+    if (!savePath.endsWith(".png")) {
+        if (!savePath.endsWith(".")) {
+            savePath = savePath + ".";
+        }
+        savePath = savePath + "png";
+    }
+    QString parentSavePath = QFileInfo(savePath).absoluteDir().absolutePath();
+    settings.setValue(SETTINGS_KEY_LAST_SAVE_DIR, parentSavePath);
+    savePath_ = savePath;
+    ui->btnExport->setEnabled(false);
+    ui->btnCopyImg->setEnabled(false);
+    ui->btnExportTimeline->setEnabled(false);
+    ui->btnCopyTimeline->setEnabled(false);
+    isGenerating_.storeRelaxed(1);
+    TimelineImageGenerator *gen = new TimelineImageGenerator(savePath, night, night.host(), night.squad());
+    QThread *genThread = new QThread;
+    gen->moveToThread(genThread);
+    connect(genThread, &QThread::finished, genThread, &QThread::deleteLater);
+    connect(genThread, &QThread::finished, gen, &QThread::deleteLater);
+    connect(genThread, &QThread::started, gen, &TimelineImageGenerator::exportImage);
+    connect(gen, &TimelineImageGenerator::exportFinished, this, &AnalysisWindow::exportFinished);
+    genThread->start();
+}
+
+
+void AnalysisWindow::on_btnCopyTimeline_clicked()
+{
+    if (selectedNight_ == -1 || (selectedNight_ >= hunt_->nightCount())) {
+        unhighlightNight();
+        return;
+    }
+    qDebug() << "Generating timeline image.";
+
+    QSettings settings;
+    NightInfo &night = hunt_->night(selectedNight_);
+    ui->btnExport->setEnabled(false);
+    ui->btnCopyImg->setEnabled(false);
+    ui->btnExportTimeline->setEnabled(false);
+    ui->btnCopyTimeline->setEnabled(false);
+    isGenerating_.storeRelaxed(1);
+    TimelineImageGenerator *gen = new TimelineImageGenerator("", night, night.host(), night.squad());
+    QThread *genThread = new QThread;
+    gen->moveToThread(genThread);
+    connect(genThread, &QThread::finished, genThread, &QThread::deleteLater);
+    connect(genThread, &QThread::finished, gen, &QThread::deleteLater);
+    connect(genThread, &QThread::started, gen, &TimelineImageGenerator::generateAndEmit);
+    connect(gen, &TimelineImageGenerator::generateFinished, this, &AnalysisWindow::generateFinished);
+    genThread->start();
+}
+
+
+
+
 
 }

@@ -38,7 +38,7 @@ class YATEWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    YATEWindow(QWidget *parent = nullptr);
+    YATEWindow(QString codeURI = "", QWidget *parent = nullptr);
     ~YATEWindow();
 
     bool isLogManuallySet() const;
@@ -81,6 +81,8 @@ private slots:
 
     void on_btnCopyLobbyId_clicked();
 
+    void on_btnCopyLobbyLink_clicked();
+
 public slots:
     void setLogFilePath(QString path);
     void onUpdaterBusy(bool busy);
@@ -101,6 +103,8 @@ signals:
 
 private:
     void createTrayIcon();
+    void onDiscordInviteAccepted(QString secret);
+
 
 
     Ui::YATEWindow *ui;
@@ -119,9 +123,13 @@ private:
 #ifdef DISCORD_ENABLED
     DiscordManager *discord_;
     QThread *discordThread_;
+    bool discordConnected_;
+
 #endif
     QAtomicInt isLiveFeedbackRunning_;
+    QString codeURI_;
     void initDiscord();
+    void establishLobbyConnection(QString lobbyId);
 };
 }
 #endif // YATEWINDOW_H

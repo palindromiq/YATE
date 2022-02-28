@@ -33,12 +33,15 @@ void HuntInfoGenerator::resetHuntInfo()
     currentCapIndex_ = -1;
     currentRunIndex_ = -1;
     currentNightIndex_ = -1;
+    doorOpeningTimestamp_ = 0.0;
     nightEnded_ = false;
     emit onHuntStateChanged(LIVE_FEEDBACK_DEFAULT_MSG);
     emit onLimbsChanged("");
 
 
 }
+
+
 
 HuntInfoGenerator::~HuntInfoGenerator()
 {
@@ -50,24 +53,7 @@ HuntInfoGenerator::~HuntInfoGenerator()
 
 void HuntInfoGenerator::onLogEvent(LogEvent &e)
 {
-    QMap<LogEventType, QString> logEvtTypName{
-            {LogEventType::NightBegin, "NightBegin"},
-            {LogEventType::DayBegin, "DayBegin"},
-            {LogEventType::TeralystSpawn, "TeralystSpawn"},
-            {LogEventType::LimbBreak, "LimbBreak"},
-            {LogEventType::EidolonCapture, "EidolonCapture"},
-            {LogEventType::EidolonKill, "EidolonKill"},
-            {LogEventType::LootDrop, "LootDrop"},
-            {LogEventType::ShrineEnable, "ShrineEnable"},
-            {LogEventType::ShardInsert, "ShardInsert"},
-            {LogEventType::ShardRemove, "ShardRemove"},
-            {LogEventType::ShrineDisable, "ShrineDisable"},
-            {LogEventType::EidolonSpawn, "EidolonSpawn"},
-            {LogEventType::HostJoin, "HostJoin"},
-            {LogEventType::SquadJoin, "SquadJoin"},
-            {LogEventType::HostUnload, "HostUnload"},
-            {LogEventType::Invalid, "Invalid"}
-        };
+
     QMap<HuntStateStage, QString> stateStageName{
         {HuntStateStage::Initial, "Initial"},
         {HuntStateStage::Spawned, "Spawned"},
@@ -82,6 +68,23 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
     auto typ = e.type();
     float timestamp = e.timestamp();
     bool invalid = false;
+    QVector<LogEventType> ignoredEvents({LogEventType::ShrineDisable, LogEventType::ShardRemove, LogEventType::EidolonTeleport});
+
+    if (typ == LogEventType::DoorOpening) {
+        doorOpeningTimestamp_ = timestamp;
+        return;
+    } else if (typ == LogEventType::DoorOpened) {
+        if (doorOpeningTimestamp_) {
+            float doorDelay = timestamp - doorOpeningTimestamp_;
+            emit onHuntStateChanged("Door time: " + FORMAT_NUMBER(doorDelay));
+        }
+        return;
+    } else if (ignoredEvents.indexOf(typ) != -1) {
+        if (currentNightIndex_ != -1 && currentRunIndex_ != -1) {
+            huntInfo()->night(currentNightIndex_).run(currentRunIndex_).addEvent(e);
+        }
+        return;
+    }
 
 
 
@@ -130,11 +133,19 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
             huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setSpawnTimestamp(timestamp);
             huntInfo()->night(currentNightIndex_).run(currentRunIndex_).setStartTimestamp(timestamp);
         }
+
         state_.setStage(HuntStateStage::Spawned);
-        emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + HuntInfo::eidolonName(state_.eidolonNumber()) + tr(" spawned"));
+        QString stateMsg = QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + HuntInfo::eidolonName(state_.eidolonNumber()) + tr(" spawned");
+        if ( huntInfo()->night(currentNightIndex_).run(currentRunIndex_).hasLoadTime()) {
+            stateMsg = stateMsg + tr(" (Load: ") + FORMAT_NUMBER(huntInfo()->night(currentNightIndex_).run(currentRunIndex_).loadTime()) + tr(")");
+        }
+        emit onHuntStateChanged(stateMsg);
         emit onLimbsChanged("");
     } else if (typ == LogEventType::DayBegin) {
          nightEnded_ = true;
+         if (currentNightIndex_ != -1 && currentRunIndex_ != -1) {
+                huntInfo()->night(currentNightIndex_).run(currentRunIndex_).addEvent(e);
+         }
          return;
     } else if (typ == LogEventType::HostUnload) {
         if (currentNightIndex_ != -1 && (timestamp -  huntInfo()->night(currentNightIndex_).startTimestamp()) > MAX_NIGHT_DURATION) {
@@ -155,8 +166,6 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
         } else if (capState == CapState::Kill) {
             state_.setStage(HuntStateStage::Killed);
         }
-
-
 
     } else {
         switch (state_.stage()) {
@@ -191,6 +200,18 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                     huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).setSpawnTimestamp(timestamp);
                     huntInfo()->night(currentNightIndex_).run(currentRunIndex_).setStartTimestamp(timestamp);
                     state_.setEidolonNumber(0);
+                    if (currentRunIndex_ > 0) {
+                        int previousRun = currentRunIndex_ - 1;
+                        for (int i  = 2; i >= 0; i--) {
+                            if (huntInfo()->night(currentNightIndex_).run(previousRun).capInfoByIndex(i).valid()) {
+                                if (huntInfo()->night(currentNightIndex_).run(previousRun).capInfoByIndex(i).lootDropTimestamp()) {
+                                    huntInfo()->night(currentNightIndex_).run(currentRunIndex_).setLoadTime(timestamp - huntInfo()->night(currentNightIndex_).run(previousRun).capInfoByIndex(i).lootDropTimestamp());
+                                }
+                                break;
+                            }
+                        }
+
+                    }
                 } else {
                     invalid = true;
                 }
@@ -207,14 +228,22 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
                     QString statStr = ANALYSIS_STAT_WATERSHIELD + ": "+  FORMAT_NUMBER(ws);
                     if (state_.eidolonNumber() != 0) {
                         float spDelay =   huntInfo()->night(currentNightIndex_).run(currentRunIndex_).capInfoByIndex(currentCapIndex_).spawnDelay();
-                        statStr = statStr + " (";
-                        if (spDelay >= 0) {
-                            statStr += "+";
+                        QString wsFormat = settings_->value(SETTINGS_KEY_WATERSHIELD_FORMAT, SETTINGS_WS_OPT_BREAKDOWN).toString();
+                        if (wsFormat == SETTINGS_WS_OPT_SHIELD) {
+                            statStr = ANALYSIS_STAT_WATERSHIELD + ": "+  FORMAT_NUMBER(ws);
+                        } else if (wsFormat == SETTINGS_WS_OPT_TOTAL) {
+                            statStr = ANALYSIS_STAT_WATERSHIELD + ": "+  FORMAT_NUMBER(ws + spDelay);
+                        } else {
+                            statStr = statStr + " (";
+                            if (spDelay >= 0) {
+                                statStr += "+";
+                            }
+                            statStr = statStr + FORMAT_NUMBER(spDelay);
+                            statStr = statStr + " = ";
+                            statStr = statStr + FORMAT_NUMBER(spDelay + ws);
+                            statStr = statStr + ")";
                         }
-                        statStr = statStr + FORMAT_NUMBER(spDelay);
-                        statStr = statStr + " = ";
-                        statStr = statStr + FORMAT_NUMBER(spDelay + ws);
-                        statStr = statStr + ")";
+
                     }
                     emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + statStr);
                     emitLimbsUpdate();
@@ -345,7 +374,8 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
 
                     state_.setStage(HuntStateStage::Spawned);
                     state_.setEidolonNumber(state_.eidolonNumber() + 1);
-                    emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + HuntInfo::eidolonName(state_.eidolonNumber()) + tr(" spawned"));
+                    QString stateMsg = QString(" [#") + QString::number(currentRunIndex_ + 1) + "] " + HuntInfo::eidolonName(state_.eidolonNumber()) + tr(" spawned");
+                    emit onHuntStateChanged(stateMsg);
                     emit onLimbsChanged("");
                 } else {
                     invalid = true;
@@ -359,11 +389,13 @@ void HuntInfoGenerator::onLogEvent(LogEvent &e)
        }
     }
     if (invalid) {
-        qDebug () << stateStageName[state_.stage()] << "" << int(typ) << logEvtTypName[typ] << "  " << timestamp;
+        qDebug () << stateStageName[state_.stage()] << "" << int(typ) << e.typeName() << "  " << timestamp;
         emit onHuntStateChanged(QString(" [#") + QString::number(currentRunIndex_ + 1) + "] Error: at phase " +
-                                stateStageName[state_.stage()] + " received " + logEvtTypName[typ]);
-
+                                stateStageName[state_.stage()] + " received " + e.typeName());
+    } else if (currentNightIndex_ != -1 && currentRunIndex_ != -1) {
+        huntInfo()->night(currentNightIndex_).run(currentRunIndex_).addEvent(e);
     }
+//    huntInfo()->night(currentNightIndex_).run(currentRunIndex_).addEvent(LogEvent(-1, LogEventType::HostJoin, 0));
     lastEventTime_ = timestamp;
     lastEvent_ = e;
 }

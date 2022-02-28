@@ -90,5 +90,23 @@
         <file>MaterialDark.qss</file>
         <file>png.svg</file>
         <file>RobotoMonoV.ttf</file>
+        <file>tl.svg</file>
+        <file>timeline/DayBegin.png</file>
+        <file>timeline/EidolonCapture.png</file>
+        <file>timeline/EidolonDespawn.png</file>
+        <file>timeline/EidolonKill.png</file>
+        <file>timeline/EidolonSpawn.png</file>
+        <file>timeline/HostJoin.png</file>
+        <file>timeline/HostUnload.png</file>
+        <file>timeline/Invalid.png</file>
+        <file>timeline/LimbBreak.png</file>
+        <file>timeline/LootDrop.png</file>
+        <file>timeline/NightBegin.png</file>
+        <file>timeline/ShardInsert.png</file>
+        <file>timeline/ShardRemove.png</file>
+        <file>timeline/ShrineDisable.png</file>
+        <file>timeline/ShrineEnable.png</file>
+        <file>timeline/SquadJoin.png</file>
+        <file>timeline/EidolonTeleport.png</file>
     </qresource>
 </RCC>

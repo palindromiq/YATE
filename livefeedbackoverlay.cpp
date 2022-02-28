@@ -27,6 +27,9 @@ LiveFeedbackOverlay::LiveFeedbackOverlay(QWidget *parent, bool locked) :
     if (locked) {
         ui->btnLockFeedback->setVisible(false);
         setAttribute(Qt::WA_TransparentForMouseEvents);
+    } else {
+        float lockScaleFactor = settings_->value(SETTINGS_KEY_FEEDBACK_FONT, SETTINGS_FEEDBACK_FONT_DEFAULT).toInt() / 8.0;
+        ui->btnLockFeedback->setIconSize(QSize(16 * lockScaleFactor, 16 * lockScaleFactor));
     }
 
     if (settings_->value(SETTINGS_KEY_STREAMER_MODE, false).toBool()) {

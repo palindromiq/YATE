@@ -5,6 +5,7 @@
 #include <QImage>
 #include <QAtomicInt>
 
+
 namespace Ui {
 class AnalysisWindow;
 }
@@ -33,6 +34,10 @@ private slots:
     void on_btnExport_clicked();
     void exportFinished(bool);
     void generateFinished(QImage);
+
+    void on_btnExportTimeline_clicked();
+
+    void on_btnCopyTimeline_clicked();
 
     void on_btnCopyImg_clicked();
 

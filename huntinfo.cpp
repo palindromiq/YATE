@@ -81,7 +81,7 @@ QString HuntInfo::eidolonName(int eido, bool abbreviate)
 
 QString HuntInfo::timestampToProgressString(float timestamp)
 {
-    if (timestamp == 0.0) {
+    if (timestamp < 0.0) {
         return "N/A";
     }
     int tsMins = int(timestamp / 60.0);
@@ -292,7 +292,7 @@ void NightInfo::setSquad(const QSet<QString> &newSquad)
     squad_ = newSquad;
 }
 
-RunInfo::RunInfo()
+RunInfo::RunInfo(): hasLoadTime_(false)
 {
 
 }
@@ -354,7 +354,11 @@ AnalysisViewItem *RunInfo::toAnalysisViewItem(int runNo)
     }
     AnalysisViewItem *runItem = new AnalysisViewItem({ANALYSIS_STAT_RUN_NO + QString::number(runNo), runRes});
     if(teralystCapInfo().valid()) {
-        runItem->appendChild(teralystCapInfo().toAnalysisViewItem());
+        QString missionLoadTime;
+        if (hasLoadTime()) {
+            missionLoadTime = FORMAT_NUMBER(loadTime());
+        }
+        runItem->appendChild(teralystCapInfo().toAnalysisViewItem(missionLoadTime));
     }
     if(gantulystCapInfo().valid()) {
         runItem->appendChild(gantulystCapInfo().toAnalysisViewItem());
@@ -414,6 +418,31 @@ float RunInfo::startTimestamp() const
 void RunInfo::setStartTimestamp(float newStartTime)
 {
     startTimestamp_ = newStartTime;
+}
+
+const QVector<LogEvent> &RunInfo::eventLog() const
+{
+    return eventLog_;
+}
+
+void RunInfo::addEvent(const LogEvent &evt) {
+    eventLog_.push_back(evt);
+}
+
+float RunInfo::loadTime() const
+{
+    return loadTime_;
+}
+
+void RunInfo::setLoadTime(float newLoadTime)
+{
+    hasLoadTime_ = true;
+    loadTime_ = newLoadTime;
+}
+
+bool RunInfo::hasLoadTime() const
+{
+    return hasLoadTime_;
 }
 
 CapInfo::CapInfo():valid_(false), shrineTime_(0), lateShardInsertLog_(false)
@@ -576,11 +605,12 @@ void CapInfo::setEidolon(Eidolon newEidolon)
     }
 }
 
-AnalysisViewItem *CapInfo::toAnalysisViewItem() const
+AnalysisViewItem *CapInfo::toAnalysisViewItem(QString firstLoadTime) const
 {
     QString eidolonName = "N/A";
     if (eidolon() == Eidolon::Teralyst) {
         eidolonName = ANALYSIS_STAT_TERALYST;
+
     } else if (eidolon() == Eidolon::Gantulyst) {
          eidolonName = ANALYSIS_STAT_GANTULYST;
     } else if (eidolon() == Eidolon::Hydrolyst) {
@@ -597,6 +627,9 @@ AnalysisViewItem *CapInfo::toAnalysisViewItem() const
         resultName = ANALYSIS_STAT_RESULT_SPAWNED;
     }
     AnalysisViewItem *capItem = new AnalysisViewItem({eidolonName, resultName});
+    if (firstLoadTime.size()) {
+        capItem->appendChild(new AnalysisViewItem({ANALYSIS_STAT_LOADTIME, firstLoadTime}));
+    }
 
     if(result() !=  CapState::InComplete) {
         QString ws = FORMAT_NUMBER(waterShield());

@@ -67,6 +67,7 @@ public:
     void setLastEventTime(float newLastEventTime);
     void emitLimbsUpdate();
 
+
 public slots:
     void onLogEvent(LogEvent &e);
     void resetHuntInfo();
@@ -90,6 +91,7 @@ private:
     int currentNightIndex_;
     bool nightEnded_;
     float shrineDelay_;
+    float doorOpeningTimestamp_;
     bool showLimbsSummary_;
     bool showLimbsSummaryAfterLast_;
     int limbsSummaryPrec_;

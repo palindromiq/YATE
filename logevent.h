@@ -19,11 +19,14 @@ enum class LogEventType {
     ShardRemove,
     ShrineDisable,
     EidolonSpawn,
+    EidolonTeleport,
     HostUnload,
     Invalid,
     HostJoin,
     SquadJoin,
-    EidolonDespawn
+    EidolonDespawn,
+    DoorOpening,
+    DoorOpened
 };
 
 
@@ -46,6 +49,8 @@ public:
 
     const QString &strValue() const;
     void setStrValue(const QString &newStrValue);
+
+    QString typeName() const;
 
 private:
     int id_;

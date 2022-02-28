@@ -21,18 +21,31 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QWidget" name="widget" native="true">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>1</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+       <widget class="QPushButton" name="btnCopyTimeline">
+        <property name="enabled">
+         <bool>false</bool>
         </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <item>
-          <widget class="QWidget" name="widget_2" native="true"/>
-         </item>
-        </layout>
+        <property name="text">
+         <string>Copy Timeline Image</string>
+        </property>
+        <property name="icon">
+         <iconset resource="assets/breeze.qrc">
+          <normaloff>:/tl.svg</normaloff>:/tl.svg</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnExportTimeline">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Export Timeline Image</string>
+        </property>
+        <property name="icon">
+         <iconset resource="assets/breeze.qrc">
+          <normaloff>:/tl.svg</normaloff>:/tl.svg</iconset>
+        </property>
        </widget>
       </item>
       <item>
@@ -41,7 +54,7 @@
          <bool>false</bool>
         </property>
         <property name="text">
-         <string>Copy Image</string>
+         <string>Copy Summary Image</string>
         </property>
         <property name="icon">
          <iconset resource="assets/breeze.qrc">
@@ -55,7 +68,7 @@
          <bool>false</bool>
         </property>
         <property name="text">
-         <string>Export Image</string>
+         <string>Export Summary Image</string>
         </property>
         <property name="icon">
          <iconset resource="assets/breeze.qrc">

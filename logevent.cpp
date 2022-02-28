@@ -1,5 +1,5 @@
 #include "logevent.h"
-
+#include <QMap>
 namespace Yate {
 
 
@@ -58,6 +58,33 @@ const QString &LogEvent::strValue() const
 void LogEvent::setStrValue(const QString &newStrValue)
 {
     strValue_ = newStrValue;
+}
+
+QString LogEvent::typeName() const
+{
+    static QMap<LogEventType, QString> logEvtTypName{
+            {LogEventType::NightBegin, "NightBegin"},
+            {LogEventType::DayBegin, "DayBegin"},
+            {LogEventType::TeralystSpawn, "TeralystSpawn"},
+            {LogEventType::LimbBreak, "LimbBreak"},
+            {LogEventType::EidolonCapture, "EidolonCapture"},
+            {LogEventType::EidolonKill, "EidolonKill"},
+            {LogEventType::LootDrop, "LootDrop"},
+            {LogEventType::ShrineEnable, "ShrineEnable"},
+            {LogEventType::ShardInsert, "ShardInsert"},
+            {LogEventType::ShardRemove, "ShardRemove"},
+            {LogEventType::ShrineDisable, "ShrineDisable"},
+            {LogEventType::EidolonSpawn, "EidolonSpawn"},
+            {LogEventType::EidolonTeleport, "EidolonTeleported"},
+            {LogEventType::HostJoin, "HostJoin"},
+            {LogEventType::SquadJoin, "SquadJoin"},
+            {LogEventType::HostUnload, "HostUnload"},
+            {LogEventType::EidolonDespawn, "EidolonDespawn"},
+            {LogEventType::DoorOpening, "DoorOpening"},
+            {LogEventType::DoorOpened, "DoorOpened"},
+            {LogEventType::Invalid, "Invalid"}
+    };
+    return logEvtTypName.value(type_, "Invalid");
 }
 
 }

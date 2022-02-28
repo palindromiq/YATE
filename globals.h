@@ -14,12 +14,14 @@ class QString;
 #define SETTINGS_WEBSITE QString("yate.app")
 #define SETTINGS_WEBSITE_HTTPS QString("https://") + SETTINGS_WEBSITE
 #define SETTINGS_URL_API_BASE QString("https://api.") + SETTINGS_WEBSITE
+#define SETTINGS_URL_CODE_REDIRECT SETTINGS_WEBSITE_HTTPS + "/code.html"
 #define SETTINGS_API_VERSION "v1.0"
 #define SETTINGS_URL_API_CHECK_VERSION SETTINGS_URL_API_BASE + "/" + SETTINGS_API_VERSION + "/update"
 #define SETTINGS_KEY_EE_LOG "eelogpath"
-#define SETTINGS_KEY_WATERSHIELD "watershield"
-#define SETTINGS_OPT_EXACT "exact"
-#define SETTINGS_OPT_SHARD "shard"
+#define SETTINGS_KEY_WATERSHIELD_FORMAT "watershield_format"
+#define SETTINGS_WS_OPT_BREAKDOWN "breakdown"
+#define SETTINGS_WS_OPT_TOTAL "total"
+#define SETTINGS_WS_OPT_SHIELD "shield"
 #define SETTINGS_KEY_FEEDBACK_POS_X "feedback_xpos"
 #define SETTINGS_KEY_FEEDBACK_POS_Y "feedback_ypos"
 #define SETTINGS_KEY_FEEDBACK_FONT "feedback_font"
@@ -35,8 +37,10 @@ class QString;
 #define SETTINGS_KEY_DISCORD_FEATURES "discord_features"
 #define SETTINGS_KEY_DISCORD_ACTIVITY "discord_activity"
 #define SETTINGS_KEY_DISCORD_NETWORKING "discord_networking"
+#define SETTINGS_KEY_DISCORD_ACTIVITY_JOIN "discord_activity_join"
 
 #define DISCORD_UPDATE_TIMER 50
+#define DISCORD_LOBBY_SIZE 30
 #define DISCORD_MESSAGE_BUFFER_TIMER 1000
 
 #define EMOJI_LOCKED "🔒"
@@ -83,6 +87,7 @@ class QString;
 #define ANALYSIS_STAT_HEADER1 QObject::tr("Attribute")
 #define ANALYSIS_STAT_HEADER2 QObject::tr("Value")
 #define ANALYSIS_STAT_LIMBS QObject::tr("Limbs")
+#define ANALYSIS_STAT_LOADTIME QObject::tr("Load Time")
 
 #define THREADED_PARSING
 
@@ -101,6 +106,9 @@ class QString;
 #define SUMMARY_COLOR_LIMBS "#283D3B"
 #define SUMMARY_COLOR_LAST_LIMB "#283D3B"
 #define SUMMARY_COLOR_AVERAGE "#283D3B"
+
+#define TIMELINE_COLOR_ELEMENT "#05aeef"
+
 
 
 

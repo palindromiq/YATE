@@ -15,6 +15,7 @@
 #include <QTimer>
 #include <QClipboard>
 #include <QInputDialog>
+#include <QUrl>
 
 
 
@@ -35,7 +36,7 @@ namespace Yate {
 
 
 
-YATEWindow::YATEWindow(QWidget *parent)
+YATEWindow::YATEWindow(QString codeURI, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::YATEWindow),
       settingsDialog_(new SettingsDialog(this)),
@@ -46,10 +47,10 @@ YATEWindow::YATEWindow(QWidget *parent)
       isLogManuallySet_(false),
 #ifdef DISCORD_ENABLED
       discord_(nullptr),
+      discordConnected_(false),
 #endif
-      isLiveFeedbackRunning_(false)
-
-
+      isLiveFeedbackRunning_(false),
+      codeURI_(codeURI)
 {
     qDebug() << "Initializing main window.";
     ui->setupUi(this);
@@ -110,8 +111,6 @@ YATEWindow::YATEWindow(QWidget *parent)
     ui->btnLiveFeedback->setText(tr("Live Feedback"));
 #endif
 
-    qDebug() << "Main window initialized.";
-
 }
 
 void Yate::YATEWindow::initDiscord()
@@ -129,9 +128,52 @@ void Yate::YATEWindow::initDiscord()
     connect(this, &YATEWindow::discordClearActivity, discord_, &DiscordManager::clearActivity, Qt::UniqueConnection);
     connect(discord_, &DiscordManager::onUserConnected, this, &YATEWindow::onUserConnected, Qt::UniqueConnection);
     connect(this, &YATEWindow::disconnectDiscordLobby, discord_, &DiscordManager::disconnectFromLobby, Qt::UniqueConnection);
+    connect(discord_, &DiscordManager::onInviteAccepted, this, &YATEWindow::onDiscordInviteAccepted);
     discordThread_->start();
     qDebug() << "Discord thread started.";
 #endif
+}
+
+void Yate::YATEWindow::onDiscordInviteAccepted(QString secret)
+{
+#ifdef DISCORD_ENABLED
+    if (!secret.size()) {
+        return;
+    }
+    if (!discordConnected_) {
+        codeURI_ = secret;
+        qWarning() << "Discord is not initalized yet.";
+    } else {
+        qDebug() << "Establishing connection using " << secret;
+        establishLobbyConnection(secret);
+    }
+#endif
+}
+
+
+void YATEWindow::establishLobbyConnection(QString lobbyId)
+{
+    if (!lobbyId.size()) {
+        qDebug() << "Returned empty Lobby Id";
+        return;
+    }
+    qDebug() << "Connecting to Lobby ID" << lobbyId;
+    auto split = lobbyId.split(":");
+    if (split.size() != 2) {
+        QMessageBox::critical(this, "Error", "Invalid code format.");
+        return;
+    }
+    if (split[0] == QString::number(discord_->getLobbyId())) {
+        QMessageBox::critical(this, "Error", "Cannot to connect to self-lobby.");
+        return;
+    }
+    if(discord_->connectTo(lobbyId)) {
+        qDebug() << "Passed initial connection to Lobby";
+        showClientLiveFeedback(false);
+    } else {
+        qCritical() << "Failed at initial connection to Lobby";
+        QMessageBox::critical(this, "Error", "Failed to establish connection to lobby, double check the input value.");
+    }
 }
 
 
@@ -298,6 +340,7 @@ void Yate::YATEWindow::showLiveFeedback(bool lock)
 
 void YATEWindow::on_btnLiveFeedback_clicked()
 {
+    codeURI_ = "";
     showLiveFeedback(false);
 }
 
@@ -459,8 +502,27 @@ void YATEWindow::onUserConnected(QString name)
     if(name.size()) {
         title = title + " (Logged in to Discord as @" + name + ")";
         statusBar()->showMessage("Logged in to Discord as " + name, 2000);
+        discordConnected_ = true;
     }
     setWindowTitle(title);
+    if (codeURI_ != "") {
+    QString lobbyId = codeURI_;
+    codeURI_ = "";
+#ifdef DISCORD_ENABLED
+    qDebug() << "Client live feedback starting with URI.";
+    QSettings settings;
+    if (!settings.value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool() || !settings.value(SETTINGS_KEY_DISCORD_NETWORKING, true).toBool()) {
+        qCritical() << "Discord features not enabled for client live feedback";
+        QMessageBox::critical(this, "Discord Features Required", "You must enable Discord features from the settings to use this feature.");
+        return;
+    }
+
+    establishLobbyConnection(lobbyId);
+#else
+    QMessageBox::critical(this, "Discord Features Required", "Discord features are needed but not supported by this version.");
+    return;
+#endif
+    }
 }
 
 void YATEWindow::onDiscordVSConnectionSucceeded()
@@ -544,6 +606,7 @@ void Yate::YATEWindow::showClientLiveFeedback(bool lock)
 
 void YATEWindow::on_btnLiveFeedbackVS_clicked()
 {
+    codeURI_ = "";
 #ifdef DISCORD_ENABLED
     qDebug() << "Client live feedback clicked.";
     QSettings settings;
@@ -553,18 +616,7 @@ void YATEWindow::on_btnLiveFeedbackVS_clicked()
         return;
     }
     QString lobbyId = QInputDialog::getText(this, "Host Lobby ID", "Enter the host's Lobby ID").trimmed();
-    if (!lobbyId.size()) {
-        qDebug() << "Returned empty Lobby Id";
-        return;
-    }
-    qDebug() << "Connecting to Lobby ID" << lobbyId;
-    if(discord_->connectTo(lobbyId)) {
-        qDebug() << "Passed initial connection to Lobby";
-        showClientLiveFeedback(false);
-    } else {
-        qCritical() << "Failed at initial connection to Lobby";
-        QMessageBox::critical(this, "Error", "Failed to establish connection to lobby, double check the input value.");
-    }
+    establishLobbyConnection(lobbyId);
 #else
     QMessageBox::critical(this, "Discord Features Required", "Discord features are needed but not supported by this version.");
     return;
@@ -579,6 +631,19 @@ void YATEWindow::on_btnCopyLobbyId_clicked()
     if (lobbyIdText.size()) {
         QClipboard *clipboard = QApplication::clipboard();
         clipboard->setText(lobbyIdText);
+    } else {
+        qDebug() << "Lobby ID is empty.";
+    }
+}
+
+
+void YATEWindow::on_btnCopyLobbyLink_clicked()
+{
+    qDebug() << "Copy Lobby Link.";
+    QString lobbyIdText = ui->lblLobbyId->text().trimmed();
+    if (lobbyIdText.size()) {
+        QClipboard *clipboard = QApplication::clipboard();
+        clipboard->setText("<yate://" + lobbyIdText + ">");
     } else {
         qDebug() << "Lobby ID is empty.";
     }
