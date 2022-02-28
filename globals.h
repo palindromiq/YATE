@@ -40,7 +40,7 @@ class QString;
 #define SETTINGS_KEY_DISCORD_ACTIVITY_JOIN "discord_activity_join"
 
 #define DISCORD_UPDATE_TIMER 50
-#define DISCORD_LOBBY_SIZE 50
+#define DISCORD_LOBBY_SIZE 30
 #define DISCORD_MESSAGE_BUFFER_TIMER 1000
 
 #define EMOJI_LOCKED "🔒"

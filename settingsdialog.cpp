@@ -27,7 +27,6 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->lblWebsite->setTextFormat(Qt::RichText);
     ui->lblWebsite->setTextInteractionFlags(Qt::TextBrowserInteraction);
     ui->lblWebsite->setOpenExternalLinks(true);
-    ui->chkDiscordActivityJoin->hide();
     qDebug() << "Settings window initialized.";
 }
 

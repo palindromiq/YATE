@@ -47,6 +47,7 @@ YATEWindow::YATEWindow(QString codeURI, QWidget *parent)
       isLogManuallySet_(false),
 #ifdef DISCORD_ENABLED
       discord_(nullptr),
+      discordConnected_(false),
 #endif
       isLiveFeedbackRunning_(false),
       codeURI_(codeURI)
@@ -127,10 +128,28 @@ void Yate::YATEWindow::initDiscord()
     connect(this, &YATEWindow::discordClearActivity, discord_, &DiscordManager::clearActivity, Qt::UniqueConnection);
     connect(discord_, &DiscordManager::onUserConnected, this, &YATEWindow::onUserConnected, Qt::UniqueConnection);
     connect(this, &YATEWindow::disconnectDiscordLobby, discord_, &DiscordManager::disconnectFromLobby, Qt::UniqueConnection);
+    connect(discord_, &DiscordManager::onInviteAccepted, this, &YATEWindow::onDiscordInviteAccepted);
     discordThread_->start();
     qDebug() << "Discord thread started.";
 #endif
 }
+
+void Yate::YATEWindow::onDiscordInviteAccepted(QString secret)
+{
+#ifdef DISCORD_ENABLED
+    if (!secret.size()) {
+        return;
+    }
+    if (!discordConnected_) {
+        codeURI_ = secret;
+        qWarning() << "Discord is not initalized yet.";
+    } else {
+        qDebug() << "Establishing connection using " << secret;
+        establishLobbyConnection(secret);
+    }
+#endif
+}
+
 
 void YATEWindow::establishLobbyConnection(QString lobbyId)
 {
@@ -483,6 +502,7 @@ void YATEWindow::onUserConnected(QString name)
     if(name.size()) {
         title = title + " (Logged in to Discord as @" + name + ")";
         statusBar()->showMessage("Logged in to Discord as " + name, 2000);
+        discordConnected_ = true;
     }
     setWindowTitle(title);
     if (codeURI_ != "") {
@@ -623,7 +643,7 @@ void YATEWindow::on_btnCopyLobbyLink_clicked()
     QString lobbyIdText = ui->lblLobbyId->text().trimmed();
     if (lobbyIdText.size()) {
         QClipboard *clipboard = QApplication::clipboard();
-        clipboard->setText(SETTINGS_URL_CODE_REDIRECT + "?c=" + lobbyIdText);
+        clipboard->setText("<yate://" + lobbyIdText + ">");
     } else {
         qDebug() << "Lobby ID is empty.";
     }

@@ -88,10 +88,10 @@ int main(int argc, char *argv[])
         }
     } else if  (argc == 2 && QString(argv[1]).startsWith("yate://")) {
         codeURI = QString(argv[1]);
-        if (codeURI == "yate://run" || codeURI == "yate://run/") {
+        if (codeURI.startsWith("yate://run") || codeURI == "yate://" || codeURI == "yate" || codeURI == "yate:///") {
             codeURI = "";
         } else {
-            const QRegularExpression rx("yate\\:\\/\\/(\\d+)\\:([a-z0-9]+)");
+            const QRegularExpression rx("yate\\:\\/\\/(\\d+)\\/?\\:([a-z0-9]+)");
             auto match = rx.match(codeURI);
             if (!match.isValid() || !match.hasMatch()) {
                 QMessageBox::critical(0, "Invalid URI", "Provided URI format is invalid");

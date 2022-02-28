@@ -103,6 +103,8 @@ signals:
 
 private:
     void createTrayIcon();
+    void onDiscordInviteAccepted(QString secret);
+
 
 
     Ui::YATEWindow *ui;
@@ -121,6 +123,8 @@ private:
 #ifdef DISCORD_ENABLED
     DiscordManager *discord_;
     QThread *discordThread_;
+    bool discordConnected_;
+
 #endif
     QAtomicInt isLiveFeedbackRunning_;
     QString codeURI_;

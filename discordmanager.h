@@ -34,6 +34,9 @@ public:
 
     long long getLobbyId() const;
 
+    bool isHost() const;
+    void setIsHost(bool newIsHost);
+
 public slots:
     void start();
     void stop();
@@ -62,6 +65,7 @@ signals:
     void connectionSucceeded();
     void connectionFailed();
     void onLobbyDisconnect();
+    void onInviteAccepted(QString secret);
 
 private:
     void setup(bool emitErrors = true);
@@ -88,7 +92,19 @@ private:
     long long lobbyId_;
     long long peerLobbyId_;
     long long peerUserId_;
+    int currentPartySize_;
+    int activityPartySize_;
+    long long activityLobbyId_;
     char lobbySecret_[512];
+    char lobbyIdStr_[512];
+    char peerLobbyIdStr_[512];
+    char peerLobbySecret_[512];
+    char appCommand[2048];
+    QString partyId_;
+    char partyIdArr_[512];
+    bool isHost_;
+    bool activityIsHost_;
+    bool commandRegistered_;
 };
 
 }
