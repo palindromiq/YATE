@@ -100,8 +100,6 @@ private:
     char peerLobbyIdStr_[512];
     char peerLobbySecret_[512];
     char appCommand[2048];
-    QString partyId_;
-    char partyIdArr_[512];
     bool isHost_;
     bool activityIsHost_;
     bool commandRegistered_;

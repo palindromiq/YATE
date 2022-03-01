@@ -25,9 +25,6 @@ DiscordManager::DiscordManager(QObject *parent)
 {
     qDebug() << "Discord Manager: Initalizing Discord Manager.";
     qDebug() << "Discord Manager: DISCORD_INSTANCE_ID " << qgetenv("DISCORD_INSTANCE_ID");
-    partyId_ = QUuid::createUuid().toString();
-    QByteArray partyBA = partyId_.toUtf8();
-    std::strncpy(partyIdArr_, partyBA.data(), partyId_.size());
     connect(updateTimer_, &QTimer::timeout, this, &DiscordManager::update);
     connect(messageBufferTimer_, &QTimer::timeout, this, &DiscordManager::checkMessageBuffers);
     setup();
@@ -216,7 +213,8 @@ void DiscordManager::setup(bool emitErrors)
     QString appPath = QCoreApplication::applicationFilePath();
     appPath.replace("/", "\\");
     QByteArray appPathBA = appPath.toUtf8();
-    std::strncpy(appCommand, appPathBA.data(), 2048);
+    std::memset(appCommand, 0, 2048);
+    std::strncpy(appCommand, appPathBA.data(), strlen(appPathBA.data()));
 
 
     if (userResult == discord::Result::Ok) {
@@ -297,7 +295,7 @@ void DiscordManager::setup(bool emitErrors)
                 QString idStr = QString::number(lobbyId_);
                 QByteArray idStrBA = idStr.toUtf8();
                 memset(lobbyIdStr_, 0, 512);
-                strncpy(lobbyIdStr_, idStrBA.data(), idStr.size());
+                strncpy(lobbyIdStr_, idStrBA.data(), strlen(idStrBA.data()));
                 emit onLobbyIdChange(QString::fromUtf8(lobbySecret_));
 
             } else {
@@ -396,7 +394,9 @@ bool DiscordManager::connectTo(QString lobbySecret)
     if (settings_->value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool() && settings_->value(SETTINGS_KEY_DISCORD_NETWORKING, true).toBool()) {
         qDebug() << "Discord Manager: Parsing lobby secret";
         QByteArray lobbySecretBA = lobbySecret.toUtf8();
-        strncpy(peerLobbySecret_, lobbySecretBA.data(), lobbySecret.size());
+        memset(peerLobbySecret_, 0, 512);
+        std::strncpy(peerLobbySecret_, lobbySecretBA.data(), strlen(lobbySecretBA.data()));
+        qDebug() << "Casted secret: " << peerLobbySecret_;
         auto split = lobbySecret.split(":");
         if (split.size() != 2) {
             qWarning() << "Discord Manager: Invalid secret format";
@@ -416,7 +416,7 @@ bool DiscordManager::connectTo(QString lobbySecret)
                 QString idStr = QString::number(peerLobbyId_);
                 QByteArray idStrBA = idStr.toUtf8();
                 memset(peerLobbyIdStr_, 0, 512);
-                strncpy(peerLobbyIdStr_, idStrBA.data(), idStr.size());
+                std::strncpy(peerLobbyIdStr_, idStrBA.data(), strlen(idStrBA.data()));
                 qDebug() << "Discord Manager: Emitting connection succeeded";
                 emit connectionSucceeded();
             } else {
