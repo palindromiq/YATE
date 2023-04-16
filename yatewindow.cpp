@@ -167,6 +167,11 @@ void YATEWindow::establishLobbyConnection(QString lobbyId)
         QMessageBox::critical(this, "Error", "Cannot to connect to self-lobby.");
         return;
     }
+    if (lobbyId.startsWith(YATE_2_0_PREFIX)) {
+        QMessageBox::critical(this, "Error", "The requested session requires a higher YATE version.");
+        return;
+    }
+
     if(discord_->connectTo(lobbyId)) {
         qDebug() << "Passed initial connection to Lobby";
         showClientLiveFeedback(false);

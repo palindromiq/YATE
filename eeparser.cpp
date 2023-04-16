@@ -9,14 +9,16 @@
 #include <QDir>
 #include <QTimer>
 #include <QThread>
+#include <QSettings>
 
 
 #include "filewatcher.h"
+#include "globals.h"
 
 namespace Yate {
 
 EEParser::EEParser(QString logFilename, bool isLive, QObject *parent):
-    QObject(parent), filename_(logFilename), liveParsing_(isLive),
+    QObject(parent), filename_(logFilename), liveParsing_(isLive), settings_(new QSettings),
     currentPosition_(0), evtId_(0),
     lineParseRegex_("(\\d+\\.\\d+)\\s+(\\w+)\\s+\\[(\\w+)\\]\\s*\\:\\s*(.*)"),
     logDoesNotExist_(true), hostJustUnloaded_(true)
@@ -173,7 +175,13 @@ void EEParser::startLive()
 
     QTimer *tmr = new QTimer(this);
     tmr->setInterval(1000);
-    connect(tmr, &QTimer::timeout, [&]() {if(QFileInfo::exists(filename())) { QFileInfo(filename()).lastModified();}});
+    if (settings_->value(SETTINGS_KEY_FORCE_LOGS, false).toBool()) {
+        connect(tmr, &QTimer::timeout, [&]() {if(QFileInfo::exists(filename())) { QFileInfo(filename()).lastModified();}});
+    } else {
+        connect(tmr, &QTimer::timeout, [&]() {if(QFileInfo::exists(filename())) {onFileChanged(true);}});
+    }
+
+
     tmr->start();
 
     QString fileContent;

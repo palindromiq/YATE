@@ -81,6 +81,8 @@ void DiscordManager::update()
         }
     }
     core_->NetworkManager().Flush();
+    core_->LobbyManager().FlushNetwork();
+
 }
 void DiscordManager::clearActivity()
 {
@@ -154,7 +156,6 @@ void DiscordManager::setup(bool emitErrors)
 
     auto result = discord::Core::Create(DISCORD_CLIENT_ID, DiscordCreateFlags_NoRequireDiscord, &core_);
 
-
     if (!core_) {
         if (emitErrors) {
             qCritical() << "Discord Manager: Failed to instantiate discord core! (err " << static_cast<int>(result)
@@ -166,7 +167,6 @@ void DiscordManager::setup(bool emitErrors)
     }
     qDebug() << "Discord Manager: Core initialized.";
     failed_ = false;
-
 
 
     core_->SetLogHook(
@@ -209,13 +209,13 @@ void DiscordManager::setup(bool emitErrors)
        }
     });
 
+
     auto userResult = core_->UserManager().GetCurrentUser(currentUser_);
     QString appPath = QCoreApplication::applicationFilePath();
     appPath.replace("/", "\\");
     QByteArray appPathBA = appPath.toUtf8();
     std::memset(appCommand, 0, 2048);
     std::strncpy(appCommand, appPathBA.data(), strlen(appPathBA.data()));
-
 
     if (userResult == discord::Result::Ok) {
         qDebug() << "Discord Manager: Got Current User";
@@ -224,13 +224,12 @@ void DiscordManager::setup(bool emitErrors)
         qDebug() << "Discord Manager: Emitting username" << username;
         emit onUserConnected(username);
         ready_ = true;
-
     }
 
 
     core_->UserManager().OnCurrentUserUpdate.Connect([&]() {
         qDebug() << "Discord Manager: Current User Update";
-        auto userResult =core_->UserManager().GetCurrentUser(currentUser_);
+        auto userResult = core_->UserManager().GetCurrentUser(currentUser_);
         if (userResult == discord::Result::Ok) {
             QString username(currentUser_->GetUsername());
             qDebug() << "Discord Manager: Emitting username" << username;
@@ -285,7 +284,6 @@ void DiscordManager::setup(bool emitErrors)
         txn.SetType(discord::LobbyType::Public);
         txn.SetCapacity(DISCORD_LOBBY_SIZE);
         qDebug() << "Discord Manager: Created Lobby Transaction";
-
         core_->LobbyManager().CreateLobby(txn, [&](discord::Result result, const discord::Lobby &lobby) {
             if (result == discord::Result::Ok) {
                 qDebug() << "Discord Manager: Lobby created " << lobby.GetId();
@@ -333,14 +331,14 @@ void DiscordManager::setup(bool emitErrors)
            }
         });
         core_->ActivityManager().OnActivityJoin.Connect([&] (const char *secret) {
-           qDebug() << "Joining through invitation with secret " << secret;
+           qDebug() << "Discord Manager: Joining through invitation with secret " << secret;
            emit onInviteAccepted(QString(secret));
         });
         core_->ActivityManager().OnActivityInvite.Connect([&] (discord::ActivityActionType type, const discord::User &user, const discord::Activity &activity) {
-            qDebug() << "Received an invitation: " << int(type) << user.GetId() << activity.GetName();
+            qDebug() << "Discord Manager: Received an invitation: " << int(type) << user.GetId() << activity.GetName();
         });
         core_->ActivityManager().OnActivitySpectate.Connect([&] (const char *secret) {
-            qDebug() << "OnActivitySpectate " << secret;
+            qDebug() << "Discord Manager: OnActivitySpectate " << secret;
         });
 
 
@@ -396,7 +394,7 @@ bool DiscordManager::connectTo(QString lobbySecret)
         QByteArray lobbySecretBA = lobbySecret.toUtf8();
         memset(peerLobbySecret_, 0, 512);
         std::strncpy(peerLobbySecret_, lobbySecretBA.data(), strlen(lobbySecretBA.data()));
-        qDebug() << "Casted secret: " << peerLobbySecret_;
+        qDebug() << "Discord Manager: Casted secret: " << peerLobbySecret_;
         auto split = lobbySecret.split(":");
         if (split.size() != 2) {
             qWarning() << "Discord Manager: Invalid secret format";
@@ -526,14 +524,14 @@ void DiscordManager::checkMessageBuffers() {
         if (result == discord::Result::Ok) {
             currentPartySize_ = count;
         } else {
-            qWarning () << "Failed to get member count" << int(result);
+            qWarning () << "Discord Manager: Failed to get member count" << int(result);
         }
     } else if (lobbyId_ != -1) {
         auto result = core_->LobbyManager().MemberCount(lobbyId_, &count);
         if (result == discord::Result::Ok) {
             currentPartySize_ = count;
         } else {
-            qWarning () << "Failed to get member count" << int(result);
+            qWarning () << "Discord Manager: Failed to get member count" << int(result);
         }
     } else {
         currentPartySize_ = 1;

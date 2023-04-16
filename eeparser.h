@@ -7,6 +7,7 @@
 #include "logevent.h"
 
 class QFileSystemWatcher;
+class QSettings;
 
 namespace Yate {
 class FileWatcher;
@@ -48,6 +49,7 @@ signals:
 private:
     QString filename_;
     bool liveParsing_;
+    QSettings *settings_;
     int currentPosition_;
     int evtId_;
     QRegularExpression lineParseRegex_;

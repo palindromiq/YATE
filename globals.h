@@ -32,6 +32,7 @@ class QString;
 #define SETTINGS_LIMBS_PREC_DEFAULT 3
 #define SETTINGS_KEY_LOCK_FEEDBACK_BTN "lock_feedback_btn"
 #define SETTINGS_KEY_STREAMER_MODE "streamer_mode"
+#define SETTINGS_KEY_FORCE_LOGS "force_logs"
 #define SETTINGS_KEY_LAST_SAVE_DIR "img_save_dir"
 #define SETTINGS_KEY_UPDATE_ON_STARTUP "update_on_start"
 #define SETTINGS_KEY_DISCORD_FEATURES "discord_features"
@@ -108,6 +109,8 @@ class QString;
 #define SUMMARY_COLOR_AVERAGE "#283D3B"
 
 #define TIMELINE_COLOR_ELEMENT "#05aeef"
+
+#define YATE_2_0_PREFIX "yt2p0x"
 
 
 
