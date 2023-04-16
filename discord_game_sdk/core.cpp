@@ -6,8 +6,6 @@
 
 #include <cstring>
 #include <memory>
-#include <QDebug>
-
 
 namespace discord {
 
@@ -17,9 +15,7 @@ Result Core::Create(ClientId clientId, std::uint64_t flags, Core** instance)
         return Result::InternalError;
     }
 
-
     (*instance) = new Core();
-
     DiscordCreateParams params{};
     DiscordCreateParamsSetDefault(&params);
     params.client_id = clientId;
@@ -35,15 +31,11 @@ Result Core::Create(ClientId clientId, std::uint64_t flags, Core** instance)
     params.store_events = &StoreManager::events_;
     params.voice_events = &VoiceManager::events_;
     params.achievement_events = &AchievementManager::events_;
-
     auto result = DiscordCreate(DISCORD_VERSION, &params, &((*instance)->internal_));
-
     if (result != DiscordResult_Ok || !(*instance)->internal_) {
-
         delete (*instance);
         (*instance) = nullptr;
     }
-
 
     return static_cast<Result>(result);
 }
