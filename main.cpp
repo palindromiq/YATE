@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
         if (codeURI.startsWith("yate://run") || codeURI == "yate://" || codeURI == "yate" || codeURI == "yate:///") {
             codeURI = "";
         } else {
-            const QRegularExpression rx("yate\\:\\/\\/(\\d+)\\/?\\:([a-z0-9]+)");
+            const QRegularExpression rx("yate\\:\\/\\/(\\w+)\\/?\\:([a-z0-9]+)");
             auto match = rx.match(codeURI);
             if (!match.isValid() || !match.hasMatch()) {
                 QMessageBox::critical(0, "Invalid URI", "Provided URI format is invalid");
