@@ -76,7 +76,7 @@
           <item row="0" column="0">
            <widget class="QLabel" name="lblLobbyIdLabel">
             <property name="text">
-             <string>Lobby ID:</string>
+             <string>Lobby Code:</string>
             </property>
            </widget>
           </item>
@@ -122,6 +122,12 @@
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
          <widget class="QPushButton" name="btnLiveFeedback">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>Live Feedback (Host)</string>
           </property>
@@ -129,8 +135,43 @@
         </item>
         <item>
          <widget class="QPushButton" name="btnLiveFeedbackVS">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>Live Feedback (VS)</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnReconnect">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Attempt to re-connect to the server</string>
+          </property>
+          <property name="text">
+           <string>Reconnect</string>
+          </property>
+          <property name="icon">
+           <iconset resource="assets/breeze.qrc">
+            <normaloff>:/reconnect.svg</normaloff>:/reconnect.svg</iconset>
           </property>
          </widget>
         </item>
@@ -142,6 +183,8 @@
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
- <resources/>
+ <resources>
+  <include location="assets/breeze.qrc"/>
+ </resources>
  <connections/>
 </ui>

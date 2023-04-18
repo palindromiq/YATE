@@ -123,6 +123,16 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QCheckBox" name="chkClientsServer">
+        <property name="text">
+         <string>Enable YATE VS client connections</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -242,16 +252,6 @@
        <widget class="QCheckBox" name="chkDiscordActivity">
         <property name="text">
          <string>Enable Discord Activity Stream</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="chkClientsServer">
-        <property name="text">
-         <string>Enable YATE VS client connections</string>
         </property>
         <property name="checked">
          <bool>true</bool>

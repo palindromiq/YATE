@@ -19,14 +19,12 @@
 namespace Yate {
 DiscordManager::DiscordManager(QObject *parent)
     : QObject{parent}, currentUser_(new discord::User), updateTimer_(new QTimer(this)), messageBufferTimer_(new QTimer(this)),
-      settings_(new QSettings), ready_(false), failed_(false), running_(false), activityInit_(false),
-      lobbyId_(-1), peerLobbyId_(-1), peerUserId_(-1), currentPartySize_(1), activityPartySize_(1), activityLobbyId_(-1), isHost_(true),
+      settings_(new QSettings), ready_(false), failed_(false), running_(false), activityInit_(false), currentPartySize_(1), activityPartySize_(1), isHost_(true),
       activityIsHost_(true), commandRegistered_(false)
 {
     qDebug() << "Discord Manager: Initalizing Discord Manager.";
     qDebug() << "Discord Manager: DISCORD_INSTANCE_ID " << qgetenv("DISCORD_INSTANCE_ID");
     connect(updateTimer_, &QTimer::timeout, this, &DiscordManager::update);
-    connect(messageBufferTimer_, &QTimer::timeout, this, &DiscordManager::checkMessageBuffers);
     setup();
     qDebug() << "Discord Manager: Initalized Discord Manager.";
 }
@@ -35,9 +33,6 @@ DiscordManager::~DiscordManager()
 {
     qDebug() << "Discord Manager: Destroying Discord Manager.";
     if (core_) {
-        if(lobbyId_ != -1) {
-            core_->LobbyManager().DeleteLobby(lobbyId_, [&](discord::Result) {});
-        }
         qDebug() << "Discord Manager: Deleting core";
         delete core_;
     }
@@ -52,7 +47,6 @@ void DiscordManager::start()
     }
     qDebug() << "Discord Manager: Starting timers.";
     updateTimer_->start(DISCORD_UPDATE_TIMER);
-    messageBufferTimer_->start(DISCORD_MESSAGE_BUFFER_TIMER);
     running_ = true;
 }
 
@@ -93,7 +87,7 @@ void DiscordManager::clearActivity()
 
     currentActivityDetails_ = activityDetails_ = currentActivityState_ = activityState_ = currentActivityImageText_ = activityImageText_ = "";
     currentPartySize_ = activityPartySize_ = 1;
-    activityLobbyId_ = -1;
+    activityLobbyId_ = "";
     activityIsHost_ = true;
     core_->ActivityManager().ClearActivity([](discord::Result result) {
         if (result != discord::Result::Ok) {
@@ -103,12 +97,13 @@ void DiscordManager::clearActivity()
 }
 void DiscordManager::updateActivity()
 {
-//    return;
     if(failed_) {
         return;
     }
+
     currentActivityDetails_ = activityDetails_;
-    currentActivityState_ = activityDetails_;
+    currentActivityState_ = activityState_;
+    qDebug() << currentActivityState_ << " " << activityState_;
     currentActivityImageText_ = activityImageText_;
     currentPartySize_ = activityPartySize_;
     activityLobbyId_ = lobbyId_;
@@ -127,18 +122,18 @@ void DiscordManager::updateActivity()
 
 
     if (isHost()) {
-        if (lobbyId_ != -1) {
-            activity.GetParty().SetId(lobbyIdStr_);
+        if (lobbyId_ != "") {
+            activity.GetParty().SetId(lobbyUsername_.toUtf8().constData());
             activity.GetParty().GetSize().SetCurrentSize(currentPartySize_);
             activity.GetParty().GetSize().SetMaxSize(DISCORD_LOBBY_SIZE);
-            activity.GetSecrets().SetJoin(lobbySecret_);
+            qDebug() << "SEtting join sercret to" << lobbyId_.toUtf8().constData();
+            activity.GetSecrets().SetJoin(lobbyId_.toUtf8().constData());
         }
     } else {
-        activity.GetParty().SetId(peerLobbyIdStr_);
+        activity.GetParty().SetId(peerLobbyId_.toUtf8().constData());
         activity.GetParty().GetSize().SetCurrentSize(currentPartySize_);
         activity.GetParty().GetSize().SetMaxSize(DISCORD_LOBBY_SIZE);
     }
-
 
     core_->ActivityManager().UpdateActivity(activity, [&](discord::Result result) {
         if (result != discord::Result::Ok) {
@@ -159,7 +154,7 @@ void DiscordManager::setup(bool emitErrors)
     if (!core_) {
         if (emitErrors) {
             qCritical() << "Discord Manager: Failed to instantiate discord core! (err " << static_cast<int>(result)
-                     << ")\n";
+                     << ")";
             emit failed("Failed to connect to Discord");
         }
         failed_ = true;
@@ -188,26 +183,6 @@ void DiscordManager::setup(bool emitErrors)
     core_->NetworkManager().GetPeerId(&peerId);
     emit onPeerIdChange(QString::number(peerId));
 
-
-    core_->LobbyManager().OnMemberDisconnect.Connect([&](discord::LobbyId lobbyId, discord::UserId userId) {
-        qDebug() << "Discord Manager: Lobbdy Disconnect " << lobbyId << userId;
-       if(lobbyId == peerLobbyId_ && userId == peerUserId_) {
-           qDebug() << "Discord Manager: Emitting lobbyDisconnect";
-           emit onLobbyDisconnect();
-       }
-    });
-
-    core_->LobbyManager().OnMemberConnect.Connect([&](discord::LobbyId lobbyId, discord::UserId userId) {
-        qDebug() << "Discord Manager: Lobbdy Connect " << lobbyId << userId;
-    });
-
-    core_->LobbyManager().OnLobbyDelete.Connect([&](discord::LobbyId lobbyId, std::uint32_t reason) {
-       qDebug() << "Discord Manager: Lobbdy Delete " << lobbyId << reason;
-       if(lobbyId == peerLobbyId_) {
-           qDebug() << "Discord Manager: Emitting lobbyDisconnect";
-           emit onLobbyDisconnect();
-       }
-    });
 
 
     auto userResult = core_->UserManager().GetCurrentUser(currentUser_);
@@ -253,57 +228,11 @@ void DiscordManager::setup(bool emitErrors)
 
 
     });
-    core_->LobbyManager().OnLobbyMessage.Connect([&](discord::LobbyId lobbyId, discord::UserId userId,  std::uint8_t* data, std::uint32_t dataLen){
-        qDebug() << "Discord Manager: Received Lobby Message" << lobbyId << userId << QString::fromUtf8((char*)data, dataLen);
-        if (lobbyId == peerLobbyId_ && userId == peerUserId_) {
-            qDebug() << "Discord Manager: Message accepted";
-            QJsonDocument jsonMsg = QJsonDocument::fromJson(QString::fromUtf8((char*)data, dataLen).toUtf8());
-            QJsonObject obj = jsonMsg.object();
-            if (obj.contains("message")) {
-                QString message = obj.value("message").toString();
-                if (obj.contains("channel")) {
-                    QString ch = obj.value("channel").toString();
-                    if (ch == "1") {
-                        qDebug() << "Discord Manager: Message received on channel 1";
-                        emit onMessageFromChannel1(message);
-                    } else if (ch == "2") {
-                        qDebug() << "Discord Manager: Message received on channel 2";
-                        emit onMessageFromChannel2(message);
-                    } else if (ch == "3") {
-                        qDebug() << "Discord Manager: Message received on channel 3";
-                        emit onMessageFromChannel3(message);
-                    }
-                }
-            }
-        }
-    });
-    if (settings_->value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool() && settings_->value(SETTINGS_KEY_DISCORD_NETWORKING, true).toBool()) {
-        qDebug() << "Discord Manager: Creating Lobby";
-        discord::LobbyTransaction txn;
-        core_->LobbyManager().GetLobbyCreateTransaction(&txn);
-        txn.SetType(discord::LobbyType::Public);
-        txn.SetCapacity(DISCORD_LOBBY_SIZE);
-        qDebug() << "Discord Manager: Created Lobby Transaction";
-        core_->LobbyManager().CreateLobby(txn, [&](discord::Result result, const discord::Lobby &lobby) {
-            if (result == discord::Result::Ok) {
-                qDebug() << "Discord Manager: Lobby created " << lobby.GetId();
-                core_->LobbyManager().GetLobbyActivitySecret(lobby.GetId(), lobbySecret_);
-                qDebug() << "Discord Manager: Lobby secret " << QString::fromUtf8(lobbySecret_);
-                lobbyId_ = lobby.GetId();
-                QString idStr = QString::number(lobbyId_);
-                QByteArray idStrBA = idStr.toUtf8();
-                memset(lobbyIdStr_, 0, 512);
-                strncpy(lobbyIdStr_, idStrBA.data(), strlen(idStrBA.data()));
-                emit onLobbyIdChange(QString::fromUtf8(lobbySecret_));
 
-            } else {
-                qCritical() << "Discord Manager: Failed to create lobby" << int(result);
-            }
-        });
-
-        core_->ActivityManager().OnActivityJoinRequest.Connect([&] (const discord::User &user) {
+    if (settings_->value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool() && settings_->value(SETTINGS_KEY_NETWORKING, true).toBool()) {
+         core_->ActivityManager().OnActivityJoinRequest.Connect([&] (const discord::User &user) {
            if(settings_->value(SETTINGS_KEY_DISCORD_ACTIVITY_JOIN, false).toBool()) {
-               if (lobbyId_ != -1) {
+               if (lobbyId_ != "") {
                    core_->ActivityManager().SendRequestReply(user.GetId(), discord::ActivityJoinRequestReply::Yes, [&](discord::Result result) {
                         if (result == discord::Result::Ok) {
                             qDebug() << "Discord Manager: Accepted join request";
@@ -347,19 +276,30 @@ void DiscordManager::setup(bool emitErrors)
 
 }
 
-void DiscordManager::sendMessageToLobby(QString msg)
+const QString &DiscordManager::getPeerLobbyId() const
 {
-    qDebug() << "Discord Manager: Sending message to lobby.";
-    if(lobbyId_ != -1) {
-        std::uint8_t *msgPayload = (std::uint8_t*) msg.toUtf8().data();
-        qDebug() << "Discord Manager: message payload ready.";
-        core_->LobbyManager().SendLobbyMessage(lobbyId_, msgPayload, msg.size(), [&](discord::Result result) {
-            if (result != discord::Result::Ok) {
-                qCritical() << "Discord Manager: failed to sent message to lobby: " << int (result);
-            }
-        });
+    return peerLobbyId_;
+}
+
+void DiscordManager::setPeerLobbyId(const QString &newPeerLobbyId)
+{
+    peerLobbyId_ = newPeerLobbyId;
+}
+
+const QString &DiscordManager::getLobbyId() const
+{
+    return lobbyId_;
+}
+
+void DiscordManager::setLobbyId(const QString &newLobbyId)
+{
+    lobbyId_ = newLobbyId;
+    auto lobbyParts = lobbyId_.split(":");
+    if (lobbyParts.size() == 2) {
+        lobbyUsername_ = lobbyParts[0];
     } else {
-        qWarning() << "Discord Manager: Lobby ID not set.";
+        lobbyUsername_ = lobbyId_;
+        qWarning() << "Discord Manager: invalid lobby ID:" << lobbyId_;
     }
 }
 
@@ -373,171 +313,12 @@ void DiscordManager::setIsHost(bool newIsHost)
     isHost_ = newIsHost;
 }
 
-long long DiscordManager::getLobbyId() const
-{
-    return lobbyId_;
-}
-
-
 
 bool DiscordManager::running() const
 {
     return running_;
 }
 
-
-bool DiscordManager::connectTo(QString lobbySecret)
-{
-    qDebug() << "Discord Manager: Connecting to " << lobbySecret;
-    if (settings_->value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool() && settings_->value(SETTINGS_KEY_DISCORD_NETWORKING, true).toBool()) {
-        qDebug() << "Discord Manager: Parsing lobby secret";
-        QByteArray lobbySecretBA = lobbySecret.toUtf8();
-        memset(peerLobbySecret_, 0, 512);
-        std::strncpy(peerLobbySecret_, lobbySecretBA.data(), strlen(lobbySecretBA.data()));
-        qDebug() << "Discord Manager: Casted secret: " << peerLobbySecret_;
-        auto split = lobbySecret.split(":");
-        if (split.size() != 2) {
-            qWarning() << "Discord Manager: Invalid secret format";
-            return false;
-        }
-        if (split[0] == QString::number(lobbyId_)) {
-            qWarning() << "Discord Manager: Attempting to connect to self?";
-            return false;
-        }
-        qDebug() << "Discord Manager: Establishing lobby connection";
-        core_->LobbyManager().ConnectLobbyWithActivitySecret(peerLobbySecret_, [&](discord::Result result, const discord::Lobby &lobby) {
-            if (result == discord::Result::Ok) {
-                setIsHost(false);
-                qDebug() << "Discord Manager: Connected to lobby " << lobby.GetId() << lobby.GetOwnerId();
-                peerUserId_ = lobby.GetOwnerId();
-                peerLobbyId_ = lobby.GetId();
-                QString idStr = QString::number(peerLobbyId_);
-                QByteArray idStrBA = idStr.toUtf8();
-                memset(peerLobbyIdStr_, 0, 512);
-                std::strncpy(peerLobbyIdStr_, idStrBA.data(), strlen(idStrBA.data()));
-                qDebug() << "Discord Manager: Emitting connection succeeded";
-                emit connectionSucceeded();
-            } else {
-                setIsHost(true);
-                qCritical() << "Discord Manager: Failed to connect to lobby " << int(result);
-                emit connectionFailed();
-            }
-
-        });
-
-    }
-
-    return true;
-
-}
-
-
-
-
-void DiscordManager::sendMessageOnChannel1(QString msg) {
-    qDebug() << "Discord Manager: sendMessageOnChannel1";
-    if(lobbyId_ != -1) {
-        QJsonObject  json;
-        json.insert("message", msg);
-        json.insert("version", "1.0");
-        json.insert("yate_ver", Updater::getInstance(0)->getVersion());
-        json.insert("channel", "1");
-        QString msgJson(QJsonDocument(json).toJson(QJsonDocument::Compact));
-        QMutexLocker lock(&bufferMutex_);
-        ch1Buffer = msgJson;
-    } else {
-        qWarning() << "Discord Manager: Lobby ID not set.";
-    }
-
-}
-
-void DiscordManager::sendMessageOnChannel2(QString msg) {
-    qDebug() << "Discord Manager: sendMessageOnChannel2";
-    if(lobbyId_ != -1) {
-        QJsonObject  json;
-        json.insert("message", msg);
-        json.insert("version", "1.0");
-        json.insert("yate_ver", Updater::getInstance(0)->getVersion());
-        json.insert("channel", "2");
-        QString msgJson(QJsonDocument(json).toJson(QJsonDocument::Compact));
-        QMutexLocker lock(&bufferMutex_);
-        ch2Buffer = msgJson;
-    } else {
-        qWarning() << "Discord Manager: Lobby ID not set.";
-    }
-}
-
-void DiscordManager::sendMessageOnChannel3(QString msg) {
-    qDebug() << "Discord Manager: sendMessageOnChannel3";
-    if(lobbyId_ != -1) {
-        QJsonObject  json;
-        json.insert("message", msg);
-        json.insert("version", "1.0");
-        json.insert("yate_ver", Updater::getInstance(0)->getVersion());
-        json.insert("channel", "3");
-        QString msgJson(QJsonDocument(json).toJson(QJsonDocument::Compact));
-        QMutexLocker lock(&bufferMutex_);
-        ch3Buffer = msgJson;
-    } else {
-        qWarning() << "Discord Manager: Lobby ID not set.";
-    }
-}
-
-void DiscordManager::disconnectFromLobby() {
-    qDebug() << "Discord Manager: disconnecting from lobby" << peerLobbyId_;
-    if (peerLobbyId_ != -1) {
-        core_->LobbyManager().DisconnectLobby(peerLobbyId_, [&](discord::Result result) {
-            setIsHost(true);
-            if (result != discord::Result::Ok) {
-                qWarning() << "Discord Manager: Disconnect failed " << int(result);
-            } else {
-
-                qDebug() << "Discord Manager: Disconnected from lobby " << peerLobbyId_;
-            }
-        });
-        peerLobbyId_ = -1;
-        peerUserId_ = -1;
-    }
-
-}
-
-void DiscordManager::checkMessageBuffers() {
-    QMutexLocker lock(&bufferMutex_);
-    if (ch1Buffer.size()) {
-        QString payload = ch1Buffer;
-        ch1Buffer = "";
-        sendMessageToLobby(payload);
-    }
-    if (ch2Buffer.size()) {
-        QString payload = ch2Buffer;
-        ch2Buffer = "";
-        sendMessageToLobby(payload);
-    }
-    if (ch3Buffer.size()) {
-        QString payload = ch3Buffer;
-        ch3Buffer = "";
-        sendMessageToLobby(payload);
-    }
-    std::int32_t count;
-    if (peerLobbyId_ != -1) {
-        auto result = core_->LobbyManager().MemberCount(peerLobbyId_, &count);
-        if (result == discord::Result::Ok) {
-            currentPartySize_ = count;
-        } else {
-            qWarning () << "Discord Manager: Failed to get member count" << int(result);
-        }
-    } else if (lobbyId_ != -1) {
-        auto result = core_->LobbyManager().MemberCount(lobbyId_, &count);
-        if (result == discord::Result::Ok) {
-            currentPartySize_ = count;
-        } else {
-            qWarning () << "Discord Manager: Failed to get member count" << int(result);
-        }
-    } else {
-        currentPartySize_ = 1;
-    }
-
-}
 
 void DiscordManager::setSquadString(QString msg) {
     if (msg.size()) {

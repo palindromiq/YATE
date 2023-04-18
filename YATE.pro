@@ -7,7 +7,7 @@ CONFIG += c++11 DISCORD_ENABLED
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
-VERSION = 1.2.2.0
+VERSION = 2.0.0.0
 SOURCES += \
     analysisviewitem.cpp \
     analysisviewmodel.cpp \
@@ -23,6 +23,7 @@ SOURCES += \
     logevent.cpp \
     main.cpp \
     miniz.cpp \
+    mqttmanager.cpp \
     settingsdialog.cpp \
     timelineimagegenerator.cpp \
     updater.cpp \
@@ -60,6 +61,7 @@ HEADERS += \
     livefeedbackoverlay.h \
     logevent.h \
     miniz.h \
+    mqttmanager.h \
     settingsdialog.h \
     timelineimagegenerator.h \
     updater.h \
@@ -98,6 +100,14 @@ CONFIG(debug, debug|release) {
     message("Debug Mode")
     CONFIG += console
 }
+
+MQTT_KEY = "$$cat(mqtt_key)"
+isEmpty(MQTT_KEY){
+  MQTT_KEY = "NOKEY"
+}
+DEFINES += "MQTT_KEY=\"\\\"$${MQTT_KEY}\\\"\""
+
+
 
 RC_ICONS = yate.ico
 
