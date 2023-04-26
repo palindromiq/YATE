@@ -108,5 +108,6 @@
         <file>timeline/ShrineEnable.png</file>
         <file>timeline/SquadJoin.png</file>
         <file>timeline/EidolonTeleport.png</file>
+        <file>reconnect.svg</file>
     </qresource>
 </RCC>

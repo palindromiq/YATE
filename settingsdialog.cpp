@@ -62,7 +62,7 @@ void SettingsDialog::reloadSettings()
     ui->chkStreamer->setChecked(settings_->value(SETTINGS_KEY_STREAMER_MODE, false).toBool());
     ui->chkDiscord->setChecked(settings_->value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool());
     ui->chkDiscordActivity->setChecked(settings_->value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool());
-    ui->chkClientsServer->setChecked(settings_->value(SETTINGS_KEY_DISCORD_NETWORKING, true).toBool());
+    ui->chkClientsServer->setChecked(settings_->value(SETTINGS_KEY_NETWORKING, true).toBool());
     ui->chkDiscordActivityJoin->setChecked(settings_->value(SETTINGS_KEY_DISCORD_ACTIVITY_JOIN, false).toBool());
 
     QString waterShieldFormat = settings_->value(SETTINGS_KEY_WATERSHIELD_FORMAT, SETTINGS_WS_OPT_BREAKDOWN).toString();
@@ -150,7 +150,7 @@ void SettingsDialog::on_btnSave_clicked()
   settings_->setValue(SETTINGS_KEY_UPDATE_ON_STARTUP, ui->chkAutoUpdate->isChecked());
   settings_->setValue(SETTINGS_KEY_DISCORD_FEATURES, ui->chkDiscord->isChecked());
   settings_->setValue(SETTINGS_KEY_DISCORD_ACTIVITY, ui->chkDiscordActivity->isChecked());
-  settings_->setValue(SETTINGS_KEY_DISCORD_NETWORKING, ui->chkClientsServer->isChecked());
+  settings_->setValue(SETTINGS_KEY_NETWORKING, ui->chkClientsServer->isChecked());
   settings_->setValue(SETTINGS_KEY_DISCORD_ACTIVITY_JOIN, ui->chkDiscordActivityJoin->isChecked());
   if (ui->radWSFormatShield->isChecked()) {
       settings_->setValue(SETTINGS_KEY_WATERSHIELD_FORMAT, SETTINGS_WS_OPT_SHIELD);

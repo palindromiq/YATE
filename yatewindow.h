@@ -32,6 +32,7 @@ class AnalysisWindow;
 class EEParser;
 class HuntInfoGenerator;
 class DiscordManager;
+class MqttManager;
 
 class YATEWindow : public QMainWindow
 {
@@ -83,14 +84,19 @@ private slots:
 
     void on_btnCopyLobbyLink_clicked();
 
+    void on_btnReconnect_clicked();
+
 public slots:
     void setLogFilePath(QString path);
     void onUpdaterBusy(bool busy);
     void refreshDiscordSettings();
     void onLobbyIdChange(QString id);
     void onUserConnected(QString name);
-    void onDiscordVSConnectionSucceeded();
-    void onDiscordVSConnectionFailed();
+    void onMqttConnected();
+    void onMqttConnecting();
+    void onMqttDisconnected();
+    void onVSConnectionSucceeded();
+    void onVSConnectionFailed();
 
 signals:
     void exitFeebackOverlay();
@@ -99,11 +105,12 @@ signals:
     void discordStop();
     void discordStart();
     void discordClearActivity();
-    void disconnectDiscordLobby();
+    void disconnecFromLobby();
 
 private:
     void createTrayIcon();
     void onDiscordInviteAccepted(QString secret);
+    void refreshTitle();
 
 
 
@@ -120,15 +127,22 @@ private:
     HuntInfoGenerator *huntInfoGenerator_;
     bool isLogManuallySet_;
     bool clientVersion_;
+    MqttManager *mqtt_;
+    QThread *mqttThread_;
 #ifdef DISCORD_ENABLED
     DiscordManager *discord_;
     QThread *discordThread_;
     bool discordConnected_;
+    bool mqttConnected_;
 
 #endif
     QAtomicInt isLiveFeedbackRunning_;
     QString codeURI_;
+    QString discordTitle_;
+    QString mqttTitle_;
+    QString prevPeerLobbyId_;
     void initDiscord();
+    void initMqtt();
     void establishLobbyConnection(QString lobbyId);
 };
 }

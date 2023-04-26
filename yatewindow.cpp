@@ -26,6 +26,7 @@
 #include "eeparser.h"
 #include "huntinfogenerator.h"
 #include "updater.h"
+#include "mqttmanager.h"
 
 #ifdef DISCORD_ENABLED
 #include "discordmanager.h"
@@ -99,6 +100,10 @@ YATEWindow::YATEWindow(QString codeURI, QWidget *parent)
     if (settings.value(SETTINGS_KEY_UPDATE_ON_STARTUP, true).toBool()) {
         emit checkForUpdate();
     }
+
+    mqttTitle_ = "[Offline]";
+    initMqtt();
+
 #ifdef DISCORD_ENABLED
     if (settings.value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool()) {
         initDiscord();
@@ -122,21 +127,34 @@ void Yate::YATEWindow::initDiscord()
     discord_->moveToThread(discordThread_);
     connect(discordThread_, &QThread::started, discord_, &DiscordManager::start);
     connect(discordThread_, &QThread::finished, discordThread_, &QThread::deleteLater);
-    connect(discord_, &DiscordManager::onLobbyIdChange, this, &YATEWindow::onLobbyIdChange, Qt::UniqueConnection);
     connect(this, &YATEWindow::discordStart, discord_, &DiscordManager::start, Qt::UniqueConnection);
     connect(this, &YATEWindow::discordStop, discord_, &DiscordManager::stop, Qt::UniqueConnection);
     connect(this, &YATEWindow::discordClearActivity, discord_, &DiscordManager::clearActivity, Qt::UniqueConnection);
     connect(discord_, &DiscordManager::onUserConnected, this, &YATEWindow::onUserConnected, Qt::UniqueConnection);
-    connect(this, &YATEWindow::disconnectDiscordLobby, discord_, &DiscordManager::disconnectFromLobby, Qt::UniqueConnection);
     connect(discord_, &DiscordManager::onInviteAccepted, this, &YATEWindow::onDiscordInviteAccepted);
     discordThread_->start();
     qDebug() << "Discord thread started.";
 #endif
 }
 
+void YATEWindow::initMqtt()
+{
+    mqtt_ = new MqttManager(0, MQTT_KEY);
+    mqttThread_ = new QThread;
+    mqtt_->moveToThread(mqttThread_);
+    mqttThread_->start();
+    connect(mqttThread_, &QThread::started, mqtt_, &MqttManager::start);
+    connect(mqttThread_, &QThread::finished, mqtt_, &QThread::deleteLater);
+    connect(mqtt_, &MqttManager::onLobbyIdChange, this, &YATEWindow::onLobbyIdChange, Qt::UniqueConnection);
+    connect(this, &YATEWindow::disconnecFromLobby, mqtt_, &MqttManager::disconnectFromLobby, Qt::UniqueConnection);
+    connect(mqtt_, &MqttManager::connected, this, &YATEWindow::onMqttConnected, Qt::UniqueConnection);
+    connect(mqtt_, &MqttManager::connecting, this, &YATEWindow::onMqttConnecting, Qt::UniqueConnection);
+    connect(mqtt_, &MqttManager::disconnected, this, &YATEWindow::onMqttDisconnected, Qt::UniqueConnection);
+
+}
+
 void Yate::YATEWindow::onDiscordInviteAccepted(QString secret)
 {
-#ifdef DISCORD_ENABLED
     if (!secret.size()) {
         return;
     }
@@ -147,38 +165,61 @@ void Yate::YATEWindow::onDiscordInviteAccepted(QString secret)
         qDebug() << "Establishing connection using " << secret;
         establishLobbyConnection(secret);
     }
-#endif
+}
+
+void YATEWindow::refreshTitle()
+{
+    QString title = "YATE " + Updater::getInstance()->getVersion();
+    if(discordTitle_ != "") {
+        title = title + " " + discordTitle_;
+    }
+    title += " " + mqttTitle_;
+    setWindowTitle(title);
 }
 
 
 void YATEWindow::establishLobbyConnection(QString lobbyId)
 {
     if (!lobbyId.size()) {
-        qDebug() << "Returned empty Lobby Id";
+        qDebug() << "Returned empty Lobby code";
         return;
     }
-    qDebug() << "Connecting to Lobby ID" << lobbyId;
+    qDebug() << "Connecting to Lobby code" << lobbyId;
     auto split = lobbyId.split(":");
     if (split.size() != 2) {
         QMessageBox::critical(this, "Error", "Invalid code format.");
         return;
     }
-    if (split[0] == QString::number(discord_->getLobbyId())) {
+    if (split[0] == mqtt_->getUserId()) {
         QMessageBox::critical(this, "Error", "Cannot to connect to self-lobby.");
         return;
     }
-    if (lobbyId.startsWith(YATE_2_0_PREFIX)) {
-        QMessageBox::critical(this, "Error", "The requested session requires a higher YATE version.");
+    if (!lobbyId.startsWith(YATE_2_0_PREFIX)) {
+        QMessageBox::critical(this, "Error", "The requested session uses an incompatible YATE version.");
         return;
     }
+    QString err;
+    prevPeerLobbyId_ = lobbyId;
 
-    if(discord_->connectTo(lobbyId)) {
+    if(mqtt_->connectTo(lobbyId, err)) {
         qDebug() << "Passed initial connection to Lobby";
         showClientLiveFeedback(false);
+#ifdef DISCORD_ENABLED
+        if (discord_ != nullptr) {
+            discord_->setPeerLobbyId(lobbyId);
+            discord_->setIsHost(false);
+        }
+#endif
+        return;
     } else {
         qCritical() << "Failed at initial connection to Lobby";
-        QMessageBox::critical(this, "Error", "Failed to establish connection to lobby, double check the input value.");
+        QMessageBox::critical(this, "Error", "Failed to establish connection to lobby: " + err);
     }
+#ifdef DISCORD_ENABLED
+    if (discord_ != nullptr) {
+        discord_->setIsHost(true);
+    }
+#endif
 }
 
 
@@ -313,15 +354,15 @@ void Yate::YATEWindow::showLiveFeedback(bool lock)
     connect(feedbackOverlay_, &LiveFeedbackOverlay::onDoubleClicked, parser_, &EEParser::stopParsing);
     connect(feedbackOverlay_, &LiveFeedbackOverlay::onDoubleClicked, this, &YATEWindow::stopFeedback);
     connect(feedbackOverlay_, &LiveFeedbackOverlay::onLockWindow, this, &YATEWindow::lockFeedbackWindow);
-
-#ifdef DISCORD_ENABLED
     QSettings settings;
+    if (settings.value(SETTINGS_KEY_NETWORKING, true).toBool()) {
+        connect(huntInfoGenerator_, &HuntInfoGenerator::onHuntStateChanged, mqtt_, &MqttManager::sendMessageOnChannel1);
+        connect(huntInfoGenerator_, &HuntInfoGenerator::onLimbsChanged, mqtt_, &MqttManager::sendMessageOnChannel2);
+        connect(huntInfoGenerator_, &HuntInfoGenerator::onHostOrSquadChanged, mqtt_, &MqttManager::sendMessageOnChannel3);
+    }
+#ifdef DISCORD_ENABLED
+
     if (settings.value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool()) {
-        if (settings.value(SETTINGS_KEY_DISCORD_NETWORKING, true).toBool()) {
-            connect(huntInfoGenerator_, &HuntInfoGenerator::onHuntStateChanged, discord_, &DiscordManager::sendMessageOnChannel1);
-            connect(huntInfoGenerator_, &HuntInfoGenerator::onLimbsChanged, discord_, &DiscordManager::sendMessageOnChannel2);
-            connect(huntInfoGenerator_, &HuntInfoGenerator::onHostOrSquadChanged, discord_, &DiscordManager::sendMessageOnChannel3);
-        }
         if (settings.value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool()) {
             connect(huntInfoGenerator_, &HuntInfoGenerator::onHuntStateChanged, discord_, &DiscordManager::setActivityDetails);
             connect(huntInfoGenerator_, &HuntInfoGenerator::onLimbsChanged, discord_, &DiscordManager::setActivityState);
@@ -379,7 +420,7 @@ void YATEWindow::stopFeedback()
         showNormal();
         qDebug() << "Stopped live feedback.";
         emit feedbackWindowClosed();
-        emit disconnectDiscordLobby();
+        emit disconnecFromLobby();
         qDebug() << "Emitted closing signals.";
     } else {
         qDebug () << "Live feedback already stopped.";
@@ -496,46 +537,78 @@ void YATEWindow::refreshDiscordSettings()
 }
 
 void YATEWindow::onLobbyIdChange(QString id) {
-    qDebug() << "Lobby ID received: " << id;
+    qDebug() << "Lobby code received: " << id;
     ui->lblLobbyId->setText(id);
+#ifdef DISCORD_ENABLED
+    if (discord_ != nullptr) {
+        discord_->setLobbyId(id);
+        discord_->setIsHost(true);
+    }
+#endif
 }
 
 void YATEWindow::onUserConnected(QString name)
 {
     qDebug() << "Received Discord user" << name;
-    QString title = "YATE " + Updater::getInstance()->getVersion();
     if(name.size()) {
-        title = title + " (Logged in to Discord as @" + name + ")";
+        discordTitle_ = "(Logged in to Discord as @" + name + ")";
         statusBar()->showMessage("Logged in to Discord as " + name, 2000);
         discordConnected_ = true;
     }
-    setWindowTitle(title);
-    if (codeURI_ != "") {
-    QString lobbyId = codeURI_;
-    codeURI_ = "";
-#ifdef DISCORD_ENABLED
-    qDebug() << "Client live feedback starting with URI.";
-    QSettings settings;
-    if (!settings.value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool() || !settings.value(SETTINGS_KEY_DISCORD_NETWORKING, true).toBool()) {
-        qCritical() << "Discord features not enabled for client live feedback";
-        QMessageBox::critical(this, "Discord Features Required", "You must enable Discord features from the settings to use this feature.");
-        return;
-    }
+    refreshTitle();
 
-    establishLobbyConnection(lobbyId);
-#else
-    QMessageBox::critical(this, "Discord Features Required", "Discord features are needed but not supported by this version.");
-    return;
+}
+
+void YATEWindow::onMqttConnected()
+{
+    mqttConnected_ = true;
+    mqttTitle_ = "[Online]";
+    ui->btnReconnect->setDisabled(true);
+    refreshTitle();
+    statusBar()->showMessage("Connected to YATE server", 2000);
+#ifdef DISCORD_ENABLED
+    if (discord_ != nullptr) {
+        discord_->setLobbyId(mqtt_->topicUrl());
+        discord_->setIsHost(true);
+    }
 #endif
+    if (codeURI_ != "") {
+        QString lobbyId = codeURI_;
+        codeURI_ = "";
+        qDebug() << "Client live feedback starting with URI.";
+        QSettings settings;
+        if (!settings.value(SETTINGS_KEY_NETWORKING, true).toBool()) {
+            qCritical() << "VS connection feature is not enabled for client live feedback";
+            QMessageBox::critical(this, "VS connections disabled", "You must enable VS client connection feature from the settings to use this feature.");
+            return;
+        }
+        establishLobbyConnection(lobbyId);
     }
 }
 
-void YATEWindow::onDiscordVSConnectionSucceeded()
+void YATEWindow::onMqttConnecting()
+{
+    mqttConnected_ = false;
+    mqttTitle_ = "[Connecting]";
+    refreshTitle();
+    ui->btnReconnect->setDisabled(true);
+}
+
+void YATEWindow::onMqttDisconnected()
+{
+    mqttConnected_ = false;
+    mqttTitle_ = "[Offline]";
+    refreshTitle();
+    statusBar()->showMessage("Disconnected from YATE server", 2000);
+    ui->btnReconnect->setDisabled(false);
+}
+
+void YATEWindow::onVSConnectionSucceeded()
 {
 
 }
 
-void YATEWindow::onDiscordVSConnectionFailed()
+void YATEWindow::onVSConnectionFailed()
 {
     qDebug() << "Failed to connect to the given lobby.";
     stopFeedback();
@@ -582,19 +655,18 @@ void Yate::YATEWindow::showClientLiveFeedback(bool lock)
 
 
 
-    connect(discord_, &DiscordManager::onMessageFromChannel1, feedbackOverlay_, &LiveFeedbackOverlay::onUpdateMessage);
-    connect(discord_, &DiscordManager::onMessageFromChannel2, feedbackOverlay_, &LiveFeedbackOverlay::onUpdateLimbs);
-    connect(discord_, &DiscordManager::connectionFailed, this, &YATEWindow::onDiscordVSConnectionFailed, Qt::UniqueConnection);
+    connect(mqtt_, &MqttManager::onMessageFromChannel1, feedbackOverlay_, &LiveFeedbackOverlay::onUpdateMessage);
+    connect(mqtt_, &MqttManager::onMessageFromChannel2, feedbackOverlay_, &LiveFeedbackOverlay::onUpdateLimbs);
     connect(feedbackOverlay_, &LiveFeedbackOverlay::onDoubleClicked, this, &YATEWindow::stopFeedback);
-    connect(discord_, &DiscordManager::onLobbyDisconnect, this, &YATEWindow::stopFeedback);
+    connect(mqtt_, &MqttManager::disconnected, this, &YATEWindow::stopFeedback);
     connect(feedbackOverlay_, &LiveFeedbackOverlay::onLockWindow, this, &YATEWindow::lockClientFeedbackWindow);
 
 #ifdef DISCORD_ENABLED
     QSettings settings;
     if (settings.value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool() && settings.value(SETTINGS_KEY_DISCORD_ACTIVITY, true).toBool()) {
-        connect(discord_, &DiscordManager::onMessageFromChannel1, discord_,&DiscordManager::setActivityDetails);
-        connect(discord_, &DiscordManager::onMessageFromChannel2, discord_, &DiscordManager::setActivityState);
-        connect(discord_, &DiscordManager::onMessageFromChannel3, discord_, &DiscordManager::setSquadString);
+        connect(mqtt_, &MqttManager::onMessageFromChannel1, discord_,&DiscordManager::setActivityDetails);
+        connect(mqtt_, &MqttManager::onMessageFromChannel2, discord_, &DiscordManager::setActivityState);
+        connect(mqtt_, &MqttManager::onMessageFromChannel3, discord_, &DiscordManager::setSquadString);
         connect(this, &YATEWindow::feedbackWindowClosed, discord_, &DiscordManager::clearActivity);
     }
 #endif
@@ -612,32 +684,28 @@ void Yate::YATEWindow::showClientLiveFeedback(bool lock)
 void YATEWindow::on_btnLiveFeedbackVS_clicked()
 {
     codeURI_ = "";
-#ifdef DISCORD_ENABLED
     qDebug() << "Client live feedback clicked.";
     QSettings settings;
-    if (!settings.value(SETTINGS_KEY_DISCORD_FEATURES, true).toBool() || !settings.value(SETTINGS_KEY_DISCORD_NETWORKING, true).toBool()) {
-        qCritical() << "Discord features not enabled for client live feedback";
-        QMessageBox::critical(this, "Discord Features Required", "You must enable Discord features from the settings to use this feature.");
+    if (!settings.value(SETTINGS_KEY_NETWORKING, true).toBool()) {
+        qCritical() << "VS connection feature is not enabled for client live feedback";
+        QMessageBox::critical(this, "VS connections disabled", "You must enable VS client connection feature from the settings to use this feature.");
         return;
     }
-    QString lobbyId = QInputDialog::getText(this, "Host Lobby ID", "Enter the host's Lobby ID").trimmed();
+    QString lobbyId = QInputDialog::getText(this, "Host Lobby Code", "Enter the host's lobby code", QLineEdit::Normal, prevPeerLobbyId_).trimmed();
     establishLobbyConnection(lobbyId);
-#else
-    QMessageBox::critical(this, "Discord Features Required", "Discord features are needed but not supported by this version.");
-    return;
-#endif
+
 }
 
 
 void YATEWindow::on_btnCopyLobbyId_clicked()
 {
-    qDebug() << "Copy Lobby ID.";
+    qDebug() << "Copy Lobby cody.";
     QString lobbyIdText = ui->lblLobbyId->text().trimmed();
     if (lobbyIdText.size()) {
         QClipboard *clipboard = QApplication::clipboard();
         clipboard->setText(lobbyIdText);
     } else {
-        qDebug() << "Lobby ID is empty.";
+        qDebug() << "Lobby code is empty.";
     }
 }
 
@@ -650,8 +718,14 @@ void YATEWindow::on_btnCopyLobbyLink_clicked()
         QClipboard *clipboard = QApplication::clipboard();
         clipboard->setText("<yate://" + lobbyIdText + ">");
     } else {
-        qDebug() << "Lobby ID is empty.";
+        qDebug() << "Lobby code is empty.";
     }
+}
+
+
+void YATEWindow::on_btnReconnect_clicked()
+{
+  mqtt_->reconnect();
 }
 
 

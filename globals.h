@@ -37,19 +37,26 @@ class QString;
 #define SETTINGS_KEY_UPDATE_ON_STARTUP "update_on_start"
 #define SETTINGS_KEY_DISCORD_FEATURES "discord_features"
 #define SETTINGS_KEY_DISCORD_ACTIVITY "discord_activity"
-#define SETTINGS_KEY_DISCORD_NETWORKING "discord_networking"
+#define SETTINGS_KEY_NETWORKING "discord_networking"
 #define SETTINGS_KEY_DISCORD_ACTIVITY_JOIN "discord_activity_join"
+#define SETTINGS_KEY_MQTT_USER_ID "mqtt_user_id"
+#define SETTINGS_KEY_MQTT_USER_PASS "mqtt_user_pass"
 
 #define DISCORD_UPDATE_TIMER 50
 #define DISCORD_LOBBY_SIZE 30
 #define DISCORD_MESSAGE_BUFFER_TIMER 1000
 
+
 #define EMOJI_LOCKED "🔒"
 #define EMOJI_UNLOCKED "🔓︎"
 
-#define DISCORD_ENABLED
 #define DISCORD_CLIENT_ID 928576870478381096
 
+#define MQTT_HOST "mqtt.ably.io"
+#define MQTT_PORT_SECURE 8883
+#define MQTT_PORT_INSECURE 1883
+#define MQTT_KEEPALIVE 15
+#define MQTT_MESSAGE_BUFFER_TIMER 1000
 
 #define LIMB_BREAK_ANIMATION_TIME 17.186
 #define CAPSHOT_ANIMATION_TIME 48.109
