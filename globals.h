@@ -50,7 +50,6 @@ class QString;
 #define EMOJI_LOCKED "🔒"
 #define EMOJI_UNLOCKED "🔓︎"
 
-#define DISCORD_ENABLED
 #define DISCORD_CLIENT_ID 928576870478381096
 
 #define MQTT_HOST "mqtt.ably.io"

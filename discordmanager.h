@@ -1,8 +1,9 @@
 #ifndef DISCORDMANAGER_H
 #define DISCORDMANAGER_H
-#include "globals.h"
+
 
 #ifdef DISCORD_ENABLED
+#include <QString>
 #include <QObject>
 #include <QMutex>
 

@@ -15,6 +15,7 @@
 
 
 #include "updater.h"
+#include "globals.h"
 
 namespace Yate {
 DiscordManager::DiscordManager(QObject *parent)
